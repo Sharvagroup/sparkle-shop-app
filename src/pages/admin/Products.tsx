@@ -60,24 +60,26 @@ const AdminProducts = () => {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterCollection, setFilterCollection] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('_all');
+  const [filterCollection, setFilterCollection] = useState<string>('_all');
+  const [filterStatus, setFilterStatus] = useState<string>('_all');
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !filterCategory || product.category_id === filterCategory;
-    const matchesCollection = !filterCollection || product.collection_id === filterCollection;
+
+    const matchesCategory = filterCategory === '_all' || product.category_id === filterCategory;
+    const matchesCollection =
+      filterCollection === '_all' || product.collection_id === filterCollection;
+
     const matchesStatus =
-      !filterStatus ||
+      filterStatus === '_all' ||
       (filterStatus === 'active' && product.is_active) ||
       (filterStatus === 'inactive' && !product.is_active);
 
     return matchesSearch && matchesCategory && matchesCollection && matchesStatus;
   });
-
   const handleCreate = async (data: any) => {
     try {
       await createProduct.mutateAsync(data);
@@ -149,7 +151,7 @@ const AdminProducts = () => {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="_all">All Categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -163,7 +165,7 @@ const AdminProducts = () => {
             <SelectValue placeholder="All Collections" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Collections</SelectItem>
+            <SelectItem value="_all">All Collections</SelectItem>
             {collections.map((col) => (
               <SelectItem key={col.id} value={col.id}>
                 {col.name}
@@ -177,7 +179,7 @@ const AdminProducts = () => {
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Status</SelectItem>
+            <SelectItem value="_all">All Status</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
