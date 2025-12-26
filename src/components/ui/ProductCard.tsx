@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Heart, Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +16,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({
+  id,
   name,
   description,
   price,
@@ -57,7 +59,7 @@ const ProductCard = ({
   };
 
   return (
-    <div className="bg-card border border-border group hover:shadow-lg transition-shadow">
+    <Link to={`/product/${id}`} className="bg-card border border-border group hover:shadow-lg transition-shadow block">
       <div className={`relative ${variant === "featured" ? "h-80 overflow-hidden" : "bg-surface p-8 h-80 flex items-center justify-center"}`}>
         {badge && (
           <span className={`absolute top-4 left-4 ${getBadgeStyles()} text-[10px] font-bold px-2 py-1 uppercase z-10`}>
@@ -99,7 +101,7 @@ const ProductCard = ({
           Add to Cart
         </Button>
       </div>
-    </div>
+    </Link>
   );
 };
 
