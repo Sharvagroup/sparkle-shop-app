@@ -91,8 +91,8 @@ const Header = () => {
                 0
               </span>
             </Link>
-            <a
-              href="#"
+            <Link
+              to="/cart"
               className="flex items-center space-x-1 hover:text-primary transition-colors relative"
             >
               <ShoppingBag size={20} />
@@ -100,7 +100,7 @@ const Header = () => {
               <span className="absolute -top-1 left-2.5 bg-secondary text-secondary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                 2
               </span>
-            </a>
+            </Link>
           </div>
         </div>
 
