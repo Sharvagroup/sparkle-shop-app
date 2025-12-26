@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { label: "Home", href: "/" },
@@ -43,15 +51,19 @@ const Header = () => {
     { label: "Contact", href: "/contact" },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-8 py-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo and Mobile Menu */}
           <div className="w-full md:w-auto flex justify-between items-center">
-            <a href="#" className="text-3xl font-display font-bold text-primary tracking-wide">
+            <Link to="/" className="text-3xl font-display font-bold text-primary tracking-wide">
               SHARVA
-            </a>
+            </Link>
             <button
               className="md:hidden text-foreground"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -74,13 +86,44 @@ const Header = () => {
 
           {/* Action Icons */}
           <div className="flex items-center space-x-6 text-sm">
-            <a
-              href="#"
-              className="flex items-center space-x-1 hover:text-primary transition-colors hidden md:flex"
-            >
-              <User size={20} />
-              <span>Sign In</span>
-            </a>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center space-x-1 hover:text-primary transition-colors hidden md:flex">
+                    <User size={20} />
+                    <span className="max-w-[100px] truncate">
+                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                    </span>
+                    <ChevronDown size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="cursor-pointer">
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut size={14} className="mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                to="/auth"
+                className="flex items-center space-x-1 hover:text-primary transition-colors hidden md:flex"
+              >
+                <User size={20} />
+                <span>Sign In</span>
+              </Link>
+            )}
             <Link
               to="/wishlist"
               className="flex items-center space-x-1 hover:text-primary transition-colors relative"
@@ -113,13 +156,13 @@ const Header = () => {
               onMouseEnter={() => setActiveDropdown(item.label)}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <a
-                href={item.href}
+              <Link
+                to={item.href}
                 className="hover:text-primary transition-colors flex items-center cursor-pointer py-2"
               >
                 {item.label}
                 {item.children && <ChevronDown size={16} className="ml-1" />}
-              </a>
+              </Link>
               {item.children && activeDropdown === item.label && (
                 <div className="absolute left-0 top-full w-48 bg-card shadow-xl rounded-sm py-2 z-50 border border-border border-t-2 border-t-primary">
                   {item.children.map((child) => (
@@ -142,12 +185,12 @@ const Header = () => {
           <nav className="md:hidden mt-4 pt-4 border-t border-border">
             {navItems.map((item) => (
               <div key={item.label} className="py-2">
-                <a
-                  href={item.href}
+                <Link
+                  to={item.href}
                   className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
                 >
                   {item.label}
-                </a>
+                </Link>
                 {item.children && (
                   <div className="pl-4 mt-2 space-y-2">
                     {item.children.map((child) => (
@@ -163,6 +206,27 @@ const Header = () => {
                 )}
               </div>
             ))}
+            
+            {/* Mobile auth link */}
+            <div className="pt-4 mt-4 border-t border-border">
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 text-sm text-destructive"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center space-x-2 text-sm hover:text-primary"
+                >
+                  <User size={16} />
+                  <span>Sign In</span>
+                </Link>
+              )}
+            </div>
           </nav>
         )}
       </div>
