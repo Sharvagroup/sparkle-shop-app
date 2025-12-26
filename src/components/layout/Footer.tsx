@@ -1,8 +1,25 @@
+import { Link } from "react-router-dom";
+
 const Footer = () => {
   const footerLinks = {
-    shop: ["New In", "Necklaces", "Earrings", "Bracelets", "Watches"],
-    support: ["Size Guide", "Customer Care", "Our Story", "Sustainability", "Store Locator"],
-    connect: ["Instagram", "Pinterest"],
+    shop: [
+      { label: "New In", href: "#" },
+      { label: "Necklaces", href: "#" },
+      { label: "Earrings", href: "#" },
+      { label: "Bracelets", href: "#" },
+      { label: "Watches", href: "#" },
+    ],
+    support: [
+      { label: "Size Guide", href: "#" },
+      { label: "Customer Care", href: "#" },
+      { label: "Our Story", href: "/about" },
+      { label: "Sustainability", href: "#" },
+      { label: "Store Locator", href: "#" },
+    ],
+    connect: [
+      { label: "Instagram", href: "#" },
+      { label: "Pinterest", href: "#" },
+    ],
   };
 
   return (
@@ -28,7 +45,7 @@ const Footer = () => {
             <div>
               <h4 className="font-bold text-sm text-foreground mb-2">Contact</h4>
               <p className="text-muted-foreground text-sm">+1 (212) 555-0123</p>
-              <p className="text-muted-foreground text-sm">hello@sharvajewelry.com</p>
+              <p className="text-muted-foreground text-sm">hello@sharvajewellery.com</p>
             </div>
           </div>
 
@@ -37,10 +54,10 @@ const Footer = () => {
             <h4 className="font-display font-medium text-lg mb-6 text-foreground">Shop</h4>
             <ul className="space-y-4 text-sm text-muted-foreground">
               {footerLinks.shop.map((link) => (
-                <li key={link}>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    {link}
-                  </a>
+                <li key={link.label}>
+                  <Link to={link.href} className="hover:text-primary transition-colors">
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -51,10 +68,10 @@ const Footer = () => {
             <h4 className="font-display font-medium text-lg mb-6 text-foreground">Support</h4>
             <ul className="space-y-4 text-sm text-muted-foreground">
               {footerLinks.support.map((link) => (
-                <li key={link}>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    {link}
-                  </a>
+                <li key={link.label}>
+                  <Link to={link.href} className="hover:text-primary transition-colors">
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -65,9 +82,9 @@ const Footer = () => {
             <h4 className="font-display font-medium text-lg mb-6 text-foreground">Connect</h4>
             <ul className="space-y-4 text-sm text-muted-foreground">
               {footerLinks.connect.map((link) => (
-                <li key={link}>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    {link}
+                <li key={link.label}>
+                  <a href={link.href} className="hover:text-primary transition-colors">
+                    {link.label}
                   </a>
                 </li>
               ))}
