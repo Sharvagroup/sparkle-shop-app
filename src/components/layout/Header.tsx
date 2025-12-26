@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
+import { useCollections } from "@/hooks/useCollections";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ const Header = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { data: categories = [] } = useCategories();
+  const { data: collections = [] } = useCollections();
 
   // Build nav items with dynamic categories
   const navItems = useMemo(() => {
@@ -35,11 +37,21 @@ const Header = () => {
         children: shopChildren,
       },
       {
+        label: "Collections",
+        href: "/products",
+        children: [
+          { label: "All Collections", href: "/products" },
+          ...collections.map((col) => ({
+            label: col.name,
+            href: `/products?collection=${col.slug}`,
+          })),
+        ],
+      },
+      {
         label: "New In",
         href: "#",
         children: [
           { label: "New Arrivals", href: "#" },
-          { label: "Collections", href: "#" },
           { label: "Best Sellers", href: "#" },
           { label: "Celebrity Specials", href: "#" }
         ],
@@ -56,7 +68,7 @@ const Header = () => {
       },
       { label: "Contact", href: "/contact" },
     ];
-  }, [categories]);
+  }, [categories, collections]);
 
   const handleSignOut = async () => {
     await signOut();
