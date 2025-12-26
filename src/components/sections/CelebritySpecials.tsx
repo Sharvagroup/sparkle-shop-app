@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +54,16 @@ const CelebritySpecials = () => {
               variant={index < 2 ? "featured" : undefined}
             />
           ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <Link
+            to="/products?celebrity=true"
+            className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-primary hover:text-primary/80 transition-colors group"
+          >
+            View All Celebrity Specials
+            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </div>
     </section>
