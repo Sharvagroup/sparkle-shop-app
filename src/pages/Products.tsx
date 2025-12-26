@@ -15,8 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCategories } from "@/hooks/useCategories";
+import { useCollections } from "@/hooks/useCollections";
 
-const collections = ["Temple Collection", "Antique Collection", "Bridal Collection", "Everyday Wear"];
 const materials = ["Gold", "Silver", "Brass", "Diamond"];
 
 const mockProducts = [
@@ -104,6 +104,7 @@ const Products = () => {
   const categoryFromUrl = searchParams.get('category');
   
   const { data: categories = [] } = useCategories();
+  const { data: collections = [] } = useCollections();
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []
   );
@@ -218,18 +219,18 @@ const Products = () => {
                 <div className="space-y-3">
                   {collections.map((collection) => (
                     <label
-                      key={collection}
+                      key={collection.id}
                       className="flex items-center space-x-3 cursor-pointer group"
                     >
                       <Checkbox
-                        checked={selectedCollections.includes(collection)}
+                        checked={selectedCollections.includes(collection.slug)}
                         onCheckedChange={() =>
-                          toggleFilter(collection, selectedCollections, setSelectedCollections)
+                          toggleFilter(collection.slug, selectedCollections, setSelectedCollections)
                         }
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                       <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                        {collection}
+                        {collection.name}
                       </span>
                     </label>
                   ))}
