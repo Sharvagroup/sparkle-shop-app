@@ -15,7 +15,9 @@ import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLayout from "./components/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Categories from "./pages/admin/Categories";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -40,7 +42,25 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            
+            {/* Admin routes with shared layout */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="categories" element={<Categories />} />
+              {/* Future admin routes */}
+              <Route path="products" element={<Dashboard />} />
+              <Route path="collections" element={<Dashboard />} />
+              <Route path="banners" element={<Dashboard />} />
+              <Route path="offers" element={<Dashboard />} />
+              <Route path="orders" element={<Dashboard />} />
+              <Route path="reviews" element={<Dashboard />} />
+              <Route path="announcements" element={<Dashboard />} />
+              <Route path="homepage" element={<Dashboard />} />
+              <Route path="footer-links" element={<Dashboard />} />
+              <Route path="settings" element={<Dashboard />} />
+              <Route path="team" element={<Dashboard />} />
+            </Route>
+            
             <Route path="/access-denied" element={<AccessDenied />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

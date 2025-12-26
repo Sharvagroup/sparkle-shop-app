@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCategories } from "@/hooks/useCategories";
 
-const categories = ["Necklaces", "Earrings", "Bracelets", "Rings", "Bridal Sets"];
 const collections = ["Temple Collection", "Antique Collection", "Bridal Collection", "Everyday Wear"];
 const materials = ["Gold", "Silver", "Brass", "Diamond"];
 
@@ -100,7 +100,13 @@ const mockProducts = [
 ];
 
 const Products = () => {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get('category');
+  
+  const { data: categories = [] } = useCategories();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    categoryFromUrl ? [categoryFromUrl] : []
+  );
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0]);
@@ -188,18 +194,18 @@ const Products = () => {
                 <div className="space-y-3">
                   {categories.map((category) => (
                     <label
-                      key={category}
+                      key={category.id}
                       className="flex items-center space-x-3 cursor-pointer group"
                     >
                       <Checkbox
-                        checked={selectedCategories.includes(category)}
+                        checked={selectedCategories.includes(category.slug)}
                         onCheckedChange={() =>
-                          toggleFilter(category, selectedCategories, setSelectedCategories)
+                          toggleFilter(category.slug, selectedCategories, setSelectedCategories)
                         }
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                       <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                        {category}
+                        {category.name}
                       </span>
                     </label>
                   ))}
