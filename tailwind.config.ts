@@ -58,6 +58,7 @@ export default {
         },
         sale: "hsl(var(--sale))",
         trending: "hsl(var(--trending))",
+        "accent-brass": "hsl(var(--accent-brass))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
