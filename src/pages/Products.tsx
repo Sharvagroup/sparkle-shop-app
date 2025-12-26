@@ -28,6 +28,7 @@ const Products = () => {
   const collectionFromUrl = searchParams.get("collection");
   const isNewFromUrl = searchParams.get("new") === "true";
   const isBestsellerFromUrl = searchParams.get("bestseller") === "true";
+  const isCelebrityFromUrl = searchParams.get("celebrity") === "true";
 
   const { data: categories = [] } = useCategories();
   const { data: collections = [] } = useCollections();
@@ -46,6 +47,7 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isNewArrival, setIsNewArrival] = useState(isNewFromUrl);
   const [isBestSeller, setIsBestSeller] = useState(isBestsellerFromUrl);
+  const [isCelebritySpecial, setIsCelebritySpecial] = useState(isCelebrityFromUrl);
 
   // Update filters from URL params
   useEffect(() => {
@@ -61,7 +63,10 @@ const Products = () => {
     if (isBestsellerFromUrl) {
       setIsBestSeller(true);
     }
-  }, [categoryFromUrl, collectionFromUrl, isNewFromUrl, isBestsellerFromUrl]);
+    if (isCelebrityFromUrl) {
+      setIsCelebritySpecial(true);
+    }
+  }, [categoryFromUrl, collectionFromUrl, isNewFromUrl, isBestsellerFromUrl, isCelebrityFromUrl]);
 
   const toggleFilter = (
     value: string,
@@ -124,6 +129,11 @@ const Products = () => {
       filtered = filtered.filter((p) => p.is_best_seller);
     }
 
+    // Filter by celebrity special
+    if (isCelebritySpecial) {
+      filtered = filtered.filter((p) => p.is_celebrity_special);
+    }
+
     // Sort
     switch (sortBy) {
       case "newest":
@@ -155,6 +165,7 @@ const Products = () => {
     inStockOnly,
     isNewArrival,
     isBestSeller,
+    isCelebritySpecial,
     sortBy,
   ]);
 
@@ -176,6 +187,7 @@ const Products = () => {
     inStockOnly,
     isNewArrival,
     isBestSeller,
+    isCelebritySpecial,
     sortBy,
   ]);
 
@@ -203,6 +215,8 @@ const Products = () => {
               ? "New Arrivals"
               : isBestSeller
               ? "Best Sellers"
+              : isCelebritySpecial
+              ? "Celebrity Specials"
               : "All Products"}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
