@@ -94,6 +94,108 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          badge: string | null
+          care_instructions: string | null
+          category_id: string | null
+          collection_id: string | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          is_best_seller: boolean | null
+          is_celebrity_special: boolean | null
+          is_new_arrival: boolean | null
+          long_description: string | null
+          low_stock_threshold: number | null
+          material: string | null
+          name: string
+          original_price: number | null
+          price: number
+          rating: number | null
+          review_count: number | null
+          sku: string | null
+          slug: string
+          stock_quantity: number | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          badge?: string | null
+          care_instructions?: string | null
+          category_id?: string | null
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_best_seller?: boolean | null
+          is_celebrity_special?: boolean | null
+          is_new_arrival?: boolean | null
+          long_description?: string | null
+          low_stock_threshold?: number | null
+          material?: string | null
+          name: string
+          original_price?: number | null
+          price: number
+          rating?: number | null
+          review_count?: number | null
+          sku?: string | null
+          slug: string
+          stock_quantity?: number | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          badge?: string | null
+          care_instructions?: string | null
+          category_id?: string | null
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_best_seller?: boolean | null
+          is_celebrity_special?: boolean | null
+          is_new_arrival?: boolean | null
+          long_description?: string | null
+          low_stock_threshold?: number | null
+          material?: string | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          rating?: number | null
+          review_count?: number | null
+          sku?: string | null
+          slug?: string
+          stock_quantity?: number | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

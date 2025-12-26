@@ -19,6 +19,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Categories from "./pages/admin/Categories";
 import Collections from "./pages/admin/Collections";
+import AdminProducts from "./pages/admin/Products";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -48,8 +49,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="categories" element={<Categories />} />
-              {/* Future admin routes */}
-              <Route path="products" element={<Dashboard />} />
+              <Route path="products" element={<AdminProducts />} />
               <Route path="collections" element={<Collections />} />
               <Route path="banners" element={<Dashboard />} />
               <Route path="offers" element={<Dashboard />} />
