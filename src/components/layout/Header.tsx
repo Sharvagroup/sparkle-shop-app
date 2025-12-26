@@ -12,17 +12,32 @@ const Header = () => {
     {
       label: "Shop",
       href: "#",
-      children: ["Necklaces", "Earrings", "Bracelets", "Rings"],
+      children: [
+        { label: "Necklaces", href: "#" },
+        { label: "Earrings", href: "#" },
+        { label: "Bracelets", href: "#" },
+        { label: "Rings", href: "#" }
+      ],
     },
     {
       label: "New In",
       href: "#",
-      children: ["New Arrivals", "Collections", "Best Sellers", "Celebrity Specials"],
+      children: [
+        { label: "New Arrivals", href: "#" },
+        { label: "Collections", href: "#" },
+        { label: "Best Sellers", href: "#" },
+        { label: "Celebrity Specials", href: "#" }
+      ],
     },
     {
       label: "About",
-      href: "#",
-      children: ["Our Story", "Size Guide", "Customer Care", "Store Locator"],
+      href: "/about",
+      children: [
+        { label: "Our Story", href: "/about" },
+        { label: "Size Guide", href: "#" },
+        { label: "Customer Care", href: "#" },
+        { label: "Store Locator", href: "#" }
+      ],
     },
     { label: "Contact", href: "#" },
   ];
@@ -107,13 +122,13 @@ const Header = () => {
               {item.children && activeDropdown === item.label && (
                 <div className="absolute left-0 top-full w-48 bg-card shadow-xl rounded-sm py-2 z-50 border border-border border-t-2 border-t-primary">
                   {item.children.map((child) => (
-                    <a
-                      key={child}
-                      href="#"
+                    <Link
+                      key={child.label}
+                      to={child.href}
                       className="block px-4 py-3 hover:bg-muted hover:text-primary transition-colors text-xs tracking-wider"
                     >
-                      {child}
-                    </a>
+                      {child.label}
+                    </Link>
                   ))}
                 </div>
               )}
@@ -135,13 +150,13 @@ const Header = () => {
                 {item.children && (
                   <div className="pl-4 mt-2 space-y-2">
                     {item.children.map((child) => (
-                      <a
-                        key={child}
-                        href="#"
+                      <Link
+                        key={child.label}
+                        to={child.href}
                         className="block text-xs text-muted-foreground hover:text-primary transition-colors"
                       >
-                        {child}
-                      </a>
+                        {child.label}
+                      </Link>
                     ))}
                   </div>
                 )}
