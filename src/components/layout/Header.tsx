@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,42 +15,48 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { user, signOut } = useAuth();
+  const { data: categories = [] } = useCategories();
 
-  const navItems = [
-    { label: "Home", href: "/" },
-    {
-      label: "Shop",
-      href: "/products",
-      children: [
-        { label: "All Products", href: "/products" },
-        { label: "Necklaces", href: "/products" },
-        { label: "Earrings", href: "/products" },
-        { label: "Bracelets", href: "/products" },
-        { label: "Rings", href: "/products" }
-      ],
-    },
-    {
-      label: "New In",
-      href: "#",
-      children: [
-        { label: "New Arrivals", href: "#" },
-        { label: "Collections", href: "#" },
-        { label: "Best Sellers", href: "#" },
-        { label: "Celebrity Specials", href: "#" }
-      ],
-    },
-    {
-      label: "About",
-      href: "/about",
-      children: [
-        { label: "Our Story", href: "/about" },
-        { label: "Size Guide", href: "#" },
-        { label: "Customer Care", href: "#" },
-        { label: "Store Locator", href: "#" }
-      ],
-    },
-    { label: "Contact", href: "/contact" },
-  ];
+  // Build nav items with dynamic categories
+  const navItems = useMemo(() => {
+    const shopChildren = [
+      { label: "All Products", href: "/products" },
+      ...categories.map((cat) => ({
+        label: cat.name,
+        href: `/products?category=${cat.slug}`,
+      })),
+    ];
+
+    return [
+      { label: "Home", href: "/" },
+      {
+        label: "Shop",
+        href: "/products",
+        children: shopChildren,
+      },
+      {
+        label: "New In",
+        href: "#",
+        children: [
+          { label: "New Arrivals", href: "#" },
+          { label: "Collections", href: "#" },
+          { label: "Best Sellers", href: "#" },
+          { label: "Celebrity Specials", href: "#" }
+        ],
+      },
+      {
+        label: "About",
+        href: "/about",
+        children: [
+          { label: "Our Story", href: "/about" },
+          { label: "Size Guide", href: "#" },
+          { label: "Customer Care", href: "#" },
+          { label: "Store Locator", href: "#" }
+        ],
+      },
+      { label: "Contact", href: "/contact" },
+    ];
+  }, [categories]);
 
   const handleSignOut = async () => {
     await signOut();
