@@ -11,12 +11,13 @@ const Header = () => {
     { label: "Home", href: "/" },
     {
       label: "Shop",
-      href: "#",
+      href: "/products",
       children: [
-        { label: "Necklaces", href: "#" },
-        { label: "Earrings", href: "#" },
-        { label: "Bracelets", href: "#" },
-        { label: "Rings", href: "#" }
+        { label: "All Products", href: "/products" },
+        { label: "Necklaces", href: "/products" },
+        { label: "Earrings", href: "/products" },
+        { label: "Bracelets", href: "/products" },
+        { label: "Rings", href: "/products" }
       ],
     },
     {
