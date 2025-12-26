@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -7,7 +8,7 @@ const Header = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const navItems = [
-    { label: "Home", href: "#" },
+    { label: "Home", href: "/" },
     {
       label: "Shop",
       href: "#",
@@ -64,8 +65,8 @@ const Header = () => {
               <User size={20} />
               <span>Sign In</span>
             </a>
-            <a
-              href="#"
+            <Link
+              to="/wishlist"
               className="flex items-center space-x-1 hover:text-primary transition-colors relative"
             >
               <Heart size={20} />
@@ -73,7 +74,7 @@ const Header = () => {
               <span className="absolute -top-1 left-2.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                 0
               </span>
-            </a>
+            </Link>
             <a
               href="#"
               className="flex items-center space-x-1 hover:text-primary transition-colors relative"
