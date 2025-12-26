@@ -1,0 +1,83 @@
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+
+const testimonials = [
+  {
+    id: 1,
+    rating: 5,
+    text: '"The bridal set I ordered was absolutely stunning. It looked even better in person than in the pictures!"',
+    author: "Priya Sharma",
+  },
+  {
+    id: 2,
+    rating: 5,
+    text: '"Excellent quality and fast shipping. The packaging was so secure and beautiful. Will order again."',
+    author: "Sneha Reddy",
+  },
+  {
+    id: 3,
+    rating: 4,
+    text: '"Loved the intricate details on the temple jewellery. Truly a piece of art."',
+    author: "Anjali Verma",
+  },
+];
+
+const Testimonials = () => {
+  const renderStars = (rating: number) => {
+    return Array(5)
+      .fill(0)
+      .map((_, i) => (
+        <Star
+          key={i}
+          size={14}
+          className={i < rating ? "fill-primary text-primary" : "text-muted-foreground"}
+        />
+      ));
+  };
+
+  return (
+    <section className="py-16 bg-background">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
+          Our Happy Customers
+        </h2>
+        
+        <div className="relative flex items-center justify-center max-w-6xl mx-auto">
+          <button className="hidden md:flex absolute -left-4 text-muted-foreground hover:text-primary rounded-full border border-border p-2 hover:bg-muted transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-12">
+            {testimonials.map((testimonial) => (
+              <div
+                key={testimonial.id}
+                className="bg-surface p-8 rounded border border-border"
+              >
+                <div className="flex justify-center text-primary text-xs mb-4">
+                  {renderStars(testimonial.rating)}
+                </div>
+                <p className="text-sm italic text-muted-foreground mb-6 leading-relaxed">
+                  {testimonial.text}
+                </p>
+                <p className="text-xs font-bold uppercase tracking-wide text-foreground">
+                  - {testimonial.author}
+                </p>
+              </div>
+            ))}
+          </div>
+          
+          <button className="hidden md:flex absolute -right-4 text-muted-foreground hover:text-primary rounded-full border border-border p-2 hover:bg-muted transition-colors">
+            <ChevronRight size={24} />
+          </button>
+        </div>
+        
+        <div className="flex justify-center mt-8 space-x-2">
+          <span className="w-8 h-2 bg-primary rounded-full" />
+          <span className="w-2 h-2 bg-muted-foreground/30 rounded-full" />
+          <span className="w-2 h-2 bg-muted-foreground/30 rounded-full" />
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Testimonials;
