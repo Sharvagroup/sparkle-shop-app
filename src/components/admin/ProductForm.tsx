@@ -248,8 +248,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ''}
+                      onValueChange={(val) => field.onChange(val === "_none" ? "" : val)}
+                      value={field.value || "_none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -257,7 +257,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="_none">None</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
@@ -277,8 +277,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                   <FormItem>
                     <FormLabel>Collection</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ''}
+                      onValueChange={(val) => field.onChange(val === "_none" ? "" : val)}
+                      value={field.value || "_none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -286,7 +286,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="_none">None</SelectItem>
                         {collections.map((col) => (
                           <SelectItem key={col.id} value={col.id}>
                             {col.name}
@@ -562,8 +562,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                   <FormItem>
                     <FormLabel>Badge</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ''}
+                      onValueChange={(val) => field.onChange(val === "_none" ? null : val)}
+                      value={field.value || "_none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -571,7 +571,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="_none">None</SelectItem>
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="sale">Sale</SelectItem>
                         <SelectItem value="trending">Trending</SelectItem>
