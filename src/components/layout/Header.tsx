@@ -39,7 +39,7 @@ const Header = () => {
         { label: "Store Locator", href: "#" }
       ],
     },
-    { label: "Contact", href: "#" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
