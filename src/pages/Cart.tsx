@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -222,9 +222,11 @@ const Cart = () => {
                   </div>
 
                   {/* Checkout Button */}
-                  <Button className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 py-6">
-                    PROCEED TO CHECKOUT
-                    <Lock className="w-4 h-4" />
+                  <Button asChild className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 py-6">
+                    <Link to="/checkout">
+                      PROCEED TO CHECKOUT
+                      <Lock className="w-4 h-4" />
+                    </Link>
                   </Button>
 
                   {/* Payment Icons */}
