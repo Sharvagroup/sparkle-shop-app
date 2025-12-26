@@ -89,18 +89,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_verified: boolean
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_verified?: boolean
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_verified?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -118,6 +121,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_verified: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "customer"

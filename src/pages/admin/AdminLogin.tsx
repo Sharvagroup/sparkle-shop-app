@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, Shield, UserPlus, LogIn } from 'lucide-react';
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -14,26 +14,38 @@ const signInSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const signUpSchema = z.object({
+  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
 const AdminLogin = () => {
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, user } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const checkAdminRole = async () => {
       if (user) {
-        const { data } = await supabase.rpc('has_role', {
+        const { data: isVerified } = await supabase.rpc('is_admin_verified', {
           _user_id: user.id,
-          _role: 'admin',
         });
         
-        if (data) {
+        if (isVerified) {
           navigate('/admin/dashboard');
         }
       }
@@ -42,7 +54,7 @@ const AdminLogin = () => {
     checkAdminRole();
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -71,7 +83,7 @@ const AdminLogin = () => {
       return;
     }
 
-    // Check if user has admin role
+    // Check if user is a verified admin
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (authUser) {
       const { data: isAdmin } = await supabase.rpc('has_role', {
@@ -79,16 +91,112 @@ const AdminLogin = () => {
         _role: 'admin',
       });
 
+      if (!isAdmin) {
+        setLoading(false);
+        await supabase.auth.signOut();
+        navigate('/access-denied');
+        return;
+      }
+
+      const { data: isVerified } = await supabase.rpc('is_admin_verified', {
+        _user_id: authUser.id,
+      });
+
       setLoading(false);
 
-      if (isAdmin) {
+      if (isVerified) {
         toast({ title: 'Welcome, Admin!' });
         navigate('/admin/dashboard');
       } else {
         await supabase.auth.signOut();
-        navigate('/access-denied');
+        toast({
+          title: 'Account pending verification',
+          description: 'Your admin account is awaiting verification. Please contact the administrator.',
+          variant: 'destructive',
+        });
       }
     }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const result = signUpSchema.safeParse({ fullName, email, password, confirmPassword });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    
+    // First sign up the user
+    const { error: signUpError } = await signUp(email, password, fullName);
+    
+    if (signUpError) {
+      setLoading(false);
+      toast({
+        title: 'Registration failed',
+        description: signUpError.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Get the newly created user
+    const { data: { user: newUser } } = await supabase.auth.getUser();
+    
+    if (newUser) {
+      // Add admin role (unverified by default)
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: newUser.id,
+          role: 'admin',
+          is_verified: false,
+        });
+
+      if (roleError) {
+        // If role already exists (from trigger), update it to admin
+        await supabase
+          .from('user_roles')
+          .update({ role: 'admin', is_verified: false })
+          .eq('user_id', newUser.id);
+      }
+    }
+
+    // Sign out after registration
+    await supabase.auth.signOut();
+
+    setLoading(false);
+    toast({
+      title: 'Registration successful!',
+      description: 'Your admin account has been created and is pending verification. You will be notified once approved.',
+    });
+    
+    // Reset form and switch to sign in
+    setFullName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setMode('signin');
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+    setErrors({});
+  };
+
+  const toggleMode = () => {
+    resetForm();
+    setMode(mode === 'signin' ? 'signup' : 'signin');
   };
 
   return (
@@ -101,12 +209,31 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          <h1 className="text-2xl font-semibold text-center mb-2">Admin Portal</h1>
+          <h1 className="text-2xl font-semibold text-center mb-2">
+            {mode === 'signin' ? 'Admin Portal' : 'Admin Registration'}
+          </h1>
           <p className="text-muted-foreground text-center mb-8">
-            Sign in to access the admin dashboard
+            {mode === 'signin' 
+              ? 'Sign in to access the admin dashboard' 
+              : 'Create an admin account (requires verification)'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
+            {mode === 'signup' && (
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="John Doe"
+                  className={errors.fullName ? 'border-destructive' : ''}
+                />
+                {errors.fullName && <p className="text-sm text-destructive mt-1">{errors.fullName}</p>}
+              </div>
+            )}
+
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -142,10 +269,61 @@ const AdminLogin = () => {
               {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
             </div>
 
+            {mode === 'signup' && (
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={errors.confirmPassword ? 'border-destructive' : ''}
+                />
+                {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                mode === 'signin' ? 'Signing in...' : 'Creating account...'
+              ) : (
+                <>
+                  {mode === 'signin' ? (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Register
+                    </>
+                  )}
+                </>
+              )}
             </Button>
           </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-sm text-primary hover:underline"
+            >
+              {mode === 'signin' 
+                ? "Don't have an admin account? Register" 
+                : 'Already have an account? Sign in'}
+            </button>
+          </div>
+
+          {mode === 'signup' && (
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                <strong>Note:</strong> After registration, your account will require manual verification before you can access the admin dashboard.
+              </p>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-4">
