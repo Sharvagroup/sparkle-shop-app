@@ -13,9 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Palette, Globe, Image } from "lucide-react";
-import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, ThemeSettings, SeoSettings } from "@/hooks/useSiteSettings";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale } from "lucide-react";
+import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface LegalSettings {
+  copyrightText: string;
+  privacyPolicyUrl: string;
+  termsOfServiceUrl: string;
+}
 
 const Settings = () => {
   const { data: settings, isLoading } = useSiteSettings();
@@ -25,6 +31,7 @@ const Settings = () => {
   const [siteName, setSiteName] = useState("");
   const [tagline, setTagline] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [footerLogoUrl, setFooterLogoUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [loadingImageUrl, setLoadingImageUrl] = useState("");
 
@@ -41,13 +48,10 @@ const Settings = () => {
   const [pinterest, setPinterest] = useState("");
   const [youtube, setYoutube] = useState("");
 
-  // Theme
-  const [primaryColor, setPrimaryColor] = useState("");
-  const [secondaryColor, setSecondaryColor] = useState("");
-  const [accentColor, setAccentColor] = useState("");
-  const [fontHeading, setFontHeading] = useState("");
-  const [fontBody, setFontBody] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  // Legal
+  const [copyrightText, setCopyrightText] = useState("");
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
+  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState("");
 
   // SEO
   const [metaTitle, setMetaTitle] = useState("");
@@ -58,16 +62,17 @@ const Settings = () => {
 
   useEffect(() => {
     if (settings) {
-      const branding = settings.branding as unknown as BrandingSettings | undefined;
+      const branding = settings.branding as unknown as BrandingSettings & { footerLogoUrl?: string } | undefined;
       const contact = settings.contact as unknown as ContactSettings | undefined;
       const social = settings.social as unknown as SocialSettings | undefined;
-      const theme = settings.theme as unknown as ThemeSettings | undefined;
+      const legal = settings.legal as unknown as LegalSettings | undefined;
       const seo = settings.seo as unknown as SeoSettings | undefined;
 
       if (branding) {
         setSiteName(branding.siteName || "");
         setTagline(branding.tagline || "");
         setLogoUrl(branding.logoUrl || "");
+        setFooterLogoUrl(branding.footerLogoUrl || "");
         setFaviconUrl(branding.faviconUrl || "");
         setLoadingImageUrl(branding.loadingImageUrl || "");
       }
@@ -84,13 +89,10 @@ const Settings = () => {
         setPinterest(social.pinterest || "");
         setYoutube(social.youtube || "");
       }
-      if (theme) {
-        setPrimaryColor(theme.primaryColor || "");
-        setSecondaryColor(theme.secondaryColor || "");
-        setAccentColor(theme.accentColor || "");
-        setFontHeading(theme.fontHeading || "");
-        setFontBody(theme.fontBody || "");
-        setDarkMode(theme.darkMode || false);
+      if (legal) {
+        setCopyrightText(legal.copyrightText || "");
+        setPrivacyPolicyUrl(legal.privacyPolicyUrl || "");
+        setTermsOfServiceUrl(legal.termsOfServiceUrl || "");
       }
       if (seo) {
         setMetaTitle(seo.metaTitle || "");
@@ -117,7 +119,7 @@ const Settings = () => {
   const saveBranding = async () => {
     await updateSetting.mutateAsync({
       key: "branding",
-      value: { siteName, tagline, logoUrl, faviconUrl, loadingImageUrl },
+      value: { siteName, tagline, logoUrl, footerLogoUrl, faviconUrl, loadingImageUrl },
       category: "branding",
     });
   };
@@ -138,11 +140,11 @@ const Settings = () => {
     });
   };
 
-  const saveTheme = async () => {
+  const saveLegal = async () => {
     await updateSetting.mutateAsync({
-      key: "theme",
-      value: { primaryColor, secondaryColor, accentColor, fontHeading, fontBody, darkMode },
-      category: "theme",
+      key: "legal",
+      value: { copyrightText, privacyPolicyUrl, termsOfServiceUrl },
+      category: "legal",
     });
   };
 
@@ -175,7 +177,7 @@ const Settings = () => {
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
-          <TabsTrigger value="theme" className="gap-2"><Palette className="h-4 w-4" /> Theme</TabsTrigger>
+          <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
         </TabsList>
 
@@ -183,49 +185,105 @@ const Settings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Branding</CardTitle>
-              <CardDescription>Manage your store's identity</CardDescription>
+              <CardDescription>Manage your store's identity and logos</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Site Name</Label>
-                  <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} />
+                  <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="Your Store Name" />
                 </div>
                 <div className="space-y-2">
                   <Label>Tagline</Label>
-                  <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
+                  <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Your store tagline" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Logo</Label>
-                  <div className="flex gap-2 items-center">
-                    {logoUrl && <img src={logoUrl} alt="Logo" className="h-10 w-auto" />}
-                    <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
-                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("logo-upload")?.click()} disabled={uploading === "logo"}>
-                      {uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
+              {/* Logo Section */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-base font-medium">Navigation Logo</Label>
+                  <p className="text-xs text-muted-foreground">Displayed in the header navigation</p>
+                  <div className="flex gap-4 items-center">
+                    <div className="w-32 h-16 bg-muted rounded flex items-center justify-center overflow-hidden">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No logo</span>
+                      )}
+                    </div>
+                    <div>
+                      <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("logo-upload")?.click()} disabled={uploading === "logo"}>
+                        {uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Favicon</Label>
-                  <div className="flex gap-2 items-center">
-                    {faviconUrl && <img src={faviconUrl} alt="Favicon" className="h-8 w-8" />}
-                    <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
-                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("favicon-upload")?.click()} disabled={uploading === "favicon"}>
-                      {uploading === "favicon" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
+
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-base font-medium">Footer Logo</Label>
+                  <p className="text-xs text-muted-foreground">Displayed in the footer (optional)</p>
+                  <div className="flex gap-4 items-center">
+                    <div className="w-32 h-16 bg-muted rounded flex items-center justify-center overflow-hidden">
+                      {footerLogoUrl ? (
+                        <img src={footerLogoUrl} alt="Footer Logo" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No logo</span>
+                      )}
+                    </div>
+                    <div>
+                      <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("footer-logo-upload")?.click()} disabled={uploading === "footerLogo"}>
+                        {uploading === "footerLogo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Loading Image</Label>
-                  <div className="flex gap-2 items-center">
-                    {loadingImageUrl && <img src={loadingImageUrl} alt="Loading" className="h-10 w-auto" />}
-                    <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
-                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
-                      {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-base font-medium">Favicon</Label>
+                  <p className="text-xs text-muted-foreground">Browser tab icon (32x32px recommended)</p>
+                  <div className="flex gap-4 items-center">
+                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
+                      {faviconUrl ? (
+                        <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+                    <div>
+                      <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("favicon-upload")?.click()} disabled={uploading === "favicon"}>
+                        {uploading === "favicon" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-base font-medium">Loading Image</Label>
+                  <p className="text-xs text-muted-foreground">Shown while page is loading</p>
+                  <div className="flex gap-4 items-center">
+                    <div className="w-16 h-16 bg-muted rounded flex items-center justify-center overflow-hidden">
+                      {loadingImageUrl ? (
+                        <img src={loadingImageUrl} alt="Loading" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+                    <div>
+                      <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
+                        {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -248,20 +306,21 @@ const Settings = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="support@yourstore.com" />
                 </div>
                 <div className="space-y-2">
                   <Label>Phone</Label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 1234567890" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Address</Label>
-                <Textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} />
+                <Textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} placeholder="Your store address" />
               </div>
               <div className="space-y-2">
                 <Label>WhatsApp Number</Label>
                 <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+91..." />
+                <p className="text-xs text-muted-foreground">Used for WhatsApp chat button. Include country code.</p>
               </div>
               <Button onClick={saveContact} disabled={updateSetting.isPending} className="gap-2">
                 {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -308,60 +367,43 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="theme">
+        <TabsContent value="legal">
           <Card>
             <CardHeader>
-              <CardTitle>Theme & Appearance</CardTitle>
-              <CardDescription>Customize colors and fonts</CardDescription>
+              <CardTitle>Legal Information</CardTitle>
+              <CardDescription>Copyright and legal page links</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Primary Color (HSL)</Label>
-                  <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="45 93% 47%" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Secondary Color (HSL)</Label>
-                  <Input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} placeholder="0 0% 9%" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Accent Color (HSL)</Label>
-                  <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} placeholder="45 93% 47%" />
-                </div>
+              <div className="space-y-2">
+                <Label>Copyright Text</Label>
+                <Input 
+                  value={copyrightText} 
+                  onChange={(e) => setCopyrightText(e.target.value)} 
+                  placeholder="© 2024 Your Company. All rights reserved."
+                />
+                <p className="text-xs text-muted-foreground">Displayed in the footer. Leave empty to use default.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Heading Font</Label>
-                  <Select value={fontHeading} onValueChange={setFontHeading}>
-                    <SelectTrigger><SelectValue placeholder="Select font" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Cormorant Garamond">Cormorant Garamond</SelectItem>
-                      <SelectItem value="Playfair Display">Playfair Display</SelectItem>
-                      <SelectItem value="Lora">Lora</SelectItem>
-                      <SelectItem value="Merriweather">Merriweather</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Privacy Policy URL</Label>
+                  <Input 
+                    value={privacyPolicyUrl} 
+                    onChange={(e) => setPrivacyPolicyUrl(e.target.value)} 
+                    placeholder="/privacy-policy or https://..."
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Body Font</Label>
-                  <Select value={fontBody} onValueChange={setFontBody}>
-                    <SelectTrigger><SelectValue placeholder="Select font" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Inter">Inter</SelectItem>
-                      <SelectItem value="Open Sans">Open Sans</SelectItem>
-                      <SelectItem value="Roboto">Roboto</SelectItem>
-                      <SelectItem value="Lato">Lato</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Terms of Service URL</Label>
+                  <Input 
+                    value={termsOfServiceUrl} 
+                    onChange={(e) => setTermsOfServiceUrl(e.target.value)} 
+                    placeholder="/terms-of-service or https://..."
+                  />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Switch id="darkMode" checked={darkMode} onCheckedChange={setDarkMode} />
-                <Label htmlFor="darkMode">Enable Dark Mode</Label>
-              </div>
-              <Button onClick={saveTheme} disabled={updateSetting.isPending} className="gap-2">
+              <Button onClick={saveLegal} disabled={updateSetting.isPending} className="gap-2">
                 {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save Theme
+                Save Legal
               </Button>
             </CardContent>
           </Card>
@@ -376,19 +418,23 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Meta Title</Label>
-                <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+                <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Your Store - Premium Jewelry Collection" />
+                <p className="text-xs text-muted-foreground">{metaTitle.length}/60 characters recommended</p>
               </div>
               <div className="space-y-2">
                 <Label>Meta Description</Label>
-                <Textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={3} />
+                <Textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={3} placeholder="Describe your store for search engines..." />
+                <p className="text-xs text-muted-foreground">{metaDescription.length}/160 characters recommended</p>
               </div>
               <div className="space-y-2">
                 <Label>OG Image</Label>
-                <div className="flex gap-2 items-center">
-                  {ogImage && <img src={ogImage} alt="OG" className="h-16 w-auto rounded" />}
+                <p className="text-xs text-muted-foreground mb-2">Image shown when sharing on social media (1200x630px recommended)</p>
+                <div className="flex gap-4 items-center">
+                  {ogImage && <img src={ogImage} alt="OG" className="h-20 w-auto rounded border" />}
                   <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
                   <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("og-upload")?.click()} disabled={uploading === "og"}>
-                    {uploading === "og" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploading === "og" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                    Upload
                   </Button>
                 </div>
               </div>

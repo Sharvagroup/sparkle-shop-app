@@ -26,6 +26,7 @@ const Products = () => {
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
   const collectionFromUrl = searchParams.get("collection");
+  const searchFromUrl = searchParams.get("search");
   const isNewFromUrl = searchParams.get("new") === "true";
   const isBestsellerFromUrl = searchParams.get("bestseller") === "true";
   const isCelebrityFromUrl = searchParams.get("celebrity") === "true";
@@ -48,6 +49,7 @@ const Products = () => {
   const [isNewArrival, setIsNewArrival] = useState(isNewFromUrl);
   const [isBestSeller, setIsBestSeller] = useState(isBestsellerFromUrl);
   const [isCelebritySpecial, setIsCelebritySpecial] = useState(isCelebrityFromUrl);
+  const [searchQuery, setSearchQuery] = useState(searchFromUrl || "");
 
   // Update filters from URL params
   useEffect(() => {
@@ -56,6 +58,9 @@ const Products = () => {
     }
     if (collectionFromUrl) {
       setSelectedCollections([collectionFromUrl]);
+    }
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl);
     }
     if (isNewFromUrl) {
       setIsNewArrival(true);
@@ -66,7 +71,7 @@ const Products = () => {
     if (isCelebrityFromUrl) {
       setIsCelebritySpecial(true);
     }
-  }, [categoryFromUrl, collectionFromUrl, isNewFromUrl, isBestsellerFromUrl, isCelebrityFromUrl]);
+  }, [categoryFromUrl, collectionFromUrl, searchFromUrl, isNewFromUrl, isBestsellerFromUrl, isCelebrityFromUrl]);
 
   const toggleFilter = (
     value: string,
@@ -83,6 +88,19 @@ const Products = () => {
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = [...allProducts];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          (p.description && p.description.toLowerCase().includes(query)) ||
+          (p.material && p.material.toLowerCase().includes(query)) ||
+          (p.category?.name && p.category.name.toLowerCase().includes(query)) ||
+          (p.collection?.name && p.collection.name.toLowerCase().includes(query))
+      );
+    }
 
     // Filter by category
     if (selectedCategories.length > 0) {
@@ -158,6 +176,7 @@ const Products = () => {
     return filtered;
   }, [
     allProducts,
+    searchQuery,
     selectedCategories,
     selectedCollections,
     selectedMaterials,
@@ -180,6 +199,7 @@ const Products = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [
+    searchQuery,
     selectedCategories,
     selectedCollections,
     selectedMaterials,
@@ -211,7 +231,9 @@ const Products = () => {
         {/* Hero Section */}
         <section className="container mx-auto px-4 md:px-8 py-8 md:py-12 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium text-foreground mb-4">
-            {isNewArrival
+            {searchQuery
+              ? `Search: "${searchQuery}"`
+              : isNewArrival
               ? "New Arrivals"
               : isBestSeller
               ? "Best Sellers"
@@ -220,8 +242,9 @@ const Products = () => {
               : "All Products"}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
-            Explore our complete collection of handcrafted heritage jewelry, designed to bring
-            timeless elegance to your everyday life.
+            {searchQuery 
+              ? `Found ${filteredProducts.length} results for your search`
+              : "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life."}
           </p>
         </section>
 
