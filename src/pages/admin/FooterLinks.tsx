@@ -41,10 +41,9 @@ import { useFooterLinks, useCreateFooterLink, useUpdateFooterLink, useDeleteFoot
 import { Skeleton } from "@/components/ui/skeleton";
 
 const sectionLabels: Record<string, string> = {
-  company: "Company",
-  customer_service: "Customer Service",
-  policies: "Policies",
-  social: "Social Media",
+  shop: "Shop",
+  support: "Support",
+  connect: "Connect",
 };
 
 const FooterLinks = () => {
@@ -58,7 +57,7 @@ const FooterLinks = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   
   // Form state
-  const [section, setSection] = useState("company");
+  const [section, setSection] = useState("shop");
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
@@ -74,7 +73,7 @@ const FooterLinks = () => {
   }, {} as Record<string, FooterLink[]>);
 
   const resetForm = () => {
-    setSection("company");
+    setSection("shop");
     setLabel("");
     setUrl("");
     setIcon("");
@@ -233,10 +232,9 @@ const FooterLinks = () => {
               <Select value={section} onValueChange={setSection}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="company">Company</SelectItem>
-                  <SelectItem value="customer_service">Customer Service</SelectItem>
-                  <SelectItem value="policies">Policies</SelectItem>
-                  <SelectItem value="social">Social Media</SelectItem>
+                  <SelectItem value="shop">Shop</SelectItem>
+                  <SelectItem value="support">Support</SelectItem>
+                  <SelectItem value="connect">Connect</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -252,7 +250,7 @@ const FooterLinks = () => {
               </div>
             </div>
 
-            {section === "social" && (
+            {section === "connect" && (
               <div className="space-y-2">
                 <Label>Icon Name</Label>
                 <Input value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="e.g., facebook, instagram" />

@@ -15,9 +15,10 @@ const Footer = () => {
     return acc;
   }, {} as Record<string, FooterLink[]>);
 
-  // Fallback values
+  // Dynamic branding values
   const siteName = branding?.siteName || "Sharva Jewellery Collection";
   const tagline = branding?.tagline || "Minimalist jewelry crafted for the modern individual";
+  const logoUrl = branding?.logoUrl;
   const email = contact?.email || "hello@sharvajewellery.com";
   const phone = contact?.phone || "+1 (212) 555-0123";
   const address = contact?.address || "123 Madison Avenue\nNew York, NY 10016";
@@ -46,8 +47,6 @@ const Footer = () => {
     shop: "Shop",
     support: "Support",
     connect: "Connect",
-    company: "Company",
-    policies: "Policies",
   };
 
   // Get section keys, prioritize common ones first
@@ -61,9 +60,13 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand Info */}
           <div className="pr-0 md:pr-8">
-            <h3 className="text-2xl font-display font-medium mb-6 text-foreground">
-              {siteName}
-            </h3>
+            {logoUrl ? (
+              <img src={logoUrl} alt={siteName} className="h-12 w-auto mb-6" />
+            ) : (
+              <h3 className="text-2xl font-display font-medium mb-6 text-foreground">
+                {siteName}
+              </h3>
+            )}
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
               {tagline}
             </p>
@@ -126,6 +129,9 @@ const Footer = () => {
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} {siteName.split(" ")[0]}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
+            <Link to="/faq" className="hover:text-primary transition-colors">
+              FAQ
+            </Link>
             <a href="#" className="hover:text-primary transition-colors">
               Privacy Policy
             </a>

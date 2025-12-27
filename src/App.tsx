@@ -14,6 +14,11 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import UserOrders from "./pages/UserOrders";
+import Announcements from "./pages/Announcements";
+import FAQ from "./pages/FAQ";
+import SizeGuide from "./pages/SizeGuide";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -24,7 +29,7 @@ import Banners from "./pages/admin/Banners";
 import Offers from "./pages/admin/Offers";
 import Orders from "./pages/admin/Orders";
 import Reviews from "./pages/admin/Reviews";
-import Announcements from "./pages/admin/Announcements";
+import AdminAnnouncements from "./pages/admin/Announcements";
 import Homepage from "./pages/admin/Homepage";
 import FooterLinks from "./pages/admin/FooterLinks";
 import Settings from "./pages/admin/Settings";
@@ -52,6 +57,11 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<UserOrders />} />
+            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/size-guide" element={<SizeGuide />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             
             {/* Admin routes with shared layout */}
@@ -64,7 +74,7 @@ const App = () => (
               <Route path="offers" element={<Offers />} />
               <Route path="orders" element={<Orders />} />
               <Route path="reviews" element={<Reviews />} />
-              <Route path="announcements" element={<Announcements />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="homepage" element={<Homepage />} />
               <Route path="footer-links" element={<FooterLinks />} />
               <Route path="settings" element={<Settings />} />
