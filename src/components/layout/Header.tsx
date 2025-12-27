@@ -49,13 +49,12 @@ const Header = () => {
       },
       {
         label: "New In",
-        href: "/products",
+        href: "/products?new=true",
         children: [
-          { label: "All New Arrivals", href: "/products?new=true" },
-          ...collections.map((col) => ({
-            label: col.name,
-            href: `/products?collection=${col.slug}`,
-          })),
+          { label: "New Arrivals", href: "/products?new=true" },
+          { label: "Best Sellers", href: "/products?bestseller=true" },
+          { label: "Celebrity Specials", href: "/products?celebrity=true" },
+          { label: "Announcements", href: "/announcements" },
         ],
       },
       {
