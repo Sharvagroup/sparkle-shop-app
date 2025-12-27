@@ -1,26 +1,59 @@
 import { Link } from "react-router-dom";
+import { useActiveFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
+import { useSiteSetting, ContactSettings, BrandingSettings } from "@/hooks/useSiteSettings";
 
 const Footer = () => {
-  const footerLinks = {
-    shop: [
-      { label: "New In", href: "#" },
-      { label: "Necklaces", href: "#" },
-      { label: "Earrings", href: "#" },
-      { label: "Bracelets", href: "#" },
-      { label: "Watches", href: "#" },
-    ],
-    support: [
-      { label: "Size Guide", href: "#" },
-      { label: "Customer Care", href: "#" },
-      { label: "Our Story", href: "/about" },
-      { label: "Sustainability", href: "#" },
-      { label: "Store Locator", href: "#" },
-    ],
-    connect: [
-      { label: "Instagram", href: "#" },
-      { label: "Pinterest", href: "#" },
-    ],
+  const { data: footerLinks = [] } = useActiveFooterLinks();
+  const { data: contact } = useSiteSetting<ContactSettings>("contact");
+  const { data: branding } = useSiteSetting<BrandingSettings>("branding");
+
+  // Group links by section
+  const groupedLinks = footerLinks.reduce((acc, link) => {
+    const section = link.section.toLowerCase();
+    if (!acc[section]) acc[section] = [];
+    acc[section].push(link);
+    return acc;
+  }, {} as Record<string, FooterLink[]>);
+
+  // Fallback values
+  const siteName = branding?.siteName || "Sharva Jewellery Collection";
+  const tagline = branding?.tagline || "Minimalist jewelry crafted for the modern individual";
+  const email = contact?.email || "hello@sharvajewellery.com";
+  const phone = contact?.phone || "+1 (212) 555-0123";
+  const address = contact?.address || "123 Madison Avenue\nNew York, NY 10016";
+
+  const renderLinkItem = (link: FooterLink) => {
+    if (link.is_external) {
+      return (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-primary transition-colors"
+        >
+          {link.label}
+        </a>
+      );
+    }
+    return (
+      <Link to={link.url} className="hover:text-primary transition-colors">
+        {link.label}
+      </Link>
+    );
   };
+
+  const sectionTitles: Record<string, string> = {
+    shop: "Shop",
+    support: "Support",
+    connect: "Connect",
+    company: "Company",
+    policies: "Policies",
+  };
+
+  // Get section keys, prioritize common ones first
+  const orderedSections = ["shop", "support", "connect"];
+  const allSections = [...new Set([...orderedSections, ...Object.keys(groupedLinks)])];
+  const displaySections = allSections.filter((s) => groupedLinks[s]?.length > 0).slice(0, 3);
 
   return (
     <footer className="bg-card border-t border-border pt-16 pb-8">
@@ -29,72 +62,69 @@ const Footer = () => {
           {/* Brand Info */}
           <div className="pr-0 md:pr-8">
             <h3 className="text-2xl font-display font-medium mb-6 text-foreground">
-              Sharva Jewellery Collection
+              {siteName}
             </h3>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-              Minimalist jewelry crafted for the modern individual
+              {tagline}
             </p>
             <div className="mb-6">
               <h4 className="font-bold text-sm text-foreground mb-2">Visit Us</h4>
-              <p className="text-muted-foreground text-sm">
-                123 Madison Avenue
-                <br />
-                New York, NY 10016
+              <p className="text-muted-foreground text-sm whitespace-pre-line">
+                {address}
               </p>
             </div>
             <div>
               <h4 className="font-bold text-sm text-foreground mb-2">Contact</h4>
-              <p className="text-muted-foreground text-sm">+1 (212) 555-0123</p>
-              <p className="text-muted-foreground text-sm">hello@sharvajewellery.com</p>
+              <p className="text-muted-foreground text-sm">{phone}</p>
+              <p className="text-muted-foreground text-sm">{email}</p>
             </div>
           </div>
 
-          {/* Shop Links */}
-          <div>
-            <h4 className="font-display font-medium text-lg mb-6 text-foreground">Shop</h4>
-            <ul className="space-y-4 text-sm text-muted-foreground">
-              {footerLinks.shop.map((link) => (
-                <li key={link.label}>
-                  <Link to={link.href} className="hover:text-primary transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Dynamic Link Sections */}
+          {displaySections.map((section) => (
+            <div key={section}>
+              <h4 className="font-display font-medium text-lg mb-6 text-foreground capitalize">
+                {sectionTitles[section] || section}
+              </h4>
+              <ul className="space-y-4 text-sm text-muted-foreground">
+                {groupedLinks[section]?.map((link) => (
+                  <li key={link.id}>{renderLinkItem(link)}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-          {/* Support Links */}
-          <div>
-            <h4 className="font-display font-medium text-lg mb-6 text-foreground">Support</h4>
-            <ul className="space-y-4 text-sm text-muted-foreground">
-              {footerLinks.support.map((link) => (
-                <li key={link.label}>
-                  <Link to={link.href} className="hover:text-primary transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Connect Links */}
-          <div>
-            <h4 className="font-display font-medium text-lg mb-6 text-foreground">Connect</h4>
-            <ul className="space-y-4 text-sm text-muted-foreground">
-              {footerLinks.connect.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="hover:text-primary transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Fallback if no sections from DB */}
+          {displaySections.length === 0 && (
+            <>
+              <div>
+                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Shop</h4>
+                <ul className="space-y-4 text-sm text-muted-foreground">
+                  <li><Link to="/products" className="hover:text-primary transition-colors">All Products</Link></li>
+                  <li><Link to="/products?new=true" className="hover:text-primary transition-colors">New Arrivals</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Support</h4>
+                <ul className="space-y-4 text-sm text-muted-foreground">
+                  <li><Link to="/about" className="hover:text-primary transition-colors">Our Story</Link></li>
+                  <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Connect</h4>
+                <ul className="space-y-4 text-sm text-muted-foreground">
+                  <li><a href="#" className="hover:text-primary transition-colors">Instagram</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">Pinterest</a></li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
-          <p>© 2024 Sharva. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {siteName.split(" ")[0]}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-primary transition-colors">
               Privacy Policy

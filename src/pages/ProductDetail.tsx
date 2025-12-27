@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   Heart,
   Star,
@@ -24,15 +24,55 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useProduct, useProducts } from "@/hooks/useProducts";
+import { useAddToCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: allProducts = [] } = useProducts();
+  const addToCart = useAddToCart();
 
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast({ title: "Please sign in to add items to cart", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    if (!product) return;
+    
+    setIsAddingToCart(true);
+    try {
+      await addToCart.mutateAsync({ productId: product.id, quantity: 1 });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!user) {
+      toast({ title: "Please sign in to continue", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    if (!product) return;
+    
+    setIsAddingToCart(true);
+    try {
+      await addToCart.mutateAsync({ productId: product.id, quantity: 1 });
+      navigate("/checkout");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
 
   // Get related products from same category
   const relatedProducts = allProducts
@@ -318,14 +358,18 @@ const ProductDetail = () => {
                 <Button
                   variant="outline"
                   className="flex-1 py-6 font-bold uppercase tracking-wider"
-                  disabled={product.stock_quantity === 0}
+                  disabled={product.stock_quantity === 0 || isAddingToCart}
+                  onClick={handleAddToCart}
                 >
+                  {isAddingToCart ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
                   Add to Cart
                 </Button>
                 <Button
                   className="flex-1 py-6 bg-primary hover:bg-primary-dark text-primary-foreground font-bold uppercase tracking-wider shadow-lg shadow-primary/20"
-                  disabled={product.stock_quantity === 0}
+                  disabled={product.stock_quantity === 0 || isAddingToCart}
+                  onClick={handleBuyNow}
                 >
+                  {isAddingToCart ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
                   Buy Now
                 </Button>
               </div>
@@ -433,15 +477,17 @@ const ProductDetail = () => {
             <Button
               variant="outline"
               className="flex-1 font-bold uppercase text-xs tracking-wider py-3.5"
-              disabled={product.stock_quantity === 0}
+              disabled={product.stock_quantity === 0 || isAddingToCart}
+              onClick={handleAddToCart}
             >
-              Add to Cart
+              {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : "Add to Cart"}
             </Button>
             <Button
               className="flex-1 bg-primary text-primary-foreground font-bold uppercase text-xs tracking-wider py-3.5"
-              disabled={product.stock_quantity === 0}
+              disabled={product.stock_quantity === 0 || isAddingToCart}
+              onClick={handleBuyNow}
             >
-              Buy Now
+              {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : "Buy Now"}
             </Button>
           </div>
         </div>
