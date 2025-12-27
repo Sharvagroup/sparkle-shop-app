@@ -9,6 +9,7 @@ import CelebritySpecials from "@/components/sections/CelebritySpecials";
 import Offers from "@/components/sections/Offers";
 import Testimonials from "@/components/sections/Testimonials";
 import Footer from "@/components/layout/Footer";
+import WhatsAppButton from "@/components/ui/WhatsAppButton";
 
 const Index = () => {
   return (
@@ -26,6 +27,7 @@ const Index = () => {
         <Testimonials />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };
