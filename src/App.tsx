@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import Wishlist from "./pages/Wishlist";
 import About from "./pages/About";
@@ -34,6 +35,7 @@ import Homepage from "./pages/admin/Homepage";
 import FooterLinks from "./pages/admin/FooterLinks";
 import Settings from "./pages/admin/Settings";
 import Team from "./pages/admin/Team";
+import AboutPage from "./pages/admin/AboutPage";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +44,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <ThemeProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -79,6 +82,7 @@ const App = () => (
               <Route path="footer-links" element={<FooterLinks />} />
               <Route path="settings" element={<Settings />} />
               <Route path="team" element={<Team />} />
+              <Route path="about-page" element={<AboutPage />} />
             </Route>
             
             <Route path="/access-denied" element={<AccessDenied />} />
@@ -87,6 +91,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

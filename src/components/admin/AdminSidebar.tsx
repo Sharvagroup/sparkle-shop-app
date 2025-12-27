@@ -16,6 +16,7 @@ import {
   Settings,
   Users,
   LogOut,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +31,7 @@ const menuItems = [
   { icon: Star, label: 'Reviews', path: '/admin/reviews' },
   { icon: Bell, label: 'Announcements', path: '/admin/announcements' },
   { icon: Home, label: 'Homepage', path: '/admin/homepage' },
+  { icon: FileText, label: 'About Page', path: '/admin/about-page' },
   { icon: Link2, label: 'Footer Links', path: '/admin/footer-links' },
   { icon: Settings, label: 'Site Settings', path: '/admin/settings' },
   { icon: Users, label: 'Team', path: '/admin/team' },
