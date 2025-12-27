@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone } from "lucide-react";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -36,6 +36,16 @@ interface PromoBannerSettings {
   message: string;
   discountCode: string;
   isVisible: boolean;
+}
+
+interface BusinessHour {
+  day: string;
+  hours: string;
+  closed: boolean;
+}
+
+interface BusinessHoursSettings {
+  hours: BusinessHour[];
 }
 
 const fontOptions = [
@@ -97,6 +107,14 @@ const Settings = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoVisible, setPromoVisible] = useState(true);
 
+  // Business Hours
+  const defaultBusinessHours: BusinessHour[] = [
+    { day: "Monday - Friday", hours: "10:00 AM - 8:00 PM", closed: false },
+    { day: "Saturday", hours: "11:00 AM - 7:00 PM", closed: false },
+    { day: "Sunday", hours: "Closed", closed: true },
+  ];
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>(defaultBusinessHours);
+
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -153,6 +171,10 @@ const Settings = () => {
         setPromoCode(promoBanner.discountCode || "");
         setPromoVisible(promoBanner.isVisible !== false);
       }
+      const businessHoursData = settings.business_hours as unknown as BusinessHoursSettings | undefined;
+      if (businessHoursData?.hours) {
+        setBusinessHours(businessHoursData.hours);
+      }
     }
   }, [settings]);
 
@@ -198,6 +220,24 @@ const Settings = () => {
       value: { email, phone, address, whatsapp },
       category: "contact",
     });
+    // Also save business hours
+    await updateSetting.mutateAsync({
+      key: "business_hours",
+      value: { hours: businessHours },
+      category: "contact",
+    });
+  };
+
+  const updateBusinessHour = (index: number, field: keyof BusinessHour, value: string | boolean) => {
+    setBusinessHours((prev) => prev.map((h, i) => (i === index ? { ...h, [field]: value } : h)));
+  };
+
+  const addBusinessHour = () => {
+    setBusinessHours((prev) => [...prev, { day: "", hours: "", closed: false }]);
+  };
+
+  const removeBusinessHour = (index: number) => {
+    setBusinessHours((prev) => prev.filter((_, i) => i !== index));
   };
 
   const saveSocial = async () => {
@@ -413,6 +453,60 @@ const Settings = () => {
                   <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+91..." />
                   <p className="text-xs text-muted-foreground">Used for WhatsApp chat button. Include country code.</p>
                 </div>
+
+                {/* Business Hours */}
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-base font-medium">Business Hours</Label>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addBusinessHour}>
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {businessHours.map((hour, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={hour.day}
+                          onChange={(e) => updateBusinessHour(index, "day", e.target.value)}
+                          placeholder="Day(s)"
+                          className="flex-1"
+                        />
+                        <Input
+                          value={hour.hours}
+                          onChange={(e) => updateBusinessHour(index, "hours", e.target.value)}
+                          placeholder="Hours (e.g., 10AM - 6PM)"
+                          className="flex-1"
+                          disabled={hour.closed}
+                        />
+                        <label className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={hour.closed}
+                            onChange={(e) => {
+                              updateBusinessHour(index, "closed", e.target.checked);
+                              if (e.target.checked) updateBusinessHour(index, "hours", "Closed");
+                            }}
+                            className="rounded"
+                          />
+                          Closed
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeBusinessHour(index)}
+                          className="shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <Button onClick={saveContact} disabled={updateSetting.isPending} className="gap-2">
                   {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Contact
                 </Button>
