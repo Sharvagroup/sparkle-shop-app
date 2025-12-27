@@ -1,27 +1,33 @@
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
-
-const testimonials = [
-  {
-    id: 1,
-    rating: 5,
-    text: '"The bridal set I ordered was absolutely stunning. It looked even better in person than in the pictures!"',
-    author: "Priya Sharma",
-  },
-  {
-    id: 2,
-    rating: 5,
-    text: '"Excellent quality and fast shipping. The packaging was so secure and beautiful. Will order again."',
-    author: "Sneha Reddy",
-  },
-  {
-    id: 3,
-    rating: 4,
-    text: '"Loved the intricate details on the temple jewellery. Truly a piece of art."',
-    author: "Anjali Verma",
-  },
-];
+import { useHomepageReviews } from "@/hooks/useReviews";
 
 const Testimonials = () => {
+  const { data: reviews = [], isLoading } = useHomepageReviews();
+
+  // Fallback testimonials if no reviews in database
+  const fallbackTestimonials = [
+    {
+      id: "1",
+      rating: 5,
+      review_text: '"The bridal set I ordered was absolutely stunning. It looked even better in person than in the pictures!"',
+      profile: { full_name: "Priya Sharma" },
+    },
+    {
+      id: "2",
+      rating: 5,
+      review_text: '"Excellent quality and fast shipping. The packaging was so secure and beautiful. Will order again."',
+      profile: { full_name: "Sneha Reddy" },
+    },
+    {
+      id: "3",
+      rating: 4,
+      review_text: '"Loved the intricate details on the temple jewellery. Truly a piece of art."',
+      profile: { full_name: "Anjali Verma" },
+    },
+  ];
+
+  const displayReviews = reviews.length > 0 ? reviews : fallbackTestimonials;
+
   const renderStars = (rating: number) => {
     return Array(5)
       .fill(0)
@@ -33,6 +39,8 @@ const Testimonials = () => {
         />
       ));
   };
+
+  if (isLoading) return null;
 
   return (
     <section className="py-16 bg-background">
@@ -47,19 +55,19 @@ const Testimonials = () => {
           </button>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-12">
-            {testimonials.map((testimonial) => (
+            {displayReviews.slice(0, 3).map((review) => (
               <div
-                key={testimonial.id}
+                key={review.id}
                 className="bg-surface p-8 rounded border border-border"
               >
                 <div className="flex justify-center text-primary text-xs mb-4">
-                  {renderStars(testimonial.rating)}
+                  {renderStars(review.rating)}
                 </div>
                 <p className="text-sm italic text-muted-foreground mb-6 leading-relaxed">
-                  {testimonial.text}
+                  "{review.review_text}"
                 </p>
                 <p className="text-xs font-bold uppercase tracking-wide text-foreground">
-                  - {testimonial.author}
+                  - {review.profile?.full_name || "Anonymous"}
                 </p>
               </div>
             ))}

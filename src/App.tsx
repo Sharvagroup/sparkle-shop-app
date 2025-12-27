@@ -21,6 +21,9 @@ import Categories from "./pages/admin/Categories";
 import Collections from "./pages/admin/Collections";
 import AdminProducts from "./pages/admin/Products";
 import Banners from "./pages/admin/Banners";
+import Offers from "./pages/admin/Offers";
+import Orders from "./pages/admin/Orders";
+import Reviews from "./pages/admin/Reviews";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -53,9 +56,9 @@ const App = () => (
               <Route path="products" element={<AdminProducts />} />
               <Route path="collections" element={<Collections />} />
               <Route path="banners" element={<Banners />} />
-              <Route path="offers" element={<Dashboard />} />
-              <Route path="orders" element={<Dashboard />} />
-              <Route path="reviews" element={<Dashboard />} />
+              <Route path="offers" element={<Offers />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="reviews" element={<Reviews />} />
               <Route path="announcements" element={<Dashboard />} />
               <Route path="homepage" element={<Dashboard />} />
               <Route path="footer-links" element={<Dashboard />} />
