@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
@@ -10,21 +11,52 @@ import Offers from "@/components/sections/Offers";
 import Testimonials from "@/components/sections/Testimonials";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+
+interface HomepageSettings {
+  sections: string[];
+}
+
+const sectionComponents: Record<string, React.ComponentType> = {
+  hero: Hero,
+  sale_banner: SaleBanner,
+  categories: Categories,
+  offers: Offers,
+  new_arrivals: NewArrivals,
+  best_sellers: BestSellers,
+  celebrity_specials: CelebritySpecials,
+  testimonials: Testimonials,
+};
+
+const defaultSections = [
+  "hero",
+  "sale_banner",
+  "categories",
+  "offers",
+  "new_arrivals",
+  "best_sellers",
+  "celebrity_specials",
+  "testimonials",
+];
 
 const Index = () => {
+  const { data: homepageSettings } = useSiteSetting<HomepageSettings>("homepage");
+
+  const sectionsToRender = useMemo(() => {
+    const sections = homepageSettings?.sections || defaultSections;
+    return sections
+      .map((key) => ({ key, Component: sectionComponents[key] }))
+      .filter((item) => item.Component);
+  }, [homepageSettings]);
+
   return (
     <div className="min-h-screen bg-background">
       <PromoBanner />
       <Header />
       <main>
-        <Hero />
-        <SaleBanner />
-        <Categories />
-        <Offers />
-        <NewArrivals />
-        <BestSellers />
-        <CelebritySpecials />
-        <Testimonials />
+        {sectionsToRender.map(({ key, Component }) => (
+          <Component key={key} />
+        ))}
       </main>
       <Footer />
       <WhatsAppButton />

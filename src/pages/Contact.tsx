@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, Instagram, Youtube } from "lucide-react";
+import { Phone, Mail, MapPin, Instagram, Youtube, Facebook, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { z } from "zod";
+import { useSiteSetting, ContactSettings, SocialSettings } from "@/hooks/useSiteSettings";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -14,8 +16,16 @@ const contactSchema = z.object({
   message: z.string().trim().min(1, "Message is required").max(1000, "Message must be less than 1000 characters"),
 });
 
+interface BusinessHoursSettings {
+  hours: Array<{ day: string; hours: string; closed: boolean }>;
+}
+
 const Contact = () => {
   const { toast } = useToast();
+  const { data: contact, isLoading: contactLoading } = useSiteSetting<ContactSettings>("contact");
+  const { data: social, isLoading: socialLoading } = useSiteSetting<SocialSettings>("social");
+  const { data: businessHoursSettings } = useSiteSetting<BusinessHoursSettings>("business_hours");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -61,28 +71,39 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Phone Number",
-      primary: "+1 (212) 555-0123",
+      primary: contact?.phone || "+91 1234567890",
       secondary: "Mon-Fri 9am to 6pm",
     },
     {
       icon: Mail,
       title: "Email Address",
-      primary: "hello@sharvajewellery.com",
+      primary: contact?.email || "support@store.com",
       secondary: "We reply within 24 hours",
     },
     {
       icon: MapPin,
       title: "Store Address",
-      primary: "123 Madison Avenue",
-      secondary: "New York, NY 10016",
+      primary: contact?.address?.split(',')[0] || "Store Address",
+      secondary: contact?.address?.split(',').slice(1).join(',') || "City, Country",
     },
   ];
 
-  const businessHours = [
+  const defaultBusinessHours = [
     { day: "Monday - Friday", hours: "10:00 AM - 8:00 PM", closed: false },
     { day: "Saturday", hours: "11:00 AM - 7:00 PM", closed: false },
     { day: "Sunday", hours: "Closed", closed: true },
   ];
+
+  const businessHours = businessHoursSettings?.hours || defaultBusinessHours;
+
+  const socialLinks = [
+    { icon: Instagram, url: social?.instagram, label: "Instagram" },
+    { icon: Youtube, url: social?.youtube, label: "YouTube" },
+    { icon: Facebook, url: social?.facebook, label: "Facebook" },
+    { icon: Twitter, url: social?.twitter, label: "Twitter" },
+  ].filter(s => s.url);
+
+  const isLoading = contactLoading || socialLoading;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -93,7 +114,7 @@ const Contact = () => {
         {/* Hero Section */}
         <section className="relative h-[300px] md:h-[400px] w-full flex items-center justify-center bg-foreground overflow-hidden">
           <img 
-            alt="Contact Sharva Jewelry" 
+            alt="Contact Us" 
             className="absolute inset-0 w-full h-full object-cover opacity-80"
             src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop"
           />
@@ -209,20 +230,34 @@ const Contact = () => {
                   <h2 className="text-3xl md:text-4xl font-display text-foreground mb-10">
                     Our Details
                   </h2>
-                  <div className="space-y-8">
-                    {contactDetails.map((detail) => (
-                      <div key={detail.title} className="flex items-start gap-5">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-primary shrink-0">
-                          <detail.icon size={20} />
+                  {isLoading ? (
+                    <div className="space-y-6">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex gap-4">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-32" />
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-display text-lg text-foreground mb-1">{detail.title}</h3>
-                          <p className="text-muted-foreground text-sm">{detail.primary}</p>
-                          <p className="text-muted-foreground text-xs mt-1 italic">{detail.secondary}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-8">
+                      {contactDetails.map((detail) => (
+                        <div key={detail.title} className="flex items-start gap-5">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-primary shrink-0">
+                            <detail.icon size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-display text-lg text-foreground mb-1">{detail.title}</h3>
+                            <p className="text-muted-foreground text-sm">{detail.primary}</p>
+                            <p className="text-muted-foreground text-xs mt-1 italic">{detail.secondary}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Business Hours */}
@@ -257,27 +292,27 @@ const Contact = () => {
                 </div>
 
                 {/* Social Links */}
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm font-bold uppercase tracking-wider text-foreground">
-                    Follow Us:
-                  </span>
-                  <div className="flex gap-4">
-                    <a 
-                      href="#" 
-                      className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors bg-background"
-                      aria-label="Instagram"
-                    >
-                      <Instagram size={16} />
-                    </a>
-                    <a 
-                      href="#" 
-                      className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors bg-background"
-                      aria-label="YouTube"
-                    >
-                      <Youtube size={16} />
-                    </a>
+                {socialLinks.length > 0 && (
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-sm font-bold uppercase tracking-wider text-foreground">
+                      Follow Us:
+                    </span>
+                    <div className="flex gap-4">
+                      {socialLinks.map((link) => (
+                        <a 
+                          key={link.label}
+                          href={link.url} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors bg-background"
+                          aria-label={link.label}
+                        >
+                          <link.icon size={16} />
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
