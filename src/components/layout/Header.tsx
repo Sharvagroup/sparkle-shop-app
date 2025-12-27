@@ -1,9 +1,12 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
+import { useCart } from "@/hooks/useCart";
+import { useWishlistCount } from "@/hooks/useWishlist";
+import { useSiteSetting, BrandingSettings } from "@/hooks/useSiteSettings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +18,18 @@ import {
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: categories = [] } = useCategories();
   const { data: collections = [] } = useCollections();
+  const { data: cartItems = [] } = useCart();
+  const { data: wishlistCount = 0 } = useWishlistCount();
+  const { data: branding } = useSiteSetting<BrandingSettings>("branding");
+
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const siteName = branding?.siteName || "SHARVA";
+  const logoUrl = branding?.logoUrl;
 
   // Build nav items with dynamic categories
   const navItems = useMemo(() => {
@@ -62,9 +74,9 @@ const Header = () => {
         href: "/about",
         children: [
           { label: "Our Story", href: "/about" },
-          { label: "Size Guide", href: "#" },
-          { label: "Customer Care", href: "#" },
-          { label: "Store Locator", href: "#" }
+          { label: "Size Guide", href: "/size-guide" },
+          { label: "FAQ", href: "/faq" },
+          { label: "Contact", href: "/contact" }
         ],
       },
       { label: "Contact", href: "/contact" },
@@ -75,14 +87,28 @@ const Header = () => {
     await signOut();
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
+
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-8 py-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo and Mobile Menu */}
           <div className="w-full md:w-auto flex justify-between items-center">
-            <Link to="/" className="text-3xl font-display font-bold text-primary tracking-wide">
-              SHARVA
+            <Link to="/" className="flex items-center gap-2">
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName} className="h-10 w-auto" />
+              ) : (
+                <span className="text-3xl font-display font-bold text-primary tracking-wide">
+                  {siteName}
+                </span>
+              )}
             </Link>
             <button
               className="md:hidden text-foreground"
@@ -93,16 +119,18 @@ const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-md w-full relative">
+          <form onSubmit={handleSearch} className="flex-1 max-w-md w-full relative">
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for jewellery..."
               className="w-full bg-muted border border-border rounded-full py-2 px-4 pl-4 pr-10 focus:outline-none focus:border-primary text-sm transition-colors"
             />
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary">
+            <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary">
               <Search size={18} />
             </button>
-          </div>
+          </form>
 
           {/* Action Icons */}
           <div className="flex items-center space-x-6 text-sm">
@@ -150,9 +178,11 @@ const Header = () => {
             >
               <Heart size={20} />
               <span className="hidden md:inline">Wishlist</span>
-              <span className="absolute -top-1 left-2.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                0
-              </span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 left-2.5 bg-primary text-primary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
             <Link
               to="/cart"
@@ -160,9 +190,11 @@ const Header = () => {
             >
               <ShoppingBag size={20} />
               <span className="hidden md:inline">Cart</span>
-              <span className="absolute -top-1 left-2.5 bg-secondary text-secondary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                2
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 left-2.5 bg-secondary text-secondary-foreground text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
@@ -208,6 +240,7 @@ const Header = () => {
                 <Link
                   to={item.href}
                   className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
@@ -218,6 +251,7 @@ const Header = () => {
                         key={child.label}
                         to={child.href}
                         className="block text-xs text-muted-foreground hover:text-primary transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
                       >
                         {child.label}
                       </Link>
@@ -241,6 +275,7 @@ const Header = () => {
                 <Link
                   to="/auth"
                   className="flex items-center space-x-2 text-sm hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   <User size={16} />
                   <span>Sign In</span>

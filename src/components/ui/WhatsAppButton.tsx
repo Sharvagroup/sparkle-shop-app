@@ -4,9 +4,9 @@ import { useSiteSetting, ContactSettings } from "@/hooks/useSiteSettings";
 const WhatsAppButton = () => {
   const { data: contact } = useSiteSetting<ContactSettings>("contact");
   
-  // Extract phone number and remove non-digits for WhatsApp URL
-  const phone = contact?.phone || "+919876543210";
-  const cleanPhone = phone.replace(/\D/g, "");
+  // Use WhatsApp number first, fallback to phone
+  const whatsappNumber = contact?.whatsapp || contact?.phone || "+919876543210";
+  const cleanPhone = whatsappNumber.replace(/\D/g, "");
   
   const message = encodeURIComponent("Hello! I have a question about your jewelry collection.");
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;

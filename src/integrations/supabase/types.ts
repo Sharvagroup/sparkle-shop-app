@@ -276,14 +276,18 @@ export type Database = {
           created_at: string
           description: string | null
           discount_code: string | null
+          discount_type: string | null
+          discount_value: number | null
           display_order: number | null
           end_date: string | null
           id: string
           image_url: string
           is_active: boolean | null
           link_url: string | null
+          min_cart_value: number | null
           start_date: string | null
           subtitle: string | null
+          terms_conditions: string | null
           title: string
           updated_at: string
         }
@@ -292,14 +296,18 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_code?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
           display_order?: number | null
           end_date?: string | null
           id?: string
           image_url: string
           is_active?: boolean | null
           link_url?: string | null
+          min_cart_value?: number | null
           start_date?: string | null
           subtitle?: string | null
+          terms_conditions?: string | null
           title: string
           updated_at?: string
         }
@@ -308,14 +316,18 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_code?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
           display_order?: number | null
           end_date?: string | null
           id?: string
           image_url?: string
           is_active?: boolean | null
           link_url?: string | null
+          min_cart_value?: number | null
           start_date?: string | null
           subtitle?: string | null
+          terms_conditions?: string | null
           title?: string
           updated_at?: string
         }
@@ -676,6 +688,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
