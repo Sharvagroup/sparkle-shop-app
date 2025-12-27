@@ -24,6 +24,11 @@ import Banners from "./pages/admin/Banners";
 import Offers from "./pages/admin/Offers";
 import Orders from "./pages/admin/Orders";
 import Reviews from "./pages/admin/Reviews";
+import Announcements from "./pages/admin/Announcements";
+import Homepage from "./pages/admin/Homepage";
+import FooterLinks from "./pages/admin/FooterLinks";
+import Settings from "./pages/admin/Settings";
+import Team from "./pages/admin/Team";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -59,11 +64,11 @@ const App = () => (
               <Route path="offers" element={<Offers />} />
               <Route path="orders" element={<Orders />} />
               <Route path="reviews" element={<Reviews />} />
-              <Route path="announcements" element={<Dashboard />} />
-              <Route path="homepage" element={<Dashboard />} />
-              <Route path="footer-links" element={<Dashboard />} />
-              <Route path="settings" element={<Dashboard />} />
-              <Route path="team" element={<Dashboard />} />
+              <Route path="announcements" element={<Announcements />} />
+              <Route path="homepage" element={<Homepage />} />
+              <Route path="footer-links" element={<FooterLinks />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="team" element={<Team />} />
             </Route>
             
             <Route path="/access-denied" element={<AccessDenied />} />
