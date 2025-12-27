@@ -26,9 +26,12 @@ import {
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useAddToCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProductReviews } from "@/hooks/useReviews";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import ReviewForm from "@/components/ui/ReviewForm";
+import WhatsAppButton from "@/components/ui/WhatsAppButton";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
