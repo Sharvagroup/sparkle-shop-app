@@ -3,6 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Json } from "@/integrations/supabase/types";
 
+export interface BrandingSettings {
+  siteName: string;
+  tagline: string;
+  logoUrl: string;
+  faviconUrl: string;
+  loadingImageUrl: string;
+}
+
 export interface ContactSettings {
   email: string;
   phone: string;
