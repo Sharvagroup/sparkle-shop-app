@@ -10,6 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Offer, OfferInsert, uploadOfferImage } from "@/hooks/useOffers";
 import { Loader2, Upload } from "lucide-react";
 import { LinkUrlAutocomplete } from "./LinkUrlAutocomplete";
@@ -30,6 +37,10 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
   const [linkUrl, setLinkUrl] = useState("");
   const [buttonText, setButtonText] = useState("Shop Now");
   const [discountCode, setDiscountCode] = useState("");
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState(0);
+  const [minCartValue, setMinCartValue] = useState(0);
+  const [termsConditions, setTermsConditions] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [displayOrder, setDisplayOrder] = useState(0);
@@ -45,6 +56,10 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
       setLinkUrl(offer.link_url || "");
       setButtonText(offer.button_text || "Shop Now");
       setDiscountCode(offer.discount_code || "");
+      setDiscountType((offer as any).discount_type || "percentage");
+      setDiscountValue((offer as any).discount_value || 0);
+      setMinCartValue((offer as any).min_cart_value || 0);
+      setTermsConditions((offer as any).terms_conditions || "");
       setStartDate(offer.start_date ? offer.start_date.split("T")[0] : "");
       setEndDate(offer.end_date ? offer.end_date.split("T")[0] : "");
       setDisplayOrder(offer.display_order || 0);
@@ -62,6 +77,10 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
     setLinkUrl("");
     setButtonText("Shop Now");
     setDiscountCode("");
+    setDiscountType("percentage");
+    setDiscountValue(0);
+    setMinCartValue(0);
+    setTermsConditions("");
     setStartDate("");
     setEndDate("");
     setDisplayOrder(0);
@@ -97,7 +116,12 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
       end_date: endDate ? new Date(endDate).toISOString() : null,
       display_order: displayOrder,
       is_active: isActive,
-    });
+      // Extended fields
+      discount_type: discountType,
+      discount_value: discountValue,
+      min_cart_value: minCartValue,
+      terms_conditions: termsConditions || null,
+    } as any);
   };
 
   return (
@@ -133,7 +157,7 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={3}
+              rows={2}
             />
           </div>
 
@@ -172,6 +196,60 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
             </div>
           </div>
 
+          {/* Discount Section */}
+          <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+            <h4 className="font-medium text-sm">Discount Details</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Discount Type</Label>
+                <Select value={discountType} onValueChange={setDiscountType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage (%)</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Discount Value</Label>
+                <Input
+                  type="number"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                  placeholder={discountType === "percentage" ? "e.g., 20" : "e.g., 500"}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Discount Code</Label>
+                <Input
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                  placeholder="e.g., SAVE20"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Minimum Cart Value (₹)</Label>
+              <Input
+                type="number"
+                value={minCartValue}
+                onChange={(e) => setMinCartValue(parseFloat(e.target.value) || 0)}
+                placeholder="Minimum order amount for this offer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Terms & Conditions</Label>
+              <Textarea
+                value={termsConditions}
+                onChange={(e) => setTermsConditions(e.target.value)}
+                rows={2}
+                placeholder="Enter offer terms and conditions..."
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="linkUrl">Link URL</Label>
@@ -185,16 +263,6 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
                 onChange={(e) => setButtonText(e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="discountCode">Discount Code</Label>
-            <Input
-              id="discountCode"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              placeholder="e.g., SAVE20"
-            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

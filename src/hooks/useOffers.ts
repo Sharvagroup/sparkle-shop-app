@@ -11,6 +11,10 @@ export interface Offer {
   link_url: string | null;
   button_text: string | null;
   discount_code: string | null;
+  discount_type: string | null;
+  discount_value: number | null;
+  min_cart_value: number | null;
+  terms_conditions: string | null;
   start_date: string | null;
   end_date: string | null;
   display_order: number | null;
