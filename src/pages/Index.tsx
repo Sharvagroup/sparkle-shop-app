@@ -6,6 +6,7 @@ import Categories from "@/components/sections/Categories";
 import NewArrivals from "@/components/sections/NewArrivals";
 import BestSellers from "@/components/sections/BestSellers";
 import CelebritySpecials from "@/components/sections/CelebritySpecials";
+import Offers from "@/components/sections/Offers";
 import Testimonials from "@/components/sections/Testimonials";
 import Footer from "@/components/layout/Footer";
 
@@ -18,6 +19,7 @@ const Index = () => {
         <Hero />
         <SaleBanner />
         <Categories />
+        <Offers />
         <NewArrivals />
         <BestSellers />
         <CelebritySpecials />
