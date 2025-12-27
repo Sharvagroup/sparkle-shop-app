@@ -28,7 +28,7 @@ const Homepage = () => {
 
   useEffect(() => {
     if (settings?.homepage) {
-      const homepageSettings = settings.homepage as HomepageSettings;
+      const homepageSettings = settings.homepage as unknown as HomepageSettings;
       setSections(homepageSettings.sections || Object.keys(sectionLabels));
     } else {
       setSections(Object.keys(sectionLabels));

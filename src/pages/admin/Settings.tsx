@@ -58,11 +58,11 @@ const Settings = () => {
 
   useEffect(() => {
     if (settings) {
-      const branding = settings.branding as BrandingSettings | undefined;
-      const contact = settings.contact as ContactSettings | undefined;
-      const social = settings.social as SocialSettings | undefined;
-      const theme = settings.theme as ThemeSettings | undefined;
-      const seo = settings.seo as SeoSettings | undefined;
+      const branding = settings.branding as unknown as BrandingSettings | undefined;
+      const contact = settings.contact as unknown as ContactSettings | undefined;
+      const social = settings.social as unknown as SocialSettings | undefined;
+      const theme = settings.theme as unknown as ThemeSettings | undefined;
+      const seo = settings.seo as unknown as SeoSettings | undefined;
 
       if (branding) {
         setSiteName(branding.siteName || "");
