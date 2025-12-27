@@ -39,6 +39,7 @@ const ProductDetail = () => {
   const { user } = useAuth();
   const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: allProducts = [] } = useProducts();
+  const { data: productReviews = [] } = useProductReviews(product?.id || "");
   const addToCart = useAddToCart();
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -495,6 +496,78 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* Customer Reviews */}
+        <section className="container mx-auto px-4 md:px-8 py-16 border-t border-border">
+          <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
+            Customer Reviews
+          </h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            {/* Existing Reviews */}
+            <div>
+              <h3 className="text-lg font-bold uppercase tracking-wide mb-6">
+                {productReviews.length > 0 ? `Reviews (${productReviews.length})` : "No reviews yet"}
+              </h3>
+              
+              {productReviews.length > 0 ? (
+                <div className="space-y-6">
+                  {productReviews.map((review) => (
+                    <div key={review.id} className="bg-card border border-border rounded-lg p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              className={star <= review.rating ? "fill-primary text-primary" : "text-border"}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {review.title && (
+                        <h4 className="font-bold text-foreground mb-1">{review.title}</h4>
+                      )}
+                      <p className="text-muted-foreground text-sm">{review.review_text}</p>
+                      {review.profile?.full_name && (
+                        <p className="text-xs text-muted-foreground mt-3">
+                          — {review.profile.full_name}
+                        </p>
+                      )}
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {review.images.map((img, i) => (
+                            <img
+                              key={i}
+                              src={img}
+                              alt={`Review image ${i + 1}`}
+                              className="w-16 h-16 object-cover rounded border border-border"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Be the first to review this product!
+                </p>
+              )}
+            </div>
+            
+            {/* Review Form */}
+            <div>
+              <h3 className="text-lg font-bold uppercase tracking-wide mb-6">
+                Write a Review
+              </h3>
+              {product && <ReviewForm productId={product.id} />}
+            </div>
+          </div>
+        </section>
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="container mx-auto px-4 md:px-8 py-16 border-t border-border">
@@ -522,6 +595,7 @@ const ProductDetail = () => {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };
