@@ -5,9 +5,11 @@ import { toast } from "sonner";
 export interface BannerTheme {
   content_position?: "left" | "center" | "right";
   overlay_opacity?: number;
+  overlay_color?: string;
   edge_fade?: boolean;
   button_shape?: "rounded" | "box";
-  height_override?: "small" | "medium" | "large";
+  image_fit?: "cover" | "contain" | "fill";
+  image_zoom?: number;
 }
 
 export interface Banner {

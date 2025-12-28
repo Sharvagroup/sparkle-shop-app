@@ -101,6 +101,31 @@ const Hero = () => {
         const overlayOpacity = theme?.overlay_opacity ?? 40;
         const edgeFade = theme?.edge_fade || false;
 
+        // Image settings
+        const imageFit = theme?.image_fit || "cover";
+        const imageZoom = theme?.image_zoom ?? 100;
+        const overlayColor = theme?.overlay_color || "#000000";
+
+        // Convert hex to rgba
+        const hexToRgba = (hex: string, alpha: number) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
+        // Get object-fit style
+        const getObjectFitStyle = () => {
+          switch (imageFit) {
+            case "contain":
+              return "object-contain";
+            case "fill":
+              return "object-fill";
+            default:
+              return "object-cover";
+          }
+        };
+
         return (
           <div
             key={banner.id}
@@ -108,27 +133,33 @@ const Hero = () => {
               index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
-            {/* Background Image */}
-            <img
-              src={banner.image_url}
-              alt={banner.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+            {/* Background Image with fit and zoom */}
+            <div className="absolute inset-0 overflow-hidden">
+              <img
+                src={banner.image_url}
+                alt={banner.title}
+                className={`absolute inset-0 w-full h-full ${getObjectFitStyle()}`}
+                style={{
+                  transform: `scale(${imageZoom / 100})`,
+                  transformOrigin: "center center",
+                }}
+              />
+            </div>
             
-            {/* Gradient Overlay with dynamic opacity */}
+            {/* Gradient Overlay with custom color */}
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity / 100}) 0%, rgba(0,0,0,${overlayOpacity / 200}) 50%, transparent 100%)`,
+                background: `linear-gradient(to top, ${hexToRgba(overlayColor, overlayOpacity / 100)} 0%, ${hexToRgba(overlayColor, overlayOpacity / 200)} 50%, transparent 100%)`,
               }}
             />
 
-            {/* Edge Fade Effect */}
+            {/* Edge Fade Effect with custom color */}
             {edgeFade && (
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  boxShadow: "inset 0 0 100px 50px rgba(0,0,0,0.5)",
+                  boxShadow: `inset 0 0 100px 50px ${hexToRgba(overlayColor, 0.5)}`,
                 }}
               />
             )}
