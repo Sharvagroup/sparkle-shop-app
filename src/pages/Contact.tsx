@@ -20,11 +20,19 @@ interface BusinessHoursSettings {
   hours: Array<{ day: string; hours: string; closed: boolean }>;
 }
 
+interface ContactPageSettings {
+  heroImage: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  mapEmbedUrl: string;
+}
+
 const Contact = () => {
   const { toast } = useToast();
   const { data: contact, isLoading: contactLoading } = useSiteSetting<ContactSettings>("contact");
   const { data: social, isLoading: socialLoading } = useSiteSetting<SocialSettings>("social");
   const { data: businessHoursSettings } = useSiteSetting<BusinessHoursSettings>("business_hours");
+  const { data: contactPage } = useSiteSetting<ContactPageSettings>("contact_page");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -114,17 +122,17 @@ const Contact = () => {
         {/* Hero Section */}
         <section className="relative h-[300px] md:h-[400px] w-full flex items-center justify-center bg-foreground overflow-hidden">
           <img 
-            alt="Contact Us" 
+            alt={contactPage?.heroTitle || "Contact Us"} 
             className="absolute inset-0 w-full h-full object-cover opacity-80"
-            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop"
+            src={contactPage?.heroImage || "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop"}
           />
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-display text-white mb-2 drop-shadow-md tracking-wider">
-              Contact Us
+              {contactPage?.heroTitle || "Contact Us"}
             </h1>
             <p className="text-gray-200 text-lg font-light tracking-wide">
-              We're here to assist you with every query
+              {contactPage?.heroSubtitle || "We're here to assist you with every query"}
             </p>
           </div>
         </section>
@@ -281,7 +289,7 @@ const Contact = () => {
                 {/* Map */}
                 <div className="w-full h-56 bg-muted rounded-sm overflow-hidden grayscale filter hover:grayscale-0 transition-all duration-500">
                   <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425878428698!3d40.74076364379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c16587d%3A0x44b6c6563456747b!2s123%20Madison%20Ave%2C%20New%20York%2C%20NY%2010016%2C%20USA!5e0!3m2!1sen!2s!4v1647424683072!5m2!1sen!2s"
+                    src={contactPage?.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425878428698!3d40.74076364379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c16587d%3A0x44b6c6563456747b!2s123%20Madison%20Ave%2C%20New%20York%2C%20NY%2010016%2C%20USA!5e0!3m2!1sen!2s!4v1647424683072!5m2!1sen!2s"}
                     width="100%" 
                     height="100%" 
                     style={{ border: 0 }} 
