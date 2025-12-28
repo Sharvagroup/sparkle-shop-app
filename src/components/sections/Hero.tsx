@@ -42,33 +42,9 @@ const Hero = () => {
     );
   }
 
-  // No banners - show fallback
+  // No banners - hide section
   if (banners.length === 0) {
-    return (
-      <section className="relative h-[500px] md:h-[600px] w-full flex items-center justify-center bg-muted overflow-hidden">
-        <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIKiMJGKBlwXT4Ea1wCLiwQMsLknXl2_hlS-0ReOUh2NuM8ONcHB2irx2kSTxRz6ZMI0yxhdeQqpZFdnHEEgEIyZt8GXAneitQ3ct9hW5yQWJluHWbSTMbKhfdk5H6d56BA3kK5Hs1z51OO8ruNVsb2HlKFasxk8edMUnKoYaKtvV5ns6CmlKC3jpfxuxLbkex-xcFYoeXTPWtLSbF5CaFrT6Kji3VQ72xQ5ZOcXNHdCCEvNl8HdJbOcJ3l2j4ntUyws085O48X08"
-          alt="Luxury gold jewelry background"
-          className="absolute inset-0 w-full h-full object-cover opacity-80"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        <div className="relative z-10 text-center px-4 max-w-3xl mx-auto animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-display text-white mb-4 drop-shadow-md">
-            Timeless Elegance
-          </h1>
-          <p className="text-gray-100 text-lg md:text-xl mb-8 font-light max-w-xl mx-auto drop-shadow-sm">
-            Discover our handcrafted collection of exquisite jewelry designed to make every moment unforgettable.
-          </p>
-          <Button 
-            size="lg"
-            className="bg-primary hover:bg-primary-dark text-primary-foreground font-medium py-3 px-8 uppercase tracking-wide transition-colors shadow-lg"
-            asChild
-          >
-            <Link to="/products?new=true">Shop New Arrivals</Link>
-          </Button>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   const currentBanner = banners[currentSlide];
