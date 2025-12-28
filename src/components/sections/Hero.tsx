@@ -81,11 +81,11 @@ const Hero = () => {
     const position = theme?.content_position || "center";
     switch (position) {
       case "left":
-        return "items-start text-left";
+        return "items-start text-left justify-start";
       case "right":
-        return "items-end text-right";
+        return "items-end text-right justify-end";
       default:
-        return "items-center text-center";
+        return "items-center text-center justify-center";
     }
   };
 
@@ -182,8 +182,8 @@ const Hero = () => {
             )}
             
             {/* Content */}
-            <div className={`relative z-10 h-full flex justify-center ${getContentPositionClasses(theme)}`}>
-              <div className={`flex flex-col ${getContentPositionClasses(theme)} px-8 md:px-16 max-w-4xl mx-auto justify-center h-full animate-fade-in`}>
+            <div className={`relative z-10 h-full w-full flex px-8 md:px-16 ${getContentPositionClasses(theme)}`}>
+              <div className={`flex flex-col max-w-4xl ${theme?.content_position === 'left' ? 'items-start text-left' : theme?.content_position === 'right' ? 'items-end text-right' : 'items-center text-center'} justify-center h-full animate-fade-in`}>
                 <h1 className="text-4xl md:text-6xl font-display text-white mb-4 drop-shadow-md">
                   {banner.title}
                 </h1>
