@@ -18,8 +18,8 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
+import { useMaterials } from "@/hooks/useDynamicFilters";
 
-const materials = ["Gold Plated", "Silver", "Brass", "Copper", "Oxidized"];
 const ITEMS_PER_PAGE = 12;
 
 const Products = () => {
@@ -34,6 +34,7 @@ const Products = () => {
   const { data: categories = [] } = useCategories();
   const { data: collections = [] } = useCollections();
   const { data: allProducts = [], isLoading } = useProducts();
+  const { data: materials = [] } = useMaterials();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []

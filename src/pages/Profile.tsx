@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Phone, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,19 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { useState } from "react";
 
 const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -26,46 +27,19 @@ const Profile = () => {
     }
   }, [user, loading, navigate]);
 
+  // Sync form state with fetched profile data
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        setFullName(data.full_name || "");
-        setPhone(data.phone || "");
-      }
-      setLoadingProfile(false);
-    };
-
-    fetchProfile();
-  }, [user]);
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setPhone(profile.phone || "");
+    }
+  }, [profile]);
 
   const handleSave = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, phone })
-        .eq("id", user.id);
-
-      if (error) throw error;
-      toast({ title: "Profile updated successfully" });
-    } catch (error: any) {
-      toast({ title: "Failed to update profile", description: error.message, variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
+    await updateProfile.mutateAsync({ full_name: fullName, phone });
   };
 
-  if (loading || loadingProfile) {
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -119,8 +93,8 @@ const Profile = () => {
                 />
               </div>
 
-              <Button onClick={handleSave} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <Button onClick={handleSave} disabled={updateProfile.isPending} className="gap-2">
+                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Save Changes
               </Button>
             </CardContent>

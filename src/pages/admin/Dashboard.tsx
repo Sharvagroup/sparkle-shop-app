@@ -1,9 +1,10 @@
-import { BarChart3, Package, ShoppingCart, Users, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { BarChart3, Package, ShoppingCart, Users, TrendingUp, TrendingDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { ORDER_STATUS_COLORS } from '@/lib/constants';
 
 const Dashboard = () => {
   // Fetch real stats from database
@@ -103,15 +104,7 @@ const Dashboard = () => {
   };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-blue-100 text-blue-800',
-      processing: 'bg-purple-100 text-purple-800',
-      shipped: 'bg-indigo-100 text-indigo-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return ORDER_STATUS_COLORS[status] || 'bg-gray-100 text-gray-800';
   };
 
   const statCards = [
