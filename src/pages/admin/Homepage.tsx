@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
+import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard, CheckCircle2, AlertTriangle, ExternalLink, Paintbrush } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, HomepageSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBanners } from "@/hooks/useBanners";
@@ -13,6 +13,7 @@ import { useActiveOffers } from "@/hooks/useOffers";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useHomepageReviews } from "@/hooks/useReviews";
+import { HeroSectionThemeDialog } from "@/components/admin/HeroSectionThemeDialog";
 
 const sectionLabels: Record<string, { label: string; description: string }> = {
   hero: { label: "Hero Banner", description: "Main carousel/banner at the top" },
@@ -58,6 +59,7 @@ const Homepage = () => {
   const [sections, setSections] = useState<string[]>([]);
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [heroThemeOpen, setHeroThemeOpen] = useState(false);
 
   useEffect(() => {
     if (settings?.homepage) {
@@ -199,6 +201,19 @@ const Homepage = () => {
                       )
                     )}
 
+                    {/* Theme button for Hero section */}
+                    {section === "hero" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setHeroThemeOpen(true)}
+                        title="Hero Section Theme"
+                        className="h-8 w-8"
+                      >
+                        <Paintbrush className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     {/* Visibility toggle */}
                     <div className="flex items-center gap-2">
                       <Switch
@@ -242,6 +257,11 @@ const Homepage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <HeroSectionThemeDialog
+        open={heroThemeOpen}
+        onOpenChange={setHeroThemeOpen}
+      />
     </div>
   );
 };

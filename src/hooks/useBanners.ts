@@ -2,6 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export interface BannerTheme {
+  content_position?: "left" | "center" | "right";
+  overlay_opacity?: number;
+  edge_fade?: boolean;
+  button_shape?: "rounded" | "box";
+  height_override?: "small" | "medium" | "large";
+}
+
 export interface Banner {
   id: string;
   title: string;
@@ -11,11 +19,21 @@ export interface Banner {
   button_text: string | null;
   display_order: number | null;
   is_active: boolean | null;
+  theme: BannerTheme | null;
   created_at: string;
   updated_at: string;
 }
 
-export type BannerInsert = Omit<Banner, "id" | "created_at" | "updated_at">;
+export type BannerInsert = {
+  title: string;
+  subtitle?: string | null;
+  image_url: string;
+  link_url?: string | null;
+  button_text?: string | null;
+  display_order?: number | null;
+  is_active?: boolean | null;
+  theme?: Record<string, unknown> | null;
+};
 export type BannerUpdate = Partial<BannerInsert>;
 
 // Fetch active banners for frontend
@@ -59,7 +77,7 @@ export const useCreateBanner = () => {
     mutationFn: async (banner: BannerInsert) => {
       const { data, error } = await supabase
         .from("banners")
-        .insert(banner)
+        .insert(banner as any)
         .select()
         .single();
 
@@ -85,7 +103,7 @@ export const useUpdateBanner = () => {
     mutationFn: async ({ id, ...banner }: BannerUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from("banners")
-        .update(banner)
+        .update(banner as any)
         .eq("id", id)
         .select()
         .single();

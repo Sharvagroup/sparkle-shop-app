@@ -2,12 +2,21 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useBanners } from "@/hooks/useBanners";
+import { useBanners, BannerTheme } from "@/hooks/useBanners";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface HeroSectionTheme {
+  section_height?: "small" | "medium" | "large" | "full";
+  auto_slide_speed?: number;
+}
 
 const Hero = () => {
   const { data: banners = [], isLoading } = useBanners();
+  const { data: sectionTheme } = useSiteSetting<HeroSectionTheme>("hero_theme");
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const autoSlideSpeed = (sectionTheme?.auto_slide_speed ?? 5) * 1000;
 
   const nextSlide = useCallback(() => {
     if (banners.length === 0) return;
@@ -19,12 +28,12 @@ const Hero = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   }, [banners.length]);
 
-  // Auto-advance slides every 5 seconds
+  // Auto-advance slides
   useEffect(() => {
     if (banners.length <= 1) return;
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, autoSlideSpeed);
     return () => clearInterval(interval);
-  }, [banners.length, nextSlide]);
+  }, [banners.length, nextSlide, autoSlideSpeed]);
 
   // Reset slide index if banners change
   useEffect(() => {
@@ -33,10 +42,45 @@ const Hero = () => {
     }
   }, [banners.length, currentSlide]);
 
+  // Get section height classes
+  const getSectionHeight = () => {
+    const height = sectionTheme?.section_height || "medium";
+    switch (height) {
+      case "small":
+        return "h-[400px]";
+      case "medium":
+        return "h-[500px] md:h-[600px]";
+      case "large":
+        return "h-[600px] md:h-[700px]";
+      case "full":
+        return "h-screen";
+      default:
+        return "h-[500px] md:h-[600px]";
+    }
+  };
+
+  // Get content position classes based on banner theme
+  const getContentPositionClasses = (theme: BannerTheme | null) => {
+    const position = theme?.content_position || "center";
+    switch (position) {
+      case "left":
+        return "items-start text-left";
+      case "right":
+        return "items-end text-right";
+      default:
+        return "items-center text-center";
+    }
+  };
+
+  // Get button shape classes
+  const getButtonShapeClasses = (theme: BannerTheme | null) => {
+    return theme?.button_shape === "box" ? "rounded-md" : "rounded-full";
+  };
+
   // Loading state
   if (isLoading) {
     return (
-      <section className="relative h-[500px] md:h-[600px] w-full bg-muted">
+      <section className={`relative ${getSectionHeight()} w-full bg-muted`}>
         <Skeleton className="w-full h-full" />
       </section>
     );
@@ -50,57 +94,78 @@ const Hero = () => {
   const currentBanner = banners[currentSlide];
 
   return (
-    <section className="relative h-[500px] md:h-[600px] w-full flex items-center justify-center bg-muted overflow-hidden">
+    <section className={`relative ${getSectionHeight()} w-full flex items-center justify-center bg-muted overflow-hidden`}>
       {/* Slides */}
-      {banners.map((banner, index) => (
-        <div
-          key={banner.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          {/* Background Image */}
-          <img
-            src={banner.image_url}
-            alt={banner.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          
-          {/* Content */}
-          <div className="relative z-10 h-full flex items-center justify-center">
-            <div className="text-center px-4 max-w-3xl mx-auto animate-fade-in">
-              <h1 className="text-4xl md:text-6xl font-display text-white mb-4 drop-shadow-md">
-                {banner.title}
-              </h1>
-              {banner.subtitle && (
-                <p className="text-gray-100 text-lg md:text-xl mb-8 font-light max-w-xl mx-auto drop-shadow-sm">
-                  {banner.subtitle}
-                </p>
-              )}
-              {banner.link_url && (
-                <Button 
-                  size="lg"
-                  className="bg-primary hover:bg-primary-dark text-primary-foreground font-medium py-3 px-8 uppercase tracking-wide transition-colors shadow-lg"
-                  asChild
-                >
-                  {banner.link_url.startsWith("http") ? (
-                    <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
-                      {banner.button_text || "Shop Now"}
-                    </a>
-                  ) : (
-                    <Link to={banner.link_url}>
-                      {banner.button_text || "Shop Now"}
-                    </Link>
-                  )}
-                </Button>
-              )}
+      {banners.map((banner, index) => {
+        const theme = banner.theme as BannerTheme | null;
+        const overlayOpacity = theme?.overlay_opacity ?? 40;
+        const edgeFade = theme?.edge_fade || false;
+
+        return (
+          <div
+            key={banner.id}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            {/* Background Image */}
+            <img
+              src={banner.image_url}
+              alt={banner.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            
+            {/* Gradient Overlay with dynamic opacity */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to top, rgba(0,0,0,${overlayOpacity / 100}) 0%, rgba(0,0,0,${overlayOpacity / 200}) 50%, transparent 100%)`,
+              }}
+            />
+
+            {/* Edge Fade Effect */}
+            {edgeFade && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  boxShadow: "inset 0 0 100px 50px rgba(0,0,0,0.5)",
+                }}
+              />
+            )}
+            
+            {/* Content */}
+            <div className={`relative z-10 h-full flex justify-center ${getContentPositionClasses(theme)}`}>
+              <div className={`flex flex-col ${getContentPositionClasses(theme)} px-8 md:px-16 max-w-4xl mx-auto justify-center h-full animate-fade-in`}>
+                <h1 className="text-4xl md:text-6xl font-display text-white mb-4 drop-shadow-md">
+                  {banner.title}
+                </h1>
+                {banner.subtitle && (
+                  <p className="text-gray-100 text-lg md:text-xl mb-8 font-light max-w-xl drop-shadow-sm">
+                    {banner.subtitle}
+                  </p>
+                )}
+                {banner.link_url && (
+                  <Button 
+                    size="lg"
+                    className={`bg-primary hover:bg-primary-dark text-primary-foreground font-medium py-3 px-8 uppercase tracking-wide transition-colors shadow-lg ${getButtonShapeClasses(theme)}`}
+                    asChild
+                  >
+                    {banner.link_url.startsWith("http") ? (
+                      <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+                        {banner.button_text || "Shop Now"}
+                      </a>
+                    ) : (
+                      <Link to={banner.link_url}>
+                        {banner.button_text || "Shop Now"}
+                      </Link>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       
       {/* Navigation Arrows */}
       {banners.length > 1 && (
