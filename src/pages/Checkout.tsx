@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lock, HelpCircle, ShieldCheck, Shield, Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, Tag } from "lucide-react";
 import { useCart, useClearCart } from "@/hooks/useCart";
 import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
+import { INDIAN_STATES } from "@/lib/constants";
 
 const Checkout = () => {
   const { user } = useAuth();
@@ -26,6 +28,12 @@ const Checkout = () => {
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const incrementDiscountUsage = useIncrementDiscountUsage();
+
+  // Get discount from URL params (passed from Cart)
+  const discountCode = searchParams.get("discountCode");
+  const discountAmount = parseFloat(searchParams.get("discountAmount") || "0");
 
   const [email, setEmail] = useState(user?.email || "");
   const [newsletter, setNewsletter] = useState(false);
@@ -38,9 +46,7 @@ const Checkout = () => {
   const [pinCode, setPinCode] = useState("");
   const [country, setCountry] = useState("India");
   const [phone, setPhone] = useState("");
-  const [saveInfo, setSaveInfo] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
-  const [billingAddress, setBillingAddress] = useState("same");
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
 
@@ -49,7 +55,7 @@ const Checkout = () => {
     0
   );
   const shipping = subtotal > 5000 ? 0 : 150;
-  const total = subtotal + shipping;
+  const total = subtotal - discountAmount + shipping;
 
   const formatPrice = (price: number) => {
     return `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
@@ -90,10 +96,16 @@ const Checkout = () => {
         subtotal,
         shipping_amount: shipping,
         tax_amount: 0,
+        discount_amount: discountAmount,
         total_amount: total,
         shipping_address: shippingAddr,
         items: orderItems,
       });
+
+      // Increment discount code usage if one was applied
+      if (discountCode) {
+        await incrementDiscountUsage.mutateAsync(discountCode);
+      }
 
       await clearCart.mutateAsync();
       setOrderNumber(order.order_number);
@@ -195,14 +207,6 @@ const Checkout = () => {
 
       <main className="flex-1">
         <div className="container mx-auto px-4 md:px-8 py-8 md:py-16">
-          <nav className="flex items-center gap-2 text-sm mb-8">
-            <Link to="/" className="text-muted-foreground hover:text-primary">Home</Link>
-            <span className="text-muted-foreground">&gt;</span>
-            <Link to="/cart" className="text-muted-foreground hover:text-primary">Cart</Link>
-            <span className="text-muted-foreground">&gt;</span>
-            <span className="text-foreground font-medium">Checkout</span>
-          </nav>
-
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col lg:flex-row gap-12 xl:gap-20">
               <div className="w-full lg:w-3/5 xl:w-2/3">
@@ -249,29 +253,15 @@ const Checkout = () => {
                       <Select value={state} onValueChange={setState}>
                         <SelectTrigger className="flex-1"><SelectValue placeholder="State" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                          <SelectItem value="Karnataka">Karnataka</SelectItem>
-                          <SelectItem value="Delhi">Delhi</SelectItem>
-                          <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                          <SelectItem value="Gujarat">Gujarat</SelectItem>
+                          {INDIAN_STATES.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <Input placeholder="PIN code" value={pinCode} onChange={(e) => setPinCode(e.target.value)} required className="flex-1" />
                     </div>
 
                     <Input type="tel" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-                  </div>
-                </div>
-
-                {/* Shipping */}
-                <div className="mb-10">
-                  <h2 className="font-display text-2xl font-medium text-foreground mb-4">Shipping method</h2>
-                  <div className="bg-muted border border-border rounded-sm p-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{shipping === 0 ? "Free Shipping" : "Standard Shipping"}</span>
-                      <span className="font-medium">{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
-                    </div>
-                    {shipping === 0 && <p className="text-sm text-muted-foreground mt-1">Orders above ₹5,000 qualify for free shipping</p>}
                   </div>
                 </div>
 
@@ -347,6 +337,15 @@ const Checkout = () => {
                       <span>Subtotal</span>
                       <span>{formatPrice(subtotal)}</span>
                     </div>
+                    {discountCode && discountAmount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span className="flex items-center gap-1">
+                          <Tag className="h-3 w-3" />
+                          {discountCode}
+                        </span>
+                        <span>-{formatPrice(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span>Shipping</span>
                       <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
