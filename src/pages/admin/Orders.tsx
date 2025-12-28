@@ -27,23 +27,7 @@ import { Search, Eye, Package } from "lucide-react";
 import { useAllOrders, useUpdateOrderStatus, Order } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-
-const statusColors: Record<Order["status"], string> = {
-  pending: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-  confirmed: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  processing: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  shipped: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-  delivered: "bg-green-500/10 text-green-600 border-green-500/20",
-  cancelled: "bg-red-500/10 text-red-600 border-red-500/20",
-  refunded: "bg-gray-500/10 text-gray-600 border-gray-500/20",
-};
-
-const paymentStatusColors: Record<Order["payment_status"], string> = {
-  pending: "bg-yellow-500/10 text-yellow-600",
-  paid: "bg-green-500/10 text-green-600",
-  failed: "bg-red-500/10 text-red-600",
-  refunded: "bg-gray-500/10 text-gray-600",
-};
+import { ORDER_STATUS_COLORS, PAYMENT_STATUS_COLORS } from "@/lib/constants";
 
 const Orders = () => {
   const { data: orders = [], isLoading } = useAllOrders();
@@ -159,7 +143,7 @@ const Orders = () => {
                   <TableCell>{order.items?.length || 0} items</TableCell>
                   <TableCell className="font-medium">{formatPrice(order.total_amount)}</TableCell>
                   <TableCell>
-                    <Badge className={paymentStatusColors[order.payment_status]}>
+                    <Badge className={PAYMENT_STATUS_COLORS[order.payment_status] || ""}>
                       {order.payment_status}
                     </Badge>
                   </TableCell>
@@ -168,7 +152,7 @@ const Orders = () => {
                       value={order.status}
                       onValueChange={(value) => handleStatusChange(order.id, value as Order["status"])}
                     >
-                      <SelectTrigger className={`w-[130px] h-8 text-xs ${statusColors[order.status]}`}>
+                      <SelectTrigger className={`w-[130px] h-8 text-xs ${ORDER_STATUS_COLORS[order.status] || ""}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
