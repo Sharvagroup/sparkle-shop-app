@@ -29,6 +29,7 @@ export interface DiscountCodeInput {
 }
 
 export interface AppliedDiscount {
+  id: string;
   code: string;
   type: "percentage" | "fixed";
   value: number;
@@ -51,10 +52,10 @@ export const useDiscountCodes = () => {
   });
 };
 
-// Validate a discount code for a given cart total
+// Validate a discount code for a given cart total (with per-user check)
 export const useValidateDiscountCode = () => {
   return useMutation({
-    mutationFn: async ({ code, cartTotal }: { code: string; cartTotal: number }) => {
+    mutationFn: async ({ code, cartTotal, userId }: { code: string; cartTotal: number; userId?: string }) => {
       const { data, error } = await supabase
         .from("discount_codes")
         .select("*")
@@ -66,6 +67,20 @@ export const useValidateDiscountCode = () => {
       if (!data) throw new Error("Invalid discount code");
 
       const discountCode = data as DiscountCode;
+
+      // Check if user has already used this code
+      if (userId) {
+        const { data: usage } = await supabase
+          .from("discount_code_usages")
+          .select("id")
+          .eq("discount_code_id", discountCode.id)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (usage) {
+          throw new Error("You have already used this discount code");
+        }
+      }
 
       // Check if code has expired
       if (discountCode.expires_at && new Date(discountCode.expires_at) < new Date()) {
@@ -96,6 +111,7 @@ export const useValidateDiscountCode = () => {
       }
 
       return {
+        id: discountCode.id,
         code: discountCode.code,
         type: discountCode.discount_type,
         value: discountCode.discount_value,
