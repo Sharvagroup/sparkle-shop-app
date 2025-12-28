@@ -3,9 +3,11 @@ import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const BestSellers = () => {
   const { data: products = [], isLoading } = useProducts({ isBestSeller: true });
+  const { titles } = useSectionTitles();
 
   // Take first 4 best sellers
   const displayProducts = products.slice(0, 4);
@@ -15,7 +17,7 @@ const BestSellers = () => {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-4 uppercase tracking-widest text-foreground">
-            Best Sellers
+            {titles.bestSellers}
           </h2>
           <div className="w-24 h-0.5 bg-primary mx-auto mb-12" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -36,7 +38,7 @@ const BestSellers = () => {
     <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-4 uppercase tracking-widest text-foreground">
-          Best Sellers
+          {titles.bestSellers}
         </h2>
         <div className="w-24 h-0.5 bg-primary mx-auto mb-12" />
 

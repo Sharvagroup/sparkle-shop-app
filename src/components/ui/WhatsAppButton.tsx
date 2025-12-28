@@ -1,14 +1,17 @@
 import { MessageCircle } from "lucide-react";
 import { useSiteSetting, ContactSettings } from "@/hooks/useSiteSettings";
 
+interface ContactWithMessage extends ContactSettings {
+  whatsappMessage?: string;
+}
+
 const WhatsAppButton = () => {
-  const { data: contact } = useSiteSetting<ContactSettings>("contact");
+  const { data: contact } = useSiteSetting<ContactWithMessage>("contact");
   
-  // Use WhatsApp number first, fallback to phone
   const whatsappNumber = contact?.whatsapp || contact?.phone || "+919876543210";
   const cleanPhone = whatsappNumber.replace(/\D/g, "");
-  
-  const message = encodeURIComponent("Hello! I have a question about your jewelry collection.");
+  const defaultMessage = contact?.whatsappMessage || "Hello! I have a question about your jewelry collection.";
+  const message = encodeURIComponent(defaultMessage);
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
 
   return (
@@ -20,13 +23,9 @@ const WhatsAppButton = () => {
       aria-label="Chat on WhatsApp"
     >
       <MessageCircle className="w-7 h-7 fill-current" />
-      
-      {/* Tooltip */}
       <span className="absolute right-full mr-3 px-3 py-2 bg-card text-foreground text-sm font-medium rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-border hidden md:block">
         Chat with us
       </span>
-      
-      {/* Pulse animation */}
       <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" />
     </a>
   );

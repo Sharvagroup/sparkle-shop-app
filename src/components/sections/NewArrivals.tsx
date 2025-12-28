@@ -3,9 +3,11 @@ import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const NewArrivals = () => {
   const { data: products = [], isLoading } = useProducts({ isNewArrival: true });
+  const { titles } = useSectionTitles();
 
   // Take first 4 new arrivals
   const displayProducts = products.slice(0, 4);
@@ -15,7 +17,7 @@ const NewArrivals = () => {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
-            New Arrivals
+            {titles.newArrivals}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {[1, 2].map((i) => (
@@ -35,7 +37,7 @@ const NewArrivals = () => {
     <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
-          New Arrivals
+          {titles.newArrivals}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">

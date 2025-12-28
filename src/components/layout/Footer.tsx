@@ -2,12 +2,17 @@ import { Link } from "react-router-dom";
 import { useActiveFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteSetting, ContactSettings, BrandingSettings } from "@/hooks/useSiteSettings";
 
+interface LegalSettings {
+  privacyPolicyUrl?: string;
+  termsOfServiceUrl?: string;
+}
+
 const Footer = () => {
   const { data: footerLinks = [] } = useActiveFooterLinks();
   const { data: contact } = useSiteSetting<ContactSettings>("contact");
   const { data: branding } = useSiteSetting<BrandingSettings>("branding");
+  const { data: legal } = useSiteSetting<LegalSettings>("legal");
 
-  // Group links by section
   const groupedLinks = footerLinks.reduce((acc, link) => {
     const section = link.section.toLowerCase();
     if (!acc[section]) acc[section] = [];
@@ -15,7 +20,6 @@ const Footer = () => {
     return acc;
   }, {} as Record<string, FooterLink[]>);
 
-  // Dynamic branding values
   const siteName = branding?.siteName || "Sharva Jewellery Collection";
   const tagline = branding?.tagline || "Minimalist jewelry crafted for the modern individual";
   const logoUrl = branding?.logoUrl;
@@ -26,30 +30,25 @@ const Footer = () => {
   const renderLinkItem = (link: FooterLink) => {
     if (link.is_external) {
       return (
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-primary transition-colors"
-        >
+        <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
           {link.label}
         </a>
       );
     }
-    return (
-      <Link to={link.url} className="hover:text-primary transition-colors">
-        {link.label}
-      </Link>
-    );
+    return <Link to={link.url} className="hover:text-primary transition-colors">{link.label}</Link>;
   };
 
-  const sectionTitles: Record<string, string> = {
-    shop: "Shop",
-    support: "Support",
-    connect: "Connect",
+  const renderLegalLink = (url: string | undefined, label: string, fallbackPath: string) => {
+    if (!url) {
+      return <Link to={fallbackPath} className="hover:text-primary transition-colors">{label}</Link>;
+    }
+    if (url.startsWith("http")) {
+      return <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{label}</a>;
+    }
+    return <Link to={url} className="hover:text-primary transition-colors">{label}</Link>;
   };
 
-  // Get section keys, prioritize common ones first
+  const sectionTitles: Record<string, string> = { shop: "Shop", support: "Support", connect: "Connect" };
   const orderedSections = ["shop", "support", "connect"];
   const allSections = [...new Set([...orderedSections, ...Object.keys(groupedLinks)])];
   const displaySections = allSections.filter((s) => groupedLinks[s]?.length > 0).slice(0, 3);
@@ -58,23 +57,16 @@ const Footer = () => {
     <footer className="bg-card border-t border-border pt-16 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand Info */}
           <div className="pr-0 md:pr-8">
             {logoUrl ? (
               <img src={logoUrl} alt={siteName} className="h-12 w-auto mb-6" />
             ) : (
-              <h3 className="text-2xl font-display font-medium mb-6 text-foreground">
-                {siteName}
-              </h3>
+              <h3 className="text-2xl font-display font-medium mb-6 text-foreground">{siteName}</h3>
             )}
-            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-              {tagline}
-            </p>
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{tagline}</p>
             <div className="mb-6">
               <h4 className="font-bold text-sm text-foreground mb-2">Visit Us</h4>
-              <p className="text-muted-foreground text-sm whitespace-pre-line">
-                {address}
-              </p>
+              <p className="text-muted-foreground text-sm whitespace-pre-line">{address}</p>
             </div>
             <div>
               <h4 className="font-bold text-sm text-foreground mb-2">Contact</h4>
@@ -83,21 +75,15 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Dynamic Link Sections */}
           {displaySections.map((section) => (
             <div key={section}>
-              <h4 className="font-display font-medium text-lg mb-6 text-foreground capitalize">
-                {sectionTitles[section] || section}
-              </h4>
+              <h4 className="font-display font-medium text-lg mb-6 text-foreground capitalize">{sectionTitles[section] || section}</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
-                {groupedLinks[section]?.map((link) => (
-                  <li key={link.id}>{renderLinkItem(link)}</li>
-                ))}
+                {groupedLinks[section]?.map((link) => <li key={link.id}>{renderLinkItem(link)}</li>)}
               </ul>
             </div>
           ))}
 
-          {/* Fallback if no sections from DB */}
           {displaySections.length === 0 && (
             <>
               <div>
@@ -125,19 +111,12 @@ const Footer = () => {
           )}
         </div>
 
-        {/* Bottom Bar */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} {siteName.split(" ")[0]}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/faq" className="hover:text-primary transition-colors">
-              FAQ
-            </Link>
-            <a href="#" className="hover:text-primary transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Terms of Service
-            </a>
+            <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
+            {renderLegalLink(legal?.privacyPolicyUrl, "Privacy Policy", "/privacy-policy")}
+            {renderLegalLink(legal?.termsOfServiceUrl, "Terms of Service", "/terms-of-service")}
           </div>
         </div>
       </div>

@@ -1,10 +1,16 @@
+import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const Categories = () => {
   const { data: categories = [], isLoading } = useCategories();
+  const { titles } = useSectionTitles();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Fallback images for categories without images
   const fallbackImages: Record<string, string> = {
@@ -19,12 +25,45 @@ const Categories = () => {
     return fallbackImages[category.slug] || fallbackImages.necklaces;
   };
 
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", updateScrollButtons);
+      window.addEventListener("resize", updateScrollButtons);
+      return () => {
+        container.removeEventListener("scroll", updateScrollButtons);
+        window.removeEventListener("resize", updateScrollButtons);
+      };
+    }
+  }, [categories]);
+
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+    }
+  };
+
   if (isLoading) {
     return (
       <section className="py-12 bg-surface">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
-            Shop By Category
+            {titles.categories}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 w-full max-w-5xl mx-auto px-4">
             {[1, 2, 3, 4].map((i) => (
@@ -47,20 +86,30 @@ const Categories = () => {
     <section className="py-12 bg-surface">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
-          Shop By Category
+          {titles.categories}
         </h2>
-        
+
         <div className="relative flex items-center justify-center">
-          <button className="hidden md:block absolute left-0 text-muted-foreground hover:text-primary">
+          <button
+            onClick={handleScrollLeft}
+            className={`hidden md:flex absolute left-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
+              canScrollLeft ? "opacity-100" : "opacity-30 cursor-not-allowed"
+            }`}
+            disabled={!canScrollLeft}
+          >
             <ChevronLeft size={36} />
           </button>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 w-full max-w-5xl px-4">
-            {categories.slice(0, 4).map((category, index) => (
-              <Link 
+
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide scroll-smooth px-4 max-w-5xl snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {categories.map((category, index) => (
+              <Link
                 key={category.id}
                 to={`/products?category=${category.slug}`}
-                className="group cursor-pointer"
+                className="group cursor-pointer flex-shrink-0 snap-center"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full overflow-hidden border-4 border-card shadow-lg group-hover:border-primary transition-all duration-300 bg-card flex items-center justify-center">
@@ -76,8 +125,14 @@ const Categories = () => {
               </Link>
             ))}
           </div>
-          
-          <button className="hidden md:block absolute right-0 text-muted-foreground hover:text-primary">
+
+          <button
+            onClick={handleScrollRight}
+            className={`hidden md:flex absolute right-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
+              canScrollRight ? "opacity-100" : "opacity-30 cursor-not-allowed"
+            }`}
+            disabled={!canScrollRight}
+          >
             <ChevronRight size={36} />
           </button>
         </div>
