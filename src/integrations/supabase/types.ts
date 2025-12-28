@@ -80,6 +80,7 @@ export type Database = {
           is_active: boolean | null
           link_url: string | null
           subtitle: string | null
+          theme: Json | null
           title: string
           updated_at: string
         }
@@ -92,6 +93,7 @@ export type Database = {
           is_active?: boolean | null
           link_url?: string | null
           subtitle?: string | null
+          theme?: Json | null
           title: string
           updated_at?: string
         }
@@ -104,6 +106,7 @@ export type Database = {
           is_active?: boolean | null
           link_url?: string | null
           subtitle?: string | null
+          theme?: Json | null
           title?: string
           updated_at?: string
         }

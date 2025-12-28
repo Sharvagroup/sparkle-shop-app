@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, ExternalLink, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BannerForm } from "@/components/admin/BannerForm";
+import { BannerThemeDialog } from "@/components/admin/BannerThemeDialog";
 import {
   Banner,
   useAdminBanners,
@@ -33,9 +34,16 @@ const Banners = () => {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [bannerToTheme, setBannerToTheme] = useState<Banner | null>(null);
 
   const { data: banners = [], isLoading } = useAdminBanners();
   const deleteBanner = useDeleteBanner();
+
+  const handleTheme = (banner: Banner) => {
+    setBannerToTheme(banner);
+    setThemeDialogOpen(true);
+  };
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
@@ -156,11 +164,20 @@ const Banners = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleTheme(banner)}
+                        title="Theme"
+                      >
+                        <Paintbrush className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(banner)}
+                        title="Edit"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -168,6 +185,7 @@ const Banners = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteClick(banner)}
+                        title="Delete"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -184,6 +202,12 @@ const Banners = () => {
         open={formOpen}
         onOpenChange={setFormOpen}
         banner={editingBanner}
+      />
+
+      <BannerThemeDialog
+        open={themeDialogOpen}
+        onOpenChange={setThemeDialogOpen}
+        banner={bannerToTheme}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
