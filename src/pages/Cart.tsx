@@ -4,10 +4,12 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Minus, Plus, Trash2, ArrowLeft, Lock, CreditCard, Building2, ShieldCheck, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowLeft, Lock, CreditCard, Building2, ShieldCheck, Loader2, X, Tag } from "lucide-react";
 import { useCart, useUpdateCartItem, useRemoveFromCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useValidateDiscountCode, AppliedDiscount } from "@/hooks/useDiscountCodes";
+import { toast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { user } = useAuth();
@@ -16,6 +18,8 @@ const Cart = () => {
   const removeFromCart = useRemoveFromCart();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
+  const validateDiscount = useValidateDiscountCode();
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -34,8 +38,43 @@ const Cart = () => {
     0
   );
 
+  const discountAmount = appliedDiscount?.discountAmount || 0;
+
   const formatPrice = (price: number) => {
     return `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      toast({ title: "Please enter a promo code", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const discount = await validateDiscount.mutateAsync({
+        code: promoCode,
+        cartTotal: subtotal,
+      });
+      setAppliedDiscount(discount);
+      toast({ title: "Promo code applied!", description: `You saved ${formatPrice(discount.discountAmount)}` });
+    } catch (error) {
+      toast({ title: "Invalid promo code", description: (error as Error).message, variant: "destructive" });
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedDiscount(null);
+    setPromoCode("");
+    toast({ title: "Promo code removed" });
+  };
+
+  const handleProceedToCheckout = () => {
+    const params = new URLSearchParams();
+    if (appliedDiscount) {
+      params.set("discountCode", appliedDiscount.code);
+      params.set("discountAmount", appliedDiscount.discountAmount.toString());
+    }
+    navigate(`/checkout${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   if (!user) {
@@ -62,17 +101,7 @@ const Cart = () => {
 
       <main className="flex-1">
         <div className="container mx-auto px-4 md:px-8 py-8">
-          <nav className="flex items-center gap-2 text-sm mb-8">
-            <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
-              Home
-            </Link>
-            <span className="text-muted-foreground">&gt;</span>
-            <span className="text-foreground font-medium">Cart</span>
-          </nav>
-
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
-            Your Cart
-          </h1>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">Your Cart</h1>
 
           {isLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,20 +115,13 @@ const Cart = () => {
           ) : cartItems.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg mb-6">Your cart is empty</p>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button asChild>
                 <Link to="/products">Continue Shopping</Link>
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <div className="hidden md:grid grid-cols-12 gap-4 pb-4 border-b border-border text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  <div className="col-span-5">Product</div>
-                  <div className="col-span-2 text-center">Price</div>
-                  <div className="col-span-3 text-center">Quantity</div>
-                  <div className="col-span-2 text-right">Total</div>
-                </div>
-
                 <div className="divide-y divide-border">
                   {cartItems.map((item) => (
                     <div key={item.id} className="py-6">
@@ -121,8 +143,7 @@ const Cart = () => {
                             </Link>
                             <button
                               onClick={() => removeItem(item.id)}
-                              className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2 transition-colors"
-                              disabled={removeFromCart.isPending}
+                              className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2"
                             >
                               <Trash2 className="w-4 h-4" />
                               Remove
@@ -131,7 +152,6 @@ const Cart = () => {
                         </div>
 
                         <div className="md:col-span-2 text-center">
-                          <span className="md:hidden text-sm text-muted-foreground mr-2">Price:</span>
                           <span className="font-medium text-foreground">
                             {formatPrice(item.product?.price || 0)}
                           </span>
@@ -141,16 +161,14 @@ const Cart = () => {
                           <div className="flex items-center border border-border rounded-md">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="p-2 hover:bg-muted transition-colors"
-                              disabled={updateCartItem.isPending}
+                              className="p-2 hover:bg-muted"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
                             <span className="w-12 text-center font-medium">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="p-2 hover:bg-muted transition-colors"
-                              disabled={updateCartItem.isPending}
+                              className="p-2 hover:bg-muted"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -158,7 +176,6 @@ const Cart = () => {
                         </div>
 
                         <div className="md:col-span-2 text-right">
-                          <span className="md:hidden text-sm text-muted-foreground mr-2">Total:</span>
                           <span className="font-semibold text-foreground">
                             {formatPrice((item.product?.price || 0) * item.quantity)}
                           </span>
@@ -180,52 +197,69 @@ const Cart = () => {
 
               <div className="lg:col-span-1">
                 <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
-                  <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-                    Order Summary
-                  </h2>
+                  <h2 className="font-display text-xl font-semibold text-foreground mb-6">Order Summary</h2>
 
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span className="text-sm text-muted-foreground italic">Calculated at checkout</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span className="text-sm text-muted-foreground italic">Inclusive</span>
-                    </div>
+                    {appliedDiscount && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount ({appliedDiscount.code})</span>
+                        <span>-{formatPrice(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="border-t border-border pt-4">
                       <div className="flex justify-between">
                         <span className="font-semibold text-foreground">Total</span>
-                        <span className="font-bold text-lg text-foreground">{formatPrice(subtotal)}</span>
+                        <span className="font-bold text-lg text-foreground">{formatPrice(subtotal - discountAmount)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
                       Promo Code
                     </label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        type="text"
-                        placeholder="Enter code"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button variant="secondary" className="bg-foreground text-background hover:bg-foreground/90">
-                        APPLY
-                      </Button>
-                    </div>
+                    {appliedDiscount ? (
+                      <div className="flex items-center justify-between p-3 mt-2 bg-green-500/10 border border-green-500/30 rounded-md">
+                        <div>
+                          <span className="font-mono font-bold text-green-600">{appliedDiscount.code}</span>
+                          <p className="text-sm text-green-600">
+                            {appliedDiscount.type === "percentage"
+                              ? `${appliedDiscount.value}% off`
+                              : `${formatPrice(appliedDiscount.value)} off`}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={handleRemovePromo}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          type="text"
+                          placeholder="Enter code"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="secondary"
+                          onClick={handleApplyPromo}
+                          disabled={validateDiscount.isPending}
+                        >
+                          {validateDiscount.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "APPLY"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <Button
-                    onClick={() => navigate("/checkout")}
-                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 py-6"
+                    onClick={handleProceedToCheckout}
+                    className="w-full mt-6 gap-2 py-6"
                   >
                     PROCEED TO CHECKOUT
                     <Lock className="w-4 h-4" />
