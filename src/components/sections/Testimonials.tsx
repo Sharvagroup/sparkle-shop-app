@@ -8,51 +8,14 @@ const Testimonials = () => {
   const { titles } = useSectionTitles();
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Fallback testimonials if no reviews in database
-  const fallbackTestimonials = [
-    {
-      id: "1",
-      rating: 5,
-      review_text: '"The bridal set I ordered was absolutely stunning. It looked even better in person than in the pictures!"',
-      profile: { full_name: "Priya Sharma" },
-    },
-    {
-      id: "2",
-      rating: 5,
-      review_text: '"Excellent quality and fast shipping. The packaging was so secure and beautiful. Will order again."',
-      profile: { full_name: "Sneha Reddy" },
-    },
-    {
-      id: "3",
-      rating: 4,
-      review_text: '"Loved the intricate details on the temple jewellery. Truly a piece of art."',
-      profile: { full_name: "Anjali Verma" },
-    },
-    {
-      id: "4",
-      rating: 5,
-      review_text: '"Amazing craftsmanship and attention to detail. The earrings I bought exceeded my expectations!"',
-      profile: { full_name: "Meera Patel" },
-    },
-    {
-      id: "5",
-      rating: 5,
-      review_text: '"Perfect for my wedding! The bridal collection is absolutely gorgeous."',
-      profile: { full_name: "Kavitha Nair" },
-    },
-    {
-      id: "6",
-      rating: 4,
-      review_text: '"Great customer service and beautiful pieces. Highly recommend this store!"',
-      profile: { full_name: "Divya Kumar" },
-    },
-  ];
-
-  const displayReviews = reviews.length > 0 ? reviews : fallbackTestimonials;
+  // Hide section if no reviews
+  if (!isLoading && reviews.length === 0) {
+    return null;
+  }
   const reviewsPerPage = 3;
-  const totalPages = Math.ceil(displayReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
   
-  const currentReviews = displayReviews.slice(
+  const currentReviews = reviews.slice(
     currentPage * reviewsPerPage,
     (currentPage + 1) * reviewsPerPage
   );
