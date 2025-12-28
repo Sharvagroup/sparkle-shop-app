@@ -15,6 +15,7 @@ const Hero = () => {
   const { data: banners = [], isLoading } = useBanners();
   const { data: sectionTheme } = useSiteSetting<HeroSectionTheme>("hero_theme");
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [autoSlideKey, setAutoSlideKey] = useState(0);
 
   const autoSlideSpeed = (sectionTheme?.auto_slide_speed ?? 5) * 1000;
 
@@ -28,12 +29,28 @@ const Hero = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   }, [banners.length]);
 
-  // Auto-advance slides
+  // Manual navigation handlers - reset auto-slide timer
+  const handlePrevSlide = useCallback(() => {
+    prevSlide();
+    setAutoSlideKey((prev) => prev + 1);
+  }, [prevSlide]);
+
+  const handleNextSlide = useCallback(() => {
+    nextSlide();
+    setAutoSlideKey((prev) => prev + 1);
+  }, [nextSlide]);
+
+  const handleDotClick = (index: number) => {
+    setCurrentSlide(index);
+    setAutoSlideKey((prev) => prev + 1);
+  };
+
+  // Auto-advance slides - resets when autoSlideKey changes
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(nextSlide, autoSlideSpeed);
     return () => clearInterval(interval);
-  }, [banners.length, nextSlide, autoSlideSpeed]);
+  }, [banners.length, nextSlide, autoSlideSpeed, autoSlideKey]);
 
   // Reset slide index if banners change
   useEffect(() => {
@@ -202,13 +219,13 @@ const Hero = () => {
       {banners.length > 1 && (
         <>
           <button 
-            onClick={prevSlide}
+            onClick={handlePrevSlide}
             className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full p-2 backdrop-blur-sm transition-all z-20"
           >
             <ChevronLeft size={24} />
           </button>
           <button 
-            onClick={nextSlide}
+            onClick={handleNextSlide}
             className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 text-white rounded-full p-2 backdrop-blur-sm transition-all z-20"
           >
             <ChevronRight size={24} />
@@ -222,7 +239,7 @@ const Hero = () => {
           {banners.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentSlide(index)}
+              onClick={() => handleDotClick(index)}
               className={`h-2 rounded-full transition-all ${
                 index === currentSlide
                   ? "w-8 bg-primary"
