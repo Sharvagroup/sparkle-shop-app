@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useActiveOffers, Offer } from "@/hooks/useOffers";
+import { useSpecialOffers, Offer } from "@/hooks/useOffers";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const Offers = () => {
-  const { data: offers = [], isLoading } = useActiveOffers();
+  const { data: offers = [], isLoading } = useSpecialOffers();
   const { titles } = useSectionTitles();
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [copied, setCopied] = useState(false);

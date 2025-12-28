@@ -20,26 +20,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, Calendar } from "lucide-react";
-import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer, Offer, OfferInsert } from "@/hooks/useOffers";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type } from "lucide-react";
+import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer, Offer, OfferInsert, OfferType } from "@/hooks/useOffers";
 import { OfferForm } from "@/components/admin/OfferForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
 
 const Offers = () => {
   const { data: offers = [], isLoading } = useOffers();
   const createOffer = useCreateOffer();
   const updateOffer = useUpdateOffer();
   const deleteOffer = useDeleteOffer();
+  const updateSetting = useUpdateSiteSetting();
 
+  const { data: scrollEnabledData } = useSiteSetting<{ enabled: boolean }>("scroll_offer_enabled");
+  const { data: scrollSpeedData } = useSiteSetting<{ speed: string }>("scroll_offer_speed");
+  const scrollEnabled = scrollEnabledData?.enabled ?? true;
+  const scrollSpeed = scrollSpeedData?.speed ?? "medium";
+
+  const [activeTab, setActiveTab] = useState<string>("offer_banner");
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filteredOffers = offers.filter((offer) =>
-    offer.title.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter offers by type and search
+  const filteredOffers = offers.filter((offer) => {
+    const matchesSearch = offer.title.toLowerCase().includes(search.toLowerCase());
+    const matchesType = offer.offer_type === activeTab || (!offer.offer_type && activeTab === "special_offer");
+    return matchesSearch && matchesType;
+  });
+
+  // Get scroll preview text
+  const scrollPreviewText = offers
+    .filter(o => o.is_active)
+    .map(o => o.discount_code ? `${o.title} - Use code: ${o.discount_code}` : o.title)
+    .join(" • ");
 
   const handleCreate = () => {
     setEditingOffer(null);
@@ -52,10 +74,13 @@ const Offers = () => {
   };
 
   const handleSubmit = async (data: OfferInsert) => {
+    // Set offer_type based on active tab
+    const offerData = { ...data, offer_type: activeTab as OfferType };
+    
     if (editingOffer) {
-      await updateOffer.mutateAsync({ id: editingOffer.id, ...data });
+      await updateOffer.mutateAsync({ id: editingOffer.id, ...offerData });
     } else {
-      await createOffer.mutateAsync(data);
+      await createOffer.mutateAsync(offerData);
     }
     setFormOpen(false);
   };
@@ -75,77 +100,70 @@ const Offers = () => {
     return true;
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Offers</h1>
-          <p className="text-muted-foreground">Manage promotional offers and popup banners</p>
-        </div>
-        <Button onClick={handleCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Offer
-        </Button>
-      </div>
+  const handleScrollEnabledChange = (enabled: boolean) => {
+    updateSetting.mutate({ key: "scroll_offer_enabled", value: { enabled }, category: "offers" });
+  };
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search offers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+  const handleScrollSpeedChange = (value: number[]) => {
+    const speeds = ["slow", "medium", "fast"];
+    updateSetting.mutate({ key: "scroll_offer_speed", value: { speed: speeds[value[0]] }, category: "offers" });
+  };
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20">Image</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Discount Code</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array(3).fill(0).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-12 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
-                </TableRow>
-              ))
-            ) : filteredOffers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No offers found
-                </TableCell>
+  const getSpeedIndex = () => {
+    const speeds = ["slow", "medium", "fast"];
+    return speeds.indexOf(scrollSpeed);
+  };
+
+  const renderOfferTable = () => (
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-20">Image</TableHead>
+            <TableHead>Title</TableHead>
+            {activeTab === "special_offer" && <TableHead>Discount Code</TableHead>}
+            <TableHead>Duration</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            Array(3).fill(0).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell><Skeleton className="h-12 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                {activeTab === "special_offer" && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
               </TableRow>
-            ) : (
-              filteredOffers.map((offer) => (
-                <TableRow key={offer.id}>
-                  <TableCell>
-                    <img
-                      src={offer.image_url}
-                      alt={offer.title}
-                      className="h-12 w-16 object-cover rounded"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{offer.title}</p>
-                      {offer.subtitle && (
-                        <p className="text-sm text-muted-foreground">{offer.subtitle}</p>
-                      )}
-                    </div>
-                  </TableCell>
+            ))
+          ) : filteredOffers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={activeTab === "special_offer" ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                No {activeTab === "offer_banner" ? "banners" : "offers"} found
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredOffers.map((offer) => (
+              <TableRow key={offer.id}>
+                <TableCell>
+                  <img
+                    src={offer.image_url}
+                    alt={offer.title}
+                    className="h-12 w-16 object-cover rounded"
+                  />
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{offer.title}</p>
+                    {offer.subtitle && (
+                      <p className="text-sm text-muted-foreground">{offer.subtitle}</p>
+                    )}
+                  </div>
+                </TableCell>
+                {activeTab === "special_offer" && (
                   <TableCell>
                     {offer.discount_code ? (
                       <Badge variant="secondary">{offer.discount_code}</Badge>
@@ -153,52 +171,200 @@ const Offers = () => {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {offer.start_date
-                        ? format(new Date(offer.start_date), "MMM d")
-                        : "—"}
-                      {" → "}
-                      {offer.end_date
-                        ? format(new Date(offer.end_date), "MMM d")
-                        : "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={isOfferActive(offer) ? "default" : "secondary"}>
-                      {isOfferActive(offer) ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(offer)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteId(offer.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                )}
+                <TableCell>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {offer.start_date
+                      ? format(new Date(offer.start_date), "MMM d")
+                      : "—"}
+                    {" → "}
+                    {offer.end_date
+                      ? format(new Date(offer.end_date), "MMM d")
+                      : "—"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={isOfferActive(offer) ? "default" : "secondary"}>
+                    {isOfferActive(offer) ? "Active" : "Inactive"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(offer)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteId(offer.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Offers</h1>
+        <p className="text-muted-foreground">Manage promotional offers across your store</p>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="offer_banner" className="gap-2">
+            <Image className="h-4 w-4" />
+            Offer Banner
+          </TabsTrigger>
+          <TabsTrigger value="special_offer" className="gap-2">
+            <Tag className="h-4 w-4" />
+            Special Offer
+          </TabsTrigger>
+          <TabsTrigger value="scroll_offer" className="gap-2">
+            <Type className="h-4 w-4" />
+            Scroll Offer
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Offer Banner Tab */}
+        <TabsContent value="offer_banner" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium">Offer Banners</CardTitle>
+              <CardDescription>
+                Auto-rotating image banners displayed below the hero section. Add promotional images with links to products or collections.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search banners..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Banner
+            </Button>
+          </div>
+
+          {renderOfferTable()}
+        </TabsContent>
+
+        {/* Special Offer Tab */}
+        <TabsContent value="special_offer" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium">Special Offers</CardTitle>
+              <CardDescription>
+                Coupon code offers shown as a grid in the Special Offers section. Customers can click to view details and copy discount codes.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search offers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Offer
+            </Button>
+          </div>
+
+          {renderOfferTable()}
+        </TabsContent>
+
+        {/* Scroll Offer Tab */}
+        <TabsContent value="scroll_offer" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium">Scroll Offers</CardTitle>
+              <CardDescription>
+                Text announcements that scroll continuously on the top bar. Titles from both Offer Banners and Special Offers are automatically combined.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Enable/Disable Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="scroll-enabled">Enable Scroll Bar</Label>
+                  <p className="text-sm text-muted-foreground">Show scrolling offers on the top of the page</p>
+                </div>
+                <Switch
+                  id="scroll-enabled"
+                  checked={scrollEnabled}
+                  onCheckedChange={handleScrollEnabledChange}
+                />
+              </div>
+
+              {/* Speed Slider */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Scroll Speed</Label>
+                  <span className="text-sm text-muted-foreground capitalize">{scrollSpeed}</span>
+                </div>
+                <Slider
+                  value={[getSpeedIndex() >= 0 ? getSpeedIndex() : 1]}
+                  onValueChange={handleScrollSpeedChange}
+                  max={2}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Slow</span>
+                  <span>Medium</span>
+                  <span>Fast</span>
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="space-y-2">
+                <Label>Preview of Scrolling Text</Label>
+                <div className="bg-secondary text-secondary-foreground py-3 px-4 rounded-lg overflow-hidden">
+                  {scrollPreviewText ? (
+                    <p className="text-sm font-medium truncate">{scrollPreviewText}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No active offers to display</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This text is auto-generated from all active Offer Banners and Special Offers
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <OfferForm
         open={formOpen}
         onOpenChange={setFormOpen}
         offer={editingOffer}
+        offerType={activeTab as OfferType}
         onSubmit={handleSubmit}
         isLoading={createOffer.isPending || updateOffer.isPending}
       />
@@ -206,9 +372,9 @@ const Offers = () => {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Offer</AlertDialogTitle>
+            <AlertDialogTitle>Delete {activeTab === "offer_banner" ? "Banner" : "Offer"}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this offer? This action cannot be undone.
+              Are you sure you want to delete this {activeTab === "offer_banner" ? "banner" : "offer"}? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
