@@ -5,10 +5,15 @@ import { useState } from "react";
 
 const PromoBanner = () => {
   const { data: scrollTexts = [] } = useScrollOfferText();
-  const { data: scrollEnabledData } = useSiteSetting<{ enabled: boolean }>("scroll_offer_enabled");
-  const { data: scrollSpeedData } = useSiteSetting<{ speed: string }>("scroll_offer_speed");
-  const scrollEnabled = scrollEnabledData?.enabled ?? true;
-  const scrollSpeed = scrollSpeedData?.speed ?? "medium";
+  const { data: scrollEnabledData } = useSiteSetting<boolean | { enabled: boolean }>("scroll_offer_enabled");
+  const { data: scrollSpeedData } = useSiteSetting<string | { speed: string }>("scroll_offer_speed");
+  // Handle both boolean and object formats for robustness
+  const scrollEnabled = typeof scrollEnabledData === 'boolean' 
+    ? scrollEnabledData 
+    : (scrollEnabledData?.enabled ?? true);
+  const scrollSpeed = typeof scrollSpeedData === 'string'
+    ? scrollSpeedData
+    : (scrollSpeedData?.speed ?? "medium");
   const [dismissed, setDismissed] = useState(false);
 
   // Get animation duration based on speed

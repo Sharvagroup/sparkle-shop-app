@@ -20,6 +20,7 @@ interface HomepageSettings {
 const sectionComponents: Record<string, React.ComponentType> = {
   hero: Hero,
   offers_banner: OffersBanner,
+  sale_banner: OffersBanner, // Alias for backward compatibility
   categories: Categories,
   offers: Offers,
   new_arrivals: NewArrivals,
