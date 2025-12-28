@@ -25,9 +25,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type, Paintbrush } from "lucide-react";
 import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer, Offer, OfferInsert, OfferType } from "@/hooks/useOffers";
 import { OfferForm } from "@/components/admin/OfferForm";
+import { OfferItemThemeDialog } from "@/components/admin/OfferItemThemeDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
@@ -54,6 +55,7 @@ const Offers = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [itemThemeOffer, setItemThemeOffer] = useState<Offer | null>(null);
 
   // Filter offers by type and search
   const filteredOffers = offers.filter((offer) => {
@@ -195,7 +197,15 @@ const Offers = () => {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setItemThemeOffer(offer)}
+                      title="Theme"
+                    >
+                      <Paintbrush className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -390,6 +400,13 @@ const Offers = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Offer Item Theme Dialog */}
+      <OfferItemThemeDialog
+        open={!!itemThemeOffer}
+        onOpenChange={(open) => !open && setItemThemeOffer(null)}
+        offer={itemThemeOffer}
+      />
     </div>
   );
 };

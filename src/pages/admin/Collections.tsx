@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2, Info, ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, ImageIcon, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useAdminCollections,
@@ -29,6 +29,7 @@ import {
   CollectionInput,
 } from '@/hooks/useCollections';
 import CollectionForm from '@/components/admin/CollectionForm';
+import { CollectionItemThemeDialog } from '@/components/admin/CollectionItemThemeDialog';
 
 const Collections = () => {
   const { data: collections = [], isLoading } = useAdminCollections();
@@ -40,6 +41,7 @@ const Collections = () => {
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
+  const [itemThemeCollection, setItemThemeCollection] = useState<Collection | null>(null);
 
   const handleAdd = () => {
     setEditingCollection(null);
@@ -189,7 +191,15 @@ const Collections = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setItemThemeCollection(collection)}
+                        title="Theme"
+                      >
+                        <Paintbrush className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -243,6 +253,13 @@ const Collections = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Collection Item Theme Dialog */}
+      <CollectionItemThemeDialog
+        open={!!itemThemeCollection}
+        onOpenChange={(open) => !open && setItemThemeCollection(null)}
+        collection={itemThemeCollection}
+      />
     </div>
   );
 };
