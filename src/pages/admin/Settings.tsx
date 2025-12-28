@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingBag, Truck } from "lucide-react";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -47,29 +46,6 @@ interface BusinessHour {
 
 interface BusinessHoursSettings {
   hours: BusinessHour[];
-}
-
-interface ContactPageSettings {
-  heroImage: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  mapEmbedUrl: string;
-}
-
-interface ProductsPageSettings {
-  materials: string[];
-  itemsPerPage: number;
-  maxPriceFilter: number;
-  heroSubtitle: string;
-}
-
-interface ShippingSettings {
-  freeShippingThreshold: number;
-  standardShippingCost: number;
-  freeShippingText: string;
-  countries: string[];
-  states: { [country: string]: string[] };
-  paymentMethods: { card: boolean; upi: boolean; cod: boolean };
 }
 
 const fontOptions = [
@@ -139,28 +115,6 @@ const Settings = () => {
   ];
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>(defaultBusinessHours);
 
-  // Contact Page Settings
-  const [contactHeroImage, setContactHeroImage] = useState("https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop");
-  const [contactHeroTitle, setContactHeroTitle] = useState("Contact Us");
-  const [contactHeroSubtitle, setContactHeroSubtitle] = useState("We're here to assist you with every query");
-  const [contactMapEmbedUrl, setContactMapEmbedUrl] = useState("");
-
-  // Products Page Settings
-  const [productsMaterials, setProductsMaterials] = useState<string[]>(["Gold Plated", "Silver", "Brass", "Copper", "Oxidized"]);
-  const [productsItemsPerPage, setProductsItemsPerPage] = useState(12);
-  const [productsMaxPrice, setProductsMaxPrice] = useState(50000);
-  const [productsHeroSubtitle, setProductsHeroSubtitle] = useState("Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life.");
-
-  // Shipping Settings
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState(5000);
-  const [standardShippingCost, setStandardShippingCost] = useState(150);
-  const [freeShippingText, setFreeShippingText] = useState("Orders above ₹5,000 qualify for free shipping");
-  const [shippingCountries, setShippingCountries] = useState<string[]>(["India", "USA", "UK"]);
-  const [shippingStates, setShippingStates] = useState<string[]>(["Maharashtra", "Karnataka", "Delhi", "Tamil Nadu", "Gujarat"]);
-  const [paymentCard, setPaymentCard] = useState(true);
-  const [paymentUpi, setPaymentUpi] = useState(true);
-  const [paymentCod, setPaymentCod] = useState(true);
-
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -220,37 +174,6 @@ const Settings = () => {
       const businessHoursData = settings.business_hours as unknown as BusinessHoursSettings | undefined;
       if (businessHoursData?.hours) {
         setBusinessHours(businessHoursData.hours);
-      }
-
-      // Contact Page settings
-      const contactPage = settings.contact_page as unknown as ContactPageSettings | undefined;
-      if (contactPage) {
-        setContactHeroImage(contactPage.heroImage || "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop");
-        setContactHeroTitle(contactPage.heroTitle || "Contact Us");
-        setContactHeroSubtitle(contactPage.heroSubtitle || "We're here to assist you with every query");
-        setContactMapEmbedUrl(contactPage.mapEmbedUrl || "");
-      }
-
-      // Products Page settings
-      const productsPage = settings.products_page as unknown as ProductsPageSettings | undefined;
-      if (productsPage) {
-        setProductsMaterials(productsPage.materials || ["Gold Plated", "Silver", "Brass", "Copper", "Oxidized"]);
-        setProductsItemsPerPage(productsPage.itemsPerPage || 12);
-        setProductsMaxPrice(productsPage.maxPriceFilter || 50000);
-        setProductsHeroSubtitle(productsPage.heroSubtitle || "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life.");
-      }
-
-      // Shipping settings
-      const shipping = settings.shipping_settings as unknown as ShippingSettings | undefined;
-      if (shipping) {
-        setFreeShippingThreshold(shipping.freeShippingThreshold ?? 5000);
-        setStandardShippingCost(shipping.standardShippingCost ?? 150);
-        setFreeShippingText(shipping.freeShippingText || "Orders above ₹5,000 qualify for free shipping");
-        setShippingCountries(shipping.countries || ["India", "USA", "UK"]);
-        setShippingStates(shipping.states?.["India"] || ["Maharashtra", "Karnataka", "Delhi", "Tamil Nadu", "Gujarat"]);
-        setPaymentCard(shipping.paymentMethods?.card !== false);
-        setPaymentUpi(shipping.paymentMethods?.upi !== false);
-        setPaymentCod(shipping.paymentMethods?.cod !== false);
       }
     }
   }, [settings]);
@@ -357,37 +280,6 @@ const Settings = () => {
     });
   };
 
-  const saveContactPage = async () => {
-    await updateSetting.mutateAsync({
-      key: "contact_page",
-      value: { heroImage: contactHeroImage, heroTitle: contactHeroTitle, heroSubtitle: contactHeroSubtitle, mapEmbedUrl: contactMapEmbedUrl },
-      category: "pages",
-    });
-  };
-
-  const saveProductsPage = async () => {
-    await updateSetting.mutateAsync({
-      key: "products_page",
-      value: { materials: productsMaterials, itemsPerPage: productsItemsPerPage, maxPriceFilter: productsMaxPrice, heroSubtitle: productsHeroSubtitle },
-      category: "pages",
-    });
-  };
-
-  const saveShippingSettings = async () => {
-    await updateSetting.mutateAsync({
-      key: "shipping_settings",
-      value: {
-        freeShippingThreshold,
-        standardShippingCost,
-        freeShippingText,
-        countries: shippingCountries,
-        states: { India: shippingStates },
-        paymentMethods: { card: paymentCard, upi: paymentUpi, cod: paymentCod },
-      },
-      category: "shipping",
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -405,7 +297,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="flex flex-wrap gap-1">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -413,9 +305,6 @@ const Settings = () => {
           <TabsTrigger value="promo" className="gap-2"><Megaphone className="h-4 w-4" /> Promo</TabsTrigger>
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
-          <TabsTrigger value="contact-page" className="gap-2"><MapPin className="h-4 w-4" /> Contact Page</TabsTrigger>
-          <TabsTrigger value="products-page" className="gap-2"><ShoppingBag className="h-4 w-4" /> Products Page</TabsTrigger>
-          <TabsTrigger value="shipping" className="gap-2"><Truck className="h-4 w-4" /> Shipping</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -954,229 +843,6 @@ const Settings = () => {
                   <p className="text-primary text-sm truncate">{metaTitle || "Page Title"}</p>
                   <p className="text-xs text-green-600 truncate">yourstore.com</p>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{metaDescription || "Page description will appear here..."}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Contact Page Settings Tab */}
-        <TabsContent value="contact-page">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Contact Page Settings</CardTitle>
-                <CardDescription>Customize the contact page appearance</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3 p-4 border rounded-lg">
-                  <Label className="text-base font-medium">Hero Image</Label>
-                  <p className="text-xs text-muted-foreground">Background image for the contact page hero section</p>
-                  <div className="flex gap-4 items-center">
-                    <div className="w-32 h-20 bg-muted rounded flex items-center justify-center overflow-hidden">
-                      {contactHeroImage ? <img src={contactHeroImage} alt="Hero" className="max-h-full max-w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
-                    </div>
-                    <div>
-                      <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
-                      <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("contact-hero-upload")?.click()} disabled={uploading === "contactHero"}>
-                        {uploading === "contactHero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Hero Title</Label>
-                  <Input value={contactHeroTitle} onChange={(e) => setContactHeroTitle(e.target.value)} placeholder="Contact Us" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Hero Subtitle</Label>
-                  <Input value={contactHeroSubtitle} onChange={(e) => setContactHeroSubtitle(e.target.value)} placeholder="We're here to assist you with every query" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Google Maps Embed URL</Label>
-                  <Textarea value={contactMapEmbedUrl} onChange={(e) => setContactMapEmbedUrl(e.target.value)} rows={3} placeholder="https://www.google.com/maps/embed?pb=..." />
-                  <p className="text-xs text-muted-foreground">Paste the full embed URL from Google Maps (Share → Embed a map)</p>
-                </div>
-
-                <Button onClick={saveContactPage} disabled={updateSetting.isPending} className="gap-2">
-                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Contact Page
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-                <CardDescription>Contact page hero</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative h-32 rounded-lg overflow-hidden">
-                  <img src={contactHeroImage || "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400"} alt="Hero Preview" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white">
-                    <p className="font-display text-lg font-bold">{contactHeroTitle || "Contact Us"}</p>
-                    <p className="text-xs opacity-80">{contactHeroSubtitle || "Subtitle"}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Products Page Settings Tab */}
-        <TabsContent value="products-page">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Products Page Settings</CardTitle>
-                <CardDescription>Configure products listing and filters</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Hero Subtitle</Label>
-                  <Textarea value={productsHeroSubtitle} onChange={(e) => setProductsHeroSubtitle(e.target.value)} rows={2} placeholder="Explore our complete collection..." />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Items Per Page</Label>
-                    <Input type="number" value={productsItemsPerPage} onChange={(e) => setProductsItemsPerPage(Number(e.target.value))} min={4} max={48} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Max Price Filter (₹)</Label>
-                    <Input type="number" value={productsMaxPrice} onChange={(e) => setProductsMaxPrice(Number(e.target.value))} min={1000} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Material Filters</Label>
-                  <Textarea 
-                    value={productsMaterials.join(", ")} 
-                    onChange={(e) => setProductsMaterials(e.target.value.split(",").map(s => s.trim()).filter(Boolean))} 
-                    rows={2} 
-                    placeholder="Gold Plated, Silver, Brass, Copper" 
-                  />
-                  <p className="text-xs text-muted-foreground">Comma-separated list of materials for the filter sidebar</p>
-                </div>
-
-                <Button onClick={saveProductsPage} disabled={updateSetting.isPending} className="gap-2">
-                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Products Page
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-                <CardDescription>Current configuration</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Items per page:</span><span>{productsItemsPerPage}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Max price filter:</span><span>₹{productsMaxPrice.toLocaleString()}</span></div>
-                <div className="text-muted-foreground">Materials:</div>
-                <div className="flex flex-wrap gap-1">
-                  {productsMaterials.map((m, i) => <span key={i} className="px-2 py-0.5 bg-muted rounded text-xs">{m}</span>)}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Shipping & Checkout Settings Tab */}
-        <TabsContent value="shipping">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Shipping & Checkout Settings</CardTitle>
-                <CardDescription>Configure shipping costs, regions, and payment methods</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Free Shipping Threshold (₹)</Label>
-                    <Input type="number" value={freeShippingThreshold} onChange={(e) => setFreeShippingThreshold(Number(e.target.value))} min={0} />
-                    <p className="text-xs text-muted-foreground">Orders above this amount get free shipping</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Standard Shipping Cost (₹)</Label>
-                    <Input type="number" value={standardShippingCost} onChange={(e) => setStandardShippingCost(Number(e.target.value))} min={0} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Free Shipping Message</Label>
-                  <Input value={freeShippingText} onChange={(e) => setFreeShippingText(e.target.value)} placeholder="Orders above ₹5,000 qualify for free shipping" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Available Countries</Label>
-                  <Textarea 
-                    value={shippingCountries.join(", ")} 
-                    onChange={(e) => setShippingCountries(e.target.value.split(",").map(s => s.trim()).filter(Boolean))} 
-                    rows={2} 
-                    placeholder="India, USA, UK" 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>States/Regions (India)</Label>
-                  <Textarea 
-                    value={shippingStates.join(", ")} 
-                    onChange={(e) => setShippingStates(e.target.value.split(",").map(s => s.trim()).filter(Boolean))} 
-                    rows={2} 
-                    placeholder="Maharashtra, Karnataka, Delhi" 
-                  />
-                </div>
-
-                <div className="space-y-3 border-t pt-4">
-                  <Label className="text-base font-medium">Payment Methods</Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={paymentCard} onCheckedChange={(c) => setPaymentCard(c as boolean)} />
-                      <span className="text-sm">Credit/Debit Card</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={paymentUpi} onCheckedChange={(c) => setPaymentUpi(c as boolean)} />
-                      <span className="text-sm">UPI/NetBanking</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={paymentCod} onCheckedChange={(c) => setPaymentCod(c as boolean)} />
-                      <span className="text-sm">Cash on Delivery</span>
-                    </label>
-                  </div>
-                </div>
-
-                <Button onClick={saveShippingSettings} disabled={updateSetting.isPending} className="gap-2">
-                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Shipping Settings
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-                <CardDescription>Shipping summary</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="font-medium">Free shipping on orders above ₹{freeShippingThreshold.toLocaleString()}</p>
-                  <p className="text-muted-foreground text-xs mt-1">Standard: ₹{standardShippingCost}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1">Countries:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {shippingCountries.map((c, i) => <span key={i} className="px-2 py-0.5 bg-muted rounded text-xs">{c}</span>)}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1">Payment methods:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {paymentCard && <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs">Card</span>}
-                    {paymentUpi && <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs">UPI</span>}
-                    {paymentCod && <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs">COD</span>}
-                  </div>
                 </div>
               </CardContent>
             </Card>
