@@ -4,13 +4,54 @@ import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+
+interface CategoriesTheme {
+  section_padding: "small" | "medium" | "large";
+  items_to_show: number;
+  columns: number;
+}
+
+interface CategoryDisplayTheme {
+  display_shape: "circle" | "square" | "rounded";
+  image_size: number;
+  font_size: "small" | "medium" | "large";
+  text_transform: "none" | "uppercase" | "capitalize";
+  hover_border_color: string;
+  hover_border_width: number;
+  show_hover_scale: boolean;
+}
+
+const defaultSectionTheme: CategoriesTheme = {
+  section_padding: "medium",
+  items_to_show: 8,
+  columns: 4,
+};
+
+const defaultDisplayTheme: CategoryDisplayTheme = {
+  display_shape: "circle",
+  image_size: 160,
+  font_size: "small",
+  text_transform: "uppercase",
+  hover_border_color: "hsl(var(--primary))",
+  hover_border_width: 4,
+  show_hover_scale: true,
+};
 
 const Categories = () => {
   const { data: categories = [], isLoading } = useCategories();
   const { titles } = useSectionTitles();
+  const { data: sectionTheme } = useSiteSetting<CategoriesTheme>("categories_theme");
+  const { data: displayTheme } = useSiteSetting<CategoryDisplayTheme>("category_display_theme");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const theme: CategoriesTheme = { ...defaultSectionTheme, ...sectionTheme };
+  const display: CategoryDisplayTheme = { ...defaultDisplayTheme, ...displayTheme };
+
+  // Limit displayed categories
+  const displayCategories = categories.slice(0, theme.items_to_show);
 
   // Fallback images for categories without images
   const fallbackImages: Record<string, string> = {
@@ -23,6 +64,30 @@ const Categories = () => {
   const getCategoryImage = (category: { image_url: string | null; slug: string }) => {
     if (category.image_url) return category.image_url;
     return fallbackImages[category.slug] || fallbackImages.necklaces;
+  };
+
+  const getPaddingClass = () => {
+    switch (theme.section_padding) {
+      case "small": return "py-8";
+      case "large": return "py-16";
+      default: return "py-12";
+    }
+  };
+
+  const getShapeClass = () => {
+    switch (display.display_shape) {
+      case "square": return "rounded-none";
+      case "rounded": return "rounded-xl";
+      default: return "rounded-full";
+    }
+  };
+
+  const getFontSizeClass = () => {
+    switch (display.font_size) {
+      case "medium": return "text-sm";
+      case "large": return "text-base";
+      default: return "text-xs";
+    }
   };
 
   const updateScrollButtons = () => {
@@ -44,7 +109,7 @@ const Categories = () => {
         window.removeEventListener("resize", updateScrollButtons);
       };
     }
-  }, [categories]);
+  }, [displayCategories]);
 
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -60,7 +125,7 @@ const Categories = () => {
 
   if (isLoading) {
     return (
-      <section className="py-12 bg-surface">
+      <section className={`${getPaddingClass()} bg-surface`}>
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
             {titles.categories}
@@ -68,7 +133,7 @@ const Categories = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 w-full max-w-5xl mx-auto px-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex flex-col items-center">
-                <Skeleton className="w-32 h-32 md:w-40 md:h-40 rounded-full" />
+                <Skeleton className={`w-32 h-32 md:w-40 md:h-40 ${getShapeClass()}`} />
                 <Skeleton className="h-4 w-20 mt-4" />
               </div>
             ))}
@@ -83,7 +148,7 @@ const Categories = () => {
   }
 
   return (
-    <section className="py-12 bg-surface">
+    <section className={`${getPaddingClass()} bg-surface`}>
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
           {titles.categories}
@@ -105,21 +170,38 @@ const Categories = () => {
             className="flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide scroll-smooth px-4 max-w-5xl snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {categories.map((category, index) => (
+            {displayCategories.map((category, index) => (
               <Link
                 key={category.id}
                 to={`/products?category=${category.slug}`}
                 className="group cursor-pointer flex-shrink-0 snap-center"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full overflow-hidden border-4 border-card shadow-lg group-hover:border-primary transition-all duration-300 bg-card flex items-center justify-center">
+                <div 
+                  className={`mx-auto overflow-hidden border-4 border-card shadow-lg transition-all duration-300 bg-card flex items-center justify-center ${getShapeClass()} ${display.show_hover_scale ? 'group-hover:scale-105' : ''}`}
+                  style={{ 
+                    width: `${display.image_size}px`, 
+                    height: `${display.image_size}px`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = display.hover_border_color.startsWith("hsl") ? "hsl(var(--primary))" : display.hover_border_color;
+                    e.currentTarget.style.borderWidth = `${display.hover_border_width}px`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'hsl(var(--card))';
+                    e.currentTarget.style.borderWidth = '4px';
+                  }}
+                >
                   <img
                     src={getCategoryImage(category)}
                     alt={category.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <h3 className="mt-4 font-medium uppercase text-sm tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
+                <h3 
+                  className={`mt-4 font-medium tracking-wider text-muted-foreground group-hover:text-primary transition-colors ${getFontSizeClass()}`}
+                  style={{ textTransform: display.text_transform }}
+                >
                   {category.name}
                 </h3>
               </Link>

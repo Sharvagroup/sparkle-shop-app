@@ -1,24 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHomepageReviews } from "@/hooks/useReviews";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+
+interface TestimonialsTheme {
+  section_padding: "small" | "medium" | "large";
+  items_to_show: number;
+  columns: number;
+  auto_slide: boolean;
+  auto_slide_speed: number;
+}
+
+const defaultTheme: TestimonialsTheme = {
+  section_padding: "medium",
+  items_to_show: 6,
+  columns: 3,
+  auto_slide: false,
+  auto_slide_speed: 5,
+};
 
 const Testimonials = () => {
   const { data: reviews = [], isLoading } = useHomepageReviews();
   const { titles } = useSectionTitles();
+  const { data: savedTheme } = useSiteSetting<TestimonialsTheme>("testimonials_theme");
   const [currentPage, setCurrentPage] = useState(0);
+
+  const theme: TestimonialsTheme = { ...defaultTheme, ...savedTheme };
+  const displayReviews = reviews.slice(0, theme.items_to_show);
+  const reviewsPerPage = Math.min(theme.columns, 3);
+  const totalPages = Math.ceil(displayReviews.length / reviewsPerPage);
+  
+  const currentReviews = displayReviews.slice(
+    currentPage * reviewsPerPage,
+    (currentPage + 1) * reviewsPerPage
+  );
+
+  // Auto slide effect
+  useEffect(() => {
+    if (!theme.auto_slide || totalPages <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
+    }, theme.auto_slide_speed * 1000);
+    
+    return () => clearInterval(interval);
+  }, [theme.auto_slide, theme.auto_slide_speed, totalPages]);
 
   // Hide section if no reviews
   if (!isLoading && reviews.length === 0) {
     return null;
   }
-  const reviewsPerPage = 3;
-  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  
-  const currentReviews = reviews.slice(
-    currentPage * reviewsPerPage,
-    (currentPage + 1) * reviewsPerPage
-  );
+
+  const getPaddingClass = () => {
+    switch (theme.section_padding) {
+      case "small": return "py-10";
+      case "large": return "py-20";
+      default: return "py-16";
+    }
+  };
+
+  const getGridClass = () => {
+    switch (reviewsPerPage) {
+      case 1: return "grid-cols-1";
+      case 2: return "grid-cols-1 md:grid-cols-2";
+      default: return "grid-cols-1 md:grid-cols-3";
+    }
+  };
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
@@ -47,7 +95,7 @@ const Testimonials = () => {
   if (isLoading) return null;
 
   return (
-    <section className="py-16 bg-background">
+    <section className={`${getPaddingClass()} bg-background`}>
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
           {titles.testimonials}
@@ -61,7 +109,7 @@ const Testimonials = () => {
             <ChevronLeft size={24} />
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-12">
+          <div className={`grid ${getGridClass()} gap-6 w-full px-4 md:px-12`}>
             {currentReviews.map((review) => (
               <div
                 key={review.id}
