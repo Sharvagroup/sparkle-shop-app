@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Offer, OfferInsert, uploadOfferImage } from "@/hooks/useOffers";
+import { Offer, OfferInsert, OfferType, uploadOfferImage } from "@/hooks/useOffers";
 import { Loader2, Upload } from "lucide-react";
 import { LinkUrlAutocomplete } from "./LinkUrlAutocomplete";
 
@@ -25,11 +25,12 @@ interface OfferFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   offer?: Offer | null;
+  offerType?: OfferType;
   onSubmit: (data: OfferInsert) => void;
   isLoading?: boolean;
 }
 
-export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: OfferFormProps) {
+export function OfferForm({ open, onOpenChange, offer, offerType = "special_offer", onSubmit, isLoading }: OfferFormProps) {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
@@ -47,6 +48,8 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
   const [isActive, setIsActive] = useState(true);
   const [uploading, setUploading] = useState(false);
 
+  const isOfferBanner = offerType === "offer_banner";
+
   useEffect(() => {
     if (offer) {
       setTitle(offer.title);
@@ -56,10 +59,10 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
       setLinkUrl(offer.link_url || "");
       setButtonText(offer.button_text || "Shop Now");
       setDiscountCode(offer.discount_code || "");
-      setDiscountType((offer as any).discount_type || "percentage");
-      setDiscountValue((offer as any).discount_value || 0);
-      setMinCartValue((offer as any).min_cart_value || 0);
-      setTermsConditions((offer as any).terms_conditions || "");
+      setDiscountType(offer.discount_type || "percentage");
+      setDiscountValue(offer.discount_value || 0);
+      setMinCartValue(offer.min_cart_value || 0);
+      setTermsConditions(offer.terms_conditions || "");
       setStartDate(offer.start_date ? offer.start_date.split("T")[0] : "");
       setEndDate(offer.end_date ? offer.end_date.split("T")[0] : "");
       setDisplayOrder(offer.display_order || 0);
@@ -116,19 +119,23 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
       end_date: endDate ? new Date(endDate).toISOString() : null,
       display_order: displayOrder,
       is_active: isActive,
-      // Extended fields
+      offer_type: offerType,
       discount_type: discountType,
       discount_value: discountValue,
       min_cart_value: minCartValue,
       terms_conditions: termsConditions || null,
-    } as any);
+    });
   };
+
+  const dialogTitle = offer 
+    ? `Edit ${isOfferBanner ? "Banner" : "Offer"}`
+    : `Add New ${isOfferBanner ? "Banner" : "Offer"}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{offer ? "Edit Offer" : "Add New Offer"}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -138,6 +145,7 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder={isOfferBanner ? "e.g., Summer Sale" : "e.g., 20% Off Everything"}
                 required
               />
             </div>
@@ -147,6 +155,7 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
                 id="subtitle"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
+                placeholder={isOfferBanner ? "e.g., Up to 50% off" : "e.g., Limited time only"}
               />
             </div>
           </div>
@@ -158,6 +167,7 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
+              placeholder={isOfferBanner ? "Banner description..." : "Offer details and conditions..."}
             />
           </div>
 
@@ -194,61 +204,66 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
                 </Button>
               </div>
             </div>
+            {isOfferBanner && (
+              <p className="text-xs text-muted-foreground">Recommended: 1920x600px for best display in carousel</p>
+            )}
           </div>
 
-          {/* Discount Section */}
-          <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
-            <h4 className="font-medium text-sm">Discount Details</h4>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Discount Type</Label>
-                <Select value={discountType} onValueChange={setDiscountType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentage">Percentage (%)</SelectItem>
-                    <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* Discount Section - Only show for Special Offers */}
+          {!isOfferBanner && (
+            <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+              <h4 className="font-medium text-sm">Discount Details</h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Discount Type</Label>
+                  <Select value={discountType} onValueChange={setDiscountType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Discount Value</Label>
+                  <Input
+                    type="number"
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                    placeholder={discountType === "percentage" ? "e.g., 20" : "e.g., 500"}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Discount Code</Label>
+                  <Input
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    placeholder="e.g., SAVE20"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Discount Value</Label>
+                <Label>Minimum Cart Value (₹)</Label>
                 <Input
                   type="number"
-                  value={discountValue}
-                  onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                  placeholder={discountType === "percentage" ? "e.g., 20" : "e.g., 500"}
+                  value={minCartValue}
+                  onChange={(e) => setMinCartValue(parseFloat(e.target.value) || 0)}
+                  placeholder="Minimum order amount for this offer"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Discount Code</Label>
-                <Input
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                  placeholder="e.g., SAVE20"
+                <Label>Terms & Conditions</Label>
+                <Textarea
+                  value={termsConditions}
+                  onChange={(e) => setTermsConditions(e.target.value)}
+                  rows={2}
+                  placeholder="Enter offer terms and conditions..."
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Minimum Cart Value (₹)</Label>
-              <Input
-                type="number"
-                value={minCartValue}
-                onChange={(e) => setMinCartValue(parseFloat(e.target.value) || 0)}
-                placeholder="Minimum order amount for this offer"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Terms & Conditions</Label>
-              <Textarea
-                value={termsConditions}
-                onChange={(e) => setTermsConditions(e.target.value)}
-                rows={2}
-                placeholder="Enter offer terms and conditions..."
-              />
-            </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -261,6 +276,7 @@ export function OfferForm({ open, onOpenChange, offer, onSubmit, isLoading }: Of
                 id="buttonText"
                 value={buttonText}
                 onChange={(e) => setButtonText(e.target.value)}
+                placeholder="e.g., Shop Now"
               />
             </div>
           </div>

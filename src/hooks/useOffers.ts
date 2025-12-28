@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+export type OfferType = "offer_banner" | "special_offer";
+
 export interface Offer {
   id: string;
   title: string;
@@ -19,6 +21,7 @@ export interface Offer {
   end_date: string | null;
   display_order: number | null;
   is_active: boolean | null;
+  offer_type: OfferType | null;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +56,69 @@ export const useActiveOffers = () => {
 
       if (error) throw error;
       return data as Offer[];
+    },
+  });
+};
+
+// Get only Offer Banner type offers (for carousel below hero)
+export const useOfferBanners = () => {
+  return useQuery({
+    queryKey: ["offers", "offer_banner"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("is_active", true)
+        .eq("offer_type", "offer_banner")
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      return data as Offer[];
+    },
+  });
+};
+
+// Get only Special Offer type offers (for grid with popups)
+export const useSpecialOffers = () => {
+  return useQuery({
+    queryKey: ["offers", "special_offer"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("is_active", true)
+        .eq("offer_type", "special_offer")
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      return data as Offer[];
+    },
+  });
+};
+
+// Get scroll text combined from all active offers
+export const useScrollOfferText = () => {
+  return useQuery({
+    queryKey: ["offers", "scroll_text"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("title, discount_code, offer_type")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      
+      // Combine titles and discount codes into scroll text
+      const texts = (data || []).map((offer) => {
+        let text = offer.title;
+        if (offer.discount_code) {
+          text += ` - Use code: ${offer.discount_code}`;
+        }
+        return text;
+      });
+      
+      return texts;
     },
   });
 };
