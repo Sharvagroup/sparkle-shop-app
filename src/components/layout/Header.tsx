@@ -76,7 +76,6 @@ const Header = () => {
           { label: "Our Story", href: "/about" },
           { label: "Size Guide", href: "/size-guide" },
           { label: "FAQ", href: "/faq" },
-          { label: "Contact", href: "/contact" }
         ],
       },
       { label: "Contact", href: "/contact" },
