@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
-import SaleBanner from "@/components/sections/SaleBanner";
+import OffersBanner from "@/components/sections/OffersBanner";
 import Categories from "@/components/sections/Categories";
 import NewArrivals from "@/components/sections/NewArrivals";
 import BestSellers from "@/components/sections/BestSellers";
@@ -19,7 +19,7 @@ interface HomepageSettings {
 
 const sectionComponents: Record<string, React.ComponentType> = {
   hero: Hero,
-  sale_banner: SaleBanner,
+  offers_banner: OffersBanner,
   categories: Categories,
   offers: Offers,
   new_arrivals: NewArrivals,
@@ -30,7 +30,7 @@ const sectionComponents: Record<string, React.ComponentType> = {
 
 const defaultSections = [
   "hero",
-  "sale_banner",
+  "offers_banner",
   "categories",
   "offers",
   "new_arrivals",

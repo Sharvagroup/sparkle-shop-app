@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const sectionLabels: Record<string, { label: string; description: string }> = {
   hero: { label: "Hero Banner", description: "Main carousel/banner at the top" },
-  sale_banner: { label: "Sale Banner", description: "Promotional sale announcement" },
+  offers_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" },
   categories: { label: "Categories", description: "Product category showcase" },
   offers: { label: "Special Offers", description: "Promotional offers with popups" },
   new_arrivals: { label: "New Arrivals", description: "Latest products section" },

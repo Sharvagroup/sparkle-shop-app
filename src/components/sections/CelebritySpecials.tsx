@@ -3,9 +3,11 @@ import { ArrowRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const CelebritySpecials = () => {
   const { data: products = [], isLoading } = useProducts({ isCelebritySpecial: true });
+  const { titles } = useSectionTitles();
 
   // Take first 4 celebrity specials
   const displayProducts = products.slice(0, 4);
@@ -15,7 +17,7 @@ const CelebritySpecials = () => {
       <section className="py-16 bg-surface">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 capitalize tracking-wide text-foreground">
-            Celebrity Specials
+            {titles.celebritySpecials}
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {[1, 2].map((i) => (
@@ -35,7 +37,7 @@ const CelebritySpecials = () => {
     <section className="py-16 bg-surface">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 capitalize tracking-wide text-foreground">
-          Celebrity Specials
+          {titles.celebritySpecials}
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">

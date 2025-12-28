@@ -10,9 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 const Offers = () => {
   const { data: offers = [], isLoading } = useActiveOffers();
+  const { titles } = useSectionTitles();
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -30,7 +32,7 @@ const Offers = () => {
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-display font-medium mb-8 text-center uppercase tracking-widest text-foreground">
-          Special Offers
+          {titles.offers}
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -83,11 +85,11 @@ const Offers = () => {
                     {selectedOffer.title}
                   </DialogTitle>
                 </DialogHeader>
-                
+
                 {selectedOffer.subtitle && (
                   <p className="text-lg text-muted-foreground">{selectedOffer.subtitle}</p>
                 )}
-                
+
                 {selectedOffer.description && (
                   <p className="text-sm text-muted-foreground">{selectedOffer.description}</p>
                 )}
