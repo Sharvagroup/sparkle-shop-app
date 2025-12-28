@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2, Info, ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, ImageIcon, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useAdminCategories,
@@ -29,6 +29,7 @@ import {
   CategoryInput,
 } from '@/hooks/useCategories';
 import CategoryForm from '@/components/admin/CategoryForm';
+import { CategoryDisplayThemeDialog } from '@/components/admin/CategoryDisplayThemeDialog';
 
 const Categories = () => {
   const { data: categories = [], isLoading } = useAdminCategories();
@@ -40,6 +41,7 @@ const Categories = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
 
   const handleAdd = () => {
     setEditingCategory(null);
@@ -106,10 +108,16 @@ const Categories = () => {
           <h1 className="text-2xl font-semibold">Categories</h1>
           <p className="text-muted-foreground">Organize your product catalog</p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
+            <Paintbrush className="w-4 h-4 mr-2" />
+            Display Theme
+          </Button>
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Info Box */}
@@ -246,6 +254,12 @@ const Categories = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Category Display Theme Dialog */}
+      <CategoryDisplayThemeDialog
+        open={themeDialogOpen}
+        onOpenChange={setThemeDialogOpen}
+      />
     </div>
   );
 };

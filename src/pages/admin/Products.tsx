@@ -43,7 +43,8 @@ import {
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import ProductForm from '@/components/admin/ProductForm';
-import { Plus, Pencil, Trash2, Search, Package } from 'lucide-react';
+import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
+import { Plus, Pencil, Trash2, Search, Package, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminProducts = () => {
@@ -57,6 +58,7 @@ const AdminProducts = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,10 +130,16 @@ const AdminProducts = () => {
           <h1 className="text-2xl font-serif tracking-wide">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
+            <Paintbrush className="w-4 h-4 mr-2" />
+            Card Theme
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -364,6 +372,12 @@ const AdminProducts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Product Card Theme Dialog */}
+      <ProductCardThemeDialog
+        open={themeDialogOpen}
+        onOpenChange={setThemeDialogOpen}
+      />
     </div>
   );
 };
