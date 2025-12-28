@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useOfferBanners } from "@/hooks/useOffers";
+import { useOfferBanners, OfferTheme } from "@/hooks/useOffers";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -24,6 +24,19 @@ const defaultTheme: OfferBannerTheme = {
   overlay_color: "#000000",
   overlay_opacity: 50,
   content_position: "left",
+};
+
+// Default individual item theme
+const defaultItemTheme: OfferTheme = {
+  content_position: "left",
+  overlay_opacity: 50,
+  overlay_color: "#000000",
+  edge_fade: false,
+  button_shape: "rounded",
+  image_fit: "cover",
+  image_zoom: 100,
+  text_color: "#ffffff",
+  card_style: "shadow",
 };
 
 const OffersBanner = () => {
@@ -125,54 +138,104 @@ const OffersBanner = () => {
         >
           {/* Carousel Container */}
           <div className={`relative ${getHeightClass()} bg-card`}>
-            {offers.map((offer, index) => (
-              <div
-                key={offer.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-              >
-                {/* Background Image */}
-                <img
-                  src={offer.image_url}
-                  alt={offer.title}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Gradient Overlay */}
-                <div 
-                  className="absolute inset-0" 
-                  style={{ background: getOverlayGradient() }}
-                />
-                
-                {/* Content */}
-                <div className={`absolute inset-0 flex ${getContentPositionClass()}`}>
-                  <div className={`px-8 md:px-16 max-w-xl ${theme.content_position === "center" ? "mx-auto" : ""}`}>
-                    <h2 className="text-2xl md:text-4xl font-display text-white mb-3 drop-shadow-md animate-fade-in">
-                      {offer.title}
-                    </h2>
-                    {offer.subtitle && (
-                      <p className="text-white/90 mb-2 text-base md:text-lg drop-shadow animate-fade-in">
-                        {offer.subtitle}
-                      </p>
-                    )}
-                    {offer.discount_code && (
-                      <p className="text-sm text-white/80 mb-4 animate-fade-in">
-                        Use code: <span className="font-bold text-white bg-primary/80 px-2 py-0.5 rounded">{offer.discount_code}</span>
-                      </p>
-                    )}
-                    {offer.link_url && (
-                      <Button 
-                        asChild 
-                        className="bg-white text-foreground hover:bg-white/90 px-6 py-2.5 text-sm font-semibold uppercase tracking-wider animate-fade-in"
+            {offers.map((offer, index) => {
+              // Merge individual item theme with global theme
+              const itemTheme: OfferTheme = { ...defaultItemTheme, ...offer.theme };
+              
+              // Get individual content position or fallback to global
+              const itemContentPosition = itemTheme.content_position || theme.content_position;
+              const itemPositionClass = itemContentPosition === "center" 
+                ? "items-center justify-center text-center" 
+                : itemContentPosition === "right" 
+                ? "items-center justify-end text-right" 
+                : "items-center justify-start text-left";
+              
+              // Get overlay settings from individual theme
+              const itemOverlayOpacity = itemTheme.overlay_opacity ?? theme.overlay_opacity;
+              const itemOverlayColor = itemTheme.overlay_color || theme.overlay_color;
+              const itemEdgeFade = itemTheme.edge_fade ?? false;
+              
+              // Build overlay gradient
+              const overlayOpacity = itemOverlayOpacity / 100;
+              const opacityHex = Math.round(overlayOpacity * 255).toString(16).padStart(2, '0');
+              const itemOverlayGradient = itemEdgeFade
+                ? `linear-gradient(to bottom, transparent, ${itemOverlayColor}${opacityHex} 70%)`
+                : itemContentPosition === "center"
+                ? `linear-gradient(to bottom, ${itemOverlayColor}${opacityHex}, transparent 30%, transparent 70%, ${itemOverlayColor}${opacityHex})`
+                : itemContentPosition === "right"
+                ? `linear-gradient(to left, ${itemOverlayColor}${opacityHex} 0%, transparent 70%)`
+                : `linear-gradient(to right, ${itemOverlayColor}${opacityHex} 0%, transparent 70%)`;
+              
+              // Get button shape (rounded or box)
+              const buttonShapeClass = itemTheme.button_shape === "box" 
+                ? "rounded-none" 
+                : "rounded-lg";
+              
+              // Get text color
+              const textColor = itemTheme.text_color || "#ffffff";
+              
+              return (
+                <div
+                  key={offer.id}
+                  className={`absolute inset-0 transition-opacity duration-500 ${
+                    index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
+                >
+                  {/* Background Image */}
+                  <img
+                    src={offer.image_url}
+                    alt={offer.title}
+                    className="w-full h-full"
+                    style={{ 
+                      objectFit: itemTheme.image_fit || "cover",
+                      transform: `scale(${(itemTheme.image_zoom || 100) / 100})`,
+                    }}
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ background: itemOverlayGradient }}
+                  />
+                  
+                  {/* Content */}
+                  <div className={`absolute inset-0 flex ${itemPositionClass}`}>
+                    <div className={`px-8 md:px-16 max-w-xl ${itemContentPosition === "center" ? "mx-auto" : ""}`}>
+                      <h2 
+                        className="text-2xl md:text-4xl font-display mb-3 drop-shadow-md animate-fade-in"
+                        style={{ color: textColor }}
                       >
-                        <Link to={offer.link_url}>{offer.button_text || "Shop Now"}</Link>
-                      </Button>
-                    )}
+                        {offer.title}
+                      </h2>
+                      {offer.subtitle && (
+                        <p 
+                          className="mb-2 text-base md:text-lg drop-shadow animate-fade-in"
+                          style={{ color: `${textColor}e6` }}
+                        >
+                          {offer.subtitle}
+                        </p>
+                      )}
+                      {offer.discount_code && (
+                        <p 
+                          className="text-sm mb-4 animate-fade-in"
+                          style={{ color: `${textColor}cc` }}
+                        >
+                          Use code: <span className="font-bold bg-primary/80 px-2 py-0.5 rounded" style={{ color: textColor }}>{offer.discount_code}</span>
+                        </p>
+                      )}
+                      {offer.link_url && (
+                        <Button 
+                          asChild 
+                          className={`bg-white text-foreground hover:bg-white/90 px-6 py-2.5 text-sm font-semibold uppercase tracking-wider animate-fade-in ${buttonShapeClass}`}
+                        >
+                          <Link to={offer.link_url}>{offer.button_text || "Shop Now"}</Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Navigation Arrows */}

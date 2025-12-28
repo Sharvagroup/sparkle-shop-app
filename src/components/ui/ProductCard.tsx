@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Heart, Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { ProductTheme } from "@/hooks/useProducts";
 
 interface ProductCardTheme {
   card_style: "default" | "minimal" | "bordered";
@@ -25,6 +26,17 @@ const defaultTheme: ProductCardTheme = {
   image_fit: "contain",
 };
 
+// Default individual product theme
+const defaultProductTheme: ProductTheme = {
+  card_style: undefined,
+  badge_style: "default",
+  badge_color: undefined,
+  image_fit: undefined,
+  hover_effect: undefined,
+  featured_border: false,
+  highlight_color: "#d4af37",
+};
+
 interface ProductCardProps {
   id: string;
   name: string;
@@ -36,6 +48,7 @@ interface ProductCardProps {
   reviewCount: number;
   badge?: "new" | "sale" | "trending";
   variant?: "default" | "featured";
+  theme?: ProductTheme | null;
 }
 
 const ProductCard = ({
@@ -49,9 +62,13 @@ const ProductCard = ({
   reviewCount,
   badge,
   variant = "default",
+  theme: productTheme,
 }: ProductCardProps) => {
   const { data: savedTheme } = useSiteSetting<ProductCardTheme>("product_card_theme");
-  const theme: ProductCardTheme = { ...defaultTheme, ...savedTheme };
+  const globalTheme: ProductCardTheme = { ...defaultTheme, ...savedTheme };
+  
+  // Merge individual product theme
+  const itemTheme: ProductTheme = { ...defaultProductTheme, ...productTheme };
 
   const renderStars = () => {
     const stars = [];
@@ -85,7 +102,9 @@ const ProductCard = ({
   };
 
   const getCardStyleClass = () => {
-    switch (theme.card_style) {
+    // Use individual theme if set, otherwise use global
+    const cardStyle = itemTheme.card_style || globalTheme.card_style;
+    switch (cardStyle) {
       case "minimal": return "border-0 shadow-none";
       case "bordered": return "border-2 border-border";
       default: return "border border-border";
@@ -93,7 +112,9 @@ const ProductCard = ({
   };
 
   const getHoverClass = () => {
-    switch (theme.hover_effect) {
+    // Use individual theme if set, otherwise use global
+    const hoverEffect = itemTheme.hover_effect || globalTheme.hover_effect;
+    switch (hoverEffect) {
       case "scale": return "hover:scale-[1.02]";
       case "border": return "hover:border-primary";
       case "none": return "";
@@ -103,7 +124,7 @@ const ProductCard = ({
 
   const getAspectClass = () => {
     if (variant === "featured") return "h-80";
-    switch (theme.image_aspect_ratio) {
+    switch (globalTheme.image_aspect_ratio) {
       case "portrait": return "aspect-[3/4]";
       case "landscape": return "aspect-[4/3]";
       default: return "aspect-square";
@@ -111,7 +132,7 @@ const ProductCard = ({
   };
 
   const getButtonClass = () => {
-    switch (theme.button_style) {
+    switch (globalTheme.button_style) {
       case "outline": 
         return "bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground";
       case "minimal": 
@@ -125,23 +146,69 @@ const ProductCard = ({
     if (variant === "featured") {
       return "w-full h-full object-cover";
     }
-    return theme.image_fit === "cover" 
+    // Use individual theme if set, otherwise use global
+    const imageFit = itemTheme.image_fit || globalTheme.image_fit;
+    return imageFit === "cover" 
       ? "w-full h-full object-cover" 
       : "max-h-full max-w-full object-contain";
+  };
+  
+  // Get badge style from individual theme
+  const getBadgeClass = () => {
+    const badgeStyle = itemTheme.badge_style || "default";
+    const badgeColor = itemTheme.badge_color;
+    
+    if (badgeColor) {
+      return badgeStyle === "rounded" || badgeStyle === "pill"
+        ? `${badgeStyle === "pill" ? "rounded-full" : "rounded-lg"}`
+        : "";
+    }
+    
+    // Default badge styles with shape
+    const shapeClass = badgeStyle === "pill" ? "rounded-full" : badgeStyle === "rounded" ? "rounded-lg" : "";
+    
+    switch (badge) {
+      case "new":
+        return `bg-primary text-primary-foreground ${shapeClass}`;
+      case "sale":
+        return `bg-sale text-white ${shapeClass}`;
+      case "trending":
+        return `bg-trending text-white ${shapeClass}`;
+      default:
+        return shapeClass;
+    }
+  };
+  
+  // Get featured border style
+  const getFeaturedBorderStyle = () => {
+    if (itemTheme.featured_border) {
+      return {
+        borderColor: itemTheme.highlight_color || "#d4af37",
+        borderWidth: "3px",
+      };
+    }
+    return {};
   };
 
   return (
     <Link 
       to={`/product/${id}`} 
       className={`bg-card group transition-all duration-300 block ${getCardStyleClass()} ${getHoverClass()}`}
+      style={getFeaturedBorderStyle()}
     >
       <div className={`relative ${variant === "featured" ? "h-80 overflow-hidden" : `bg-surface p-8 ${getAspectClass()} flex items-center justify-center`}`}>
         {badge && (
-          <span className={`absolute top-4 left-4 ${getBadgeStyles()} text-[10px] font-bold px-2 py-1 uppercase z-10`}>
+          <span 
+            className={`absolute top-4 left-4 ${getBadgeClass()} text-[10px] font-bold px-2 py-1 uppercase z-10`}
+            style={itemTheme.badge_color ? { 
+              backgroundColor: itemTheme.badge_color,
+              color: "#ffffff",
+            } : {}}
+          >
             {badge}
           </span>
         )}
-        {theme.show_wishlist && (
+        {globalTheme.show_wishlist && (
           <button className="absolute top-4 right-4 text-muted-foreground hover:text-sale z-10">
             <div className="bg-card rounded-full p-1 shadow-sm">
               <Heart size={16} />
@@ -156,7 +223,7 @@ const ProductCard = ({
       </div>
       
       <div className="p-6">
-        {theme.show_rating && (
+        {globalTheme.show_rating && (
           <div className="flex text-primary text-xs mb-2">
             {renderStars()}
             <span className="text-muted-foreground ml-1">({reviewCount})</span>
@@ -165,7 +232,7 @@ const ProductCard = ({
         <h3 className="font-display font-medium text-lg mb-2 text-foreground truncate">
           {name}
         </h3>
-        {theme.show_description && (
+        {globalTheme.show_description && (
           <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
             {description}
           </p>
