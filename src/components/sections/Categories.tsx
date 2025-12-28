@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, Category, CategoryTheme } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
@@ -36,6 +36,19 @@ const defaultDisplayTheme: CategoryDisplayTheme = {
   hover_border_color: "hsl(var(--primary))",
   hover_border_width: 4,
   show_hover_scale: true,
+};
+
+// Default individual item theme
+const defaultItemTheme: CategoryTheme = {
+  display_shape: undefined,
+  image_size: undefined,
+  font_size: undefined,
+  font_weight: "medium",
+  hover_effect: "lift",
+  hover_border_color: undefined,
+  overlay_opacity: 0,
+  overlay_color: "#000000",
+  text_position: "below",
 };
 
 const Categories = () => {
@@ -170,42 +183,90 @@ const Categories = () => {
             className="flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide scroll-smooth px-4 max-w-5xl snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {displayCategories.map((category, index) => (
-              <Link
-                key={category.id}
-                to={`/products?category=${category.slug}`}
-                className="group cursor-pointer flex-shrink-0 snap-center"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div 
-                  className={`mx-auto overflow-hidden border-4 border-card shadow-lg transition-all duration-300 bg-card flex items-center justify-center ${getShapeClass()} ${display.show_hover_scale ? 'group-hover:scale-105' : ''}`}
-                  style={{ 
-                    width: `${display.image_size}px`, 
-                    height: `${display.image_size}px`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = display.hover_border_color.startsWith("hsl") ? "hsl(var(--primary))" : display.hover_border_color;
-                    e.currentTarget.style.borderWidth = `${display.hover_border_width}px`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'hsl(var(--card))';
-                    e.currentTarget.style.borderWidth = '4px';
-                  }}
+            {displayCategories.map((category, index) => {
+              // Merge individual item theme with display theme
+              const itemTheme: CategoryTheme = { ...defaultItemTheme, ...category.theme };
+              
+              // Get individual shape or fallback to global display
+              const itemShape = itemTheme.display_shape || display.display_shape;
+              const itemShapeClass = itemShape === "square" ? "rounded-none" : itemShape === "rounded" ? "rounded-xl" : "rounded-full";
+              
+              // Get individual size or fallback
+              const itemSize = itemTheme.image_size === "small" ? 120 : itemTheme.image_size === "large" ? 200 : (itemTheme.image_size === "medium" ? 160 : display.image_size);
+              
+              // Get individual hover effect
+              const hasScale = itemTheme.hover_effect === "lift" || display.show_hover_scale;
+              const hasGlow = itemTheme.hover_effect === "glow";
+              const hasBorder = itemTheme.hover_effect === "border";
+              
+              // Get hover border color
+              const hoverBorderColor = itemTheme.hover_border_color || display.hover_border_color;
+              
+              // Get font size
+              const itemFontSize = itemTheme.font_size || display.font_size;
+              const fontSizeClass = itemFontSize === "large" ? "text-base" : itemFontSize === "base" ? "text-sm" : "text-xs";
+              
+              // Get font weight
+              const fontWeightClass = itemTheme.font_weight === "bold" ? "font-bold" : itemTheme.font_weight === "normal" ? "font-normal" : "font-medium";
+              
+              return (
+                <Link
+                  key={category.id}
+                  to={`/products?category=${category.slug}`}
+                  className="group cursor-pointer flex-shrink-0 snap-center"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <img
-                    src={getCategoryImage(category)}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 
-                  className={`mt-4 font-medium tracking-wider text-muted-foreground group-hover:text-primary transition-colors ${getFontSizeClass()}`}
-                  style={{ textTransform: display.text_transform }}
-                >
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
+                  <div 
+                    className={`mx-auto overflow-hidden border-4 border-card shadow-lg transition-all duration-300 bg-card flex items-center justify-center relative ${itemShapeClass} ${hasScale ? 'group-hover:scale-105' : ''} ${hasGlow ? 'group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)]' : ''}`}
+                    style={{ 
+                      width: `${itemSize}px`, 
+                      height: `${itemSize}px`,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (hasBorder || display.hover_border_width > 0) {
+                        e.currentTarget.style.borderColor = hoverBorderColor.startsWith("hsl") ? "hsl(var(--primary))" : hoverBorderColor;
+                        e.currentTarget.style.borderWidth = `${display.hover_border_width}px`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'hsl(var(--card))';
+                      e.currentTarget.style.borderWidth = '4px';
+                    }}
+                  >
+                    <img
+                      src={getCategoryImage(category)}
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay for text_position: overlay */}
+                    {itemTheme.text_position === "overlay" && (
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ 
+                          backgroundColor: `${itemTheme.overlay_color}${Math.round((itemTheme.overlay_opacity || 0) * 2.55).toString(16).padStart(2, '0')}`
+                        }}
+                      >
+                        <h3 
+                          className={`${fontWeightClass} tracking-wider text-white transition-colors ${fontSizeClass}`}
+                          style={{ textTransform: display.text_transform }}
+                        >
+                          {category.name}
+                        </h3>
+                      </div>
+                    )}
+                  </div>
+                  {/* Text below image (default) */}
+                  {itemTheme.text_position !== "overlay" && (
+                    <h3 
+                      className={`mt-4 ${fontWeightClass} tracking-wider text-muted-foreground group-hover:text-primary transition-colors ${fontSizeClass}`}
+                      style={{ textTransform: display.text_transform }}
+                    >
+                      {category.name}
+                    </h3>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           <button

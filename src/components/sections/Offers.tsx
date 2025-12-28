@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSpecialOffers, Offer } from "@/hooks/useOffers";
+import { useSpecialOffers, Offer, OfferTheme } from "@/hooks/useOffers";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,18 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
+
+const defaultOfferTheme: OfferTheme = {
+  content_position: "center",
+  overlay_opacity: 40,
+  overlay_color: "#000000",
+  edge_fade: false,
+  button_shape: "rounded",
+  image_fit: "cover",
+  image_zoom: 100,
+  text_color: "#ffffff",
+  card_style: "shadow",
+};
 
 const Offers = () => {
   const { data: offers = [], isLoading } = useSpecialOffers();
@@ -36,33 +48,75 @@ const Offers = () => {
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {offers.map((offer) => (
-            <button
-              key={offer.id}
-              onClick={() => setSelectedOffer(offer)}
-              className="group relative overflow-hidden rounded-lg aspect-[4/3] bg-card border border-border transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-            >
-              <img
-                src={offer.image_url}
-                alt={offer.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-4 text-left">
-                <h3 className="text-white font-display font-bold text-lg md:text-xl leading-tight">
-                  {offer.title}
-                </h3>
-                {offer.subtitle && (
-                  <p className="text-white/80 text-sm mt-1">{offer.subtitle}</p>
-                )}
-                {offer.discount_code && (
-                  <Badge className="mt-2 w-fit bg-primary text-primary-foreground">
-                    Use: {offer.discount_code}
-                  </Badge>
-                )}
-              </div>
-            </button>
-          ))}
+          {offers.map((offer) => {
+            const theme: OfferTheme = { ...defaultOfferTheme, ...offer.theme };
+            
+            // Get card style classes
+            const cardStyleClass = theme.card_style === "bordered" 
+              ? "border-2 border-border" 
+              : theme.card_style === "minimal" 
+              ? "border-0" 
+              : "shadow-lg";
+            
+            // Get content position classes (use left/center/right from OfferTheme)
+            const contentPositionClass = theme.content_position === "left" 
+              ? "justify-start" 
+              : theme.content_position === "right" 
+              ? "justify-end" 
+              : "justify-center";
+            
+            // Build overlay gradient
+            const overlayOpacity = (theme.overlay_opacity || 40) / 100;
+            const overlayColor = theme.overlay_color || "#000000";
+            const overlayStyle = theme.edge_fade 
+              ? `linear-gradient(to bottom, transparent, ${overlayColor}${Math.round(overlayOpacity * 255).toString(16).padStart(2, '0')} 70%)`
+              : `linear-gradient(to top, ${overlayColor}${Math.round(overlayOpacity * 255).toString(16).padStart(2, '0')}, ${overlayColor}${Math.round(overlayOpacity * 0.3 * 255).toString(16).padStart(2, '0')} 50%, transparent)`;
+            
+            // Get button shape class (rounded or box)
+            const buttonShapeClass = theme.button_shape === "box" 
+              ? "rounded-none" 
+              : "rounded-lg";
+            
+            return (
+              <button
+                key={offer.id}
+                onClick={() => setSelectedOffer(offer)}
+                className={`group relative overflow-hidden rounded-lg aspect-[4/3] bg-card border transition-all duration-300 hover:scale-[1.02] ${cardStyleClass}`}
+              >
+                <img
+                  src={offer.image_url}
+                  alt={offer.title}
+                  className="w-full h-full transition-transform duration-500 group-hover:scale-110"
+                  style={{ 
+                    objectFit: theme.image_fit || "cover",
+                    transform: `scale(${(theme.image_zoom || 100) / 100})`,
+                  }}
+                />
+                <div className="absolute inset-0" style={{ background: overlayStyle }} />
+                <div className={`absolute inset-0 flex flex-col ${contentPositionClass} p-4 text-left`}>
+                  <h3 
+                    className="font-display font-bold text-lg md:text-xl leading-tight"
+                    style={{ color: theme.text_color || "#ffffff" }}
+                  >
+                    {offer.title}
+                  </h3>
+                  {offer.subtitle && (
+                    <p 
+                      className="text-sm mt-1" 
+                      style={{ color: `${theme.text_color || "#ffffff"}cc` }}
+                    >
+                      {offer.subtitle}
+                    </p>
+                  )}
+                  {offer.discount_code && (
+                    <Badge className={`mt-2 w-fit bg-primary text-primary-foreground ${buttonShapeClass}`}>
+                      Use: {offer.discount_code}
+                    </Badge>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
