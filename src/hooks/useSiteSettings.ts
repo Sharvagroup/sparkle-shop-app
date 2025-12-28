@@ -77,7 +77,7 @@ export const useSiteSettings = () => {
 export const useSiteSetting = <T>(key: string) => {
   return useQuery({
     queryKey: ["site-settings", key],
-    queryFn: async () => {
+    queryFn: async (): Promise<T | null> => {
       const { data, error } = await supabase
         .from("site_settings")
         .select("*")
@@ -85,7 +85,8 @@ export const useSiteSetting = <T>(key: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data?.value as T | null;
+      // Return null instead of undefined to satisfy React Query
+      return (data?.value as T) ?? null;
     },
   });
 };

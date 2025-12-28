@@ -13,9 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock } from "lucide-react";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface ContactPageSettings {
+  heroImage: string;
+  mapEmbedUrl: string;
+}
 
 interface LegalSettings {
   copyrightText: string;
@@ -115,6 +120,10 @@ const Settings = () => {
   ];
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>(defaultBusinessHours);
 
+  // Contact Page Settings
+  const [contactHeroImage, setContactHeroImage] = useState("");
+  const [mapEmbedUrl, setMapEmbedUrl] = useState("");
+
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -175,6 +184,11 @@ const Settings = () => {
       if (businessHoursData?.hours) {
         setBusinessHours(businessHoursData.hours);
       }
+      const contactPageData = settings.contact_page as unknown as ContactPageSettings | undefined;
+      if (contactPageData) {
+        setContactHeroImage(contactPageData.heroImage || "");
+        setMapEmbedUrl(contactPageData.mapEmbedUrl || "");
+      }
     }
   }, [settings]);
 
@@ -224,6 +238,12 @@ const Settings = () => {
     await updateSetting.mutateAsync({
       key: "business_hours",
       value: { hours: businessHours },
+      category: "contact",
+    });
+    // Also save contact page settings
+    await updateSetting.mutateAsync({
+      key: "contact_page",
+      value: { heroImage: contactHeroImage, mapEmbedUrl: mapEmbedUrl },
       category: "contact",
     });
   };
@@ -504,6 +524,42 @@ const Settings = () => {
                         </Button>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Contact Page Settings */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Image className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-base font-medium">Contact Page Settings</Label>
+                  </div>
+                  
+                  <div className="space-y-3 p-4 border rounded-lg">
+                    <Label>Hero Image</Label>
+                    <p className="text-xs text-muted-foreground">Background image for the Contact page header</p>
+                    <div className="flex gap-4 items-center">
+                      <div className="w-32 h-16 bg-muted rounded flex items-center justify-center overflow-hidden">
+                        {contactHeroImage ? <img src={contactHeroImage} alt="Contact Hero" className="max-h-full max-w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
+                      </div>
+                      <div>
+                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
+                        <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("contact-hero-upload")?.click()} disabled={uploading === "contactHero"}>
+                          {uploading === "contactHero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Google Maps Embed URL</Label>
+                    <Input 
+                      value={mapEmbedUrl} 
+                      onChange={(e) => setMapEmbedUrl(e.target.value)} 
+                      placeholder="https://www.google.com/maps/embed?pb=..." 
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Get embed code from Google Maps: Share → Embed a map → Copy the src URL
+                    </p>
                   </div>
                 </div>
 
