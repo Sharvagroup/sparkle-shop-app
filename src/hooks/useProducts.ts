@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ProductTheme {
+  badge_style?: 'default' | 'rounded' | 'pill';
+  badge_color?: string;
+  image_fit?: 'cover' | 'contain';
+  highlight_color?: string;
+  featured_border?: boolean;
+  hover_effect?: 'none' | 'lift' | 'glow' | 'zoom';
+  card_style?: 'minimal' | 'bordered' | 'shadow';
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -26,6 +36,7 @@ export interface Product {
   is_active: boolean;
   rating: number;
   review_count: number;
+  theme: ProductTheme | null;
   created_at: string;
   updated_at: string;
   // Joined relations
@@ -55,6 +66,7 @@ export interface ProductInput {
   badge?: 'new' | 'sale' | 'trending' | null;
   display_order?: number;
   is_active?: boolean;
+  theme?: ProductTheme | null;
 }
 
 export interface ProductFilters {
@@ -170,7 +182,7 @@ export const useCreateProduct = () => {
     mutationFn: async (product: ProductInput) => {
       const { data, error } = await supabase
         .from('products')
-        .insert(product)
+        .insert(product as any)
         .select()
         .single();
 
@@ -192,7 +204,7 @@ export const useUpdateProduct = () => {
     mutationFn: async ({ id, ...product }: ProductInput & { id: string }) => {
       const { data, error } = await supabase
         .from('products')
-        .update(product)
+        .update(product as any)
         .eq('id', id)
         .select()
         .single();
