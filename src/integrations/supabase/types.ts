@@ -164,6 +164,7 @@ export type Database = {
           name: string
           parent_id: string | null
           slug: string
+          theme: Json | null
           updated_at: string
         }
         Insert: {
@@ -175,6 +176,7 @@ export type Database = {
           name: string
           parent_id?: string | null
           slug: string
+          theme?: Json | null
           updated_at?: string
         }
         Update: {
@@ -186,6 +188,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           slug?: string
+          theme?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -208,6 +211,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           slug: string
+          theme: Json | null
           updated_at: string
         }
         Insert: {
@@ -219,6 +223,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           slug: string
+          theme?: Json | null
           updated_at?: string
         }
         Update: {
@@ -230,6 +235,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           slug?: string
+          theme?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -292,6 +298,7 @@ export type Database = {
           start_date: string | null
           subtitle: string | null
           terms_conditions: string | null
+          theme: Json | null
           title: string
           updated_at: string
         }
@@ -313,6 +320,7 @@ export type Database = {
           start_date?: string | null
           subtitle?: string | null
           terms_conditions?: string | null
+          theme?: Json | null
           title: string
           updated_at?: string
         }
@@ -334,6 +342,7 @@ export type Database = {
           start_date?: string | null
           subtitle?: string | null
           terms_conditions?: string | null
+          theme?: Json | null
           title?: string
           updated_at?: string
         }
@@ -478,6 +487,7 @@ export type Database = {
           sku: string | null
           slug: string
           stock_quantity: number | null
+          theme: Json | null
           updated_at: string
           video_url: string | null
         }
@@ -506,6 +516,7 @@ export type Database = {
           sku?: string | null
           slug: string
           stock_quantity?: number | null
+          theme?: Json | null
           updated_at?: string
           video_url?: string | null
         }
@@ -534,6 +545,7 @@ export type Database = {
           sku?: string | null
           slug?: string
           stock_quantity?: number | null
+          theme?: Json | null
           updated_at?: string
           video_url?: string | null
         }

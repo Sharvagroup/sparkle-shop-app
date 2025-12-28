@@ -4,6 +4,18 @@ import { toast } from "@/hooks/use-toast";
 
 export type OfferType = "offer_banner" | "special_offer";
 
+export interface OfferTheme {
+  content_position?: 'left' | 'center' | 'right';
+  overlay_opacity?: number;
+  overlay_color?: string;
+  edge_fade?: boolean;
+  button_shape?: 'rounded' | 'box';
+  image_fit?: 'cover' | 'contain' | 'fill';
+  image_zoom?: number;
+  text_color?: string;
+  card_style?: 'minimal' | 'bordered' | 'shadow';
+}
+
 export interface Offer {
   id: string;
   title: string;
@@ -22,11 +34,12 @@ export interface Offer {
   display_order: number | null;
   is_active: boolean | null;
   offer_type: OfferType | null;
+  theme: OfferTheme | null;
   created_at: string;
   updated_at: string;
 }
 
-export type OfferInsert = Omit<Offer, "id" | "created_at" | "updated_at">;
+export type OfferInsert = Omit<Offer, "id" | "created_at" | "updated_at" | "theme"> & { theme?: OfferTheme | null };
 export type OfferUpdate = Partial<OfferInsert>;
 
 export const useOffers = () => {
@@ -130,7 +143,7 @@ export const useCreateOffer = () => {
     mutationFn: async (offer: OfferInsert) => {
       const { data, error } = await supabase
         .from("offers")
-        .insert(offer)
+        .insert(offer as any)
         .select()
         .single();
 
@@ -154,7 +167,7 @@ export const useUpdateOffer = () => {
     mutationFn: async ({ id, ...offer }: OfferUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from("offers")
-        .update(offer)
+        .update(offer as any)
         .eq("id", id)
         .select()
         .single();

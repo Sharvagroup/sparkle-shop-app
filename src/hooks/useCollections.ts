@@ -1,6 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface CollectionTheme {
+  card_style?: 'minimal' | 'bordered' | 'shadow';
+  image_aspect?: 'square' | '4:3' | '16:9';
+  overlay_color?: string;
+  overlay_opacity?: number;
+  content_position?: 'bottom' | 'center';
+  font_size?: 'small' | 'base' | 'large';
+  font_weight?: 'normal' | 'medium' | 'bold';
+  hover_effect?: 'none' | 'lift' | 'glow' | 'zoom';
+}
+
 export interface Collection {
   id: string;
   name: string;
@@ -9,6 +20,7 @@ export interface Collection {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
+  theme: CollectionTheme | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +32,7 @@ export interface CollectionInput {
   image_url?: string | null;
   display_order?: number;
   is_active?: boolean;
+  theme?: CollectionTheme | null;
 }
 
 // Fetch all active collections (for frontend)
@@ -63,7 +76,7 @@ export const useCreateCollection = () => {
     mutationFn: async (collection: CollectionInput) => {
       const { data, error } = await supabase
         .from('collections')
-        .insert(collection)
+        .insert(collection as any)
         .select()
         .single();
 
@@ -85,7 +98,7 @@ export const useUpdateCollection = () => {
     mutationFn: async ({ id, ...collection }: CollectionInput & { id: string }) => {
       const { data, error } = await supabase
         .from('collections')
-        .update(collection)
+        .update(collection as any)
         .eq('id', id)
         .select()
         .single();

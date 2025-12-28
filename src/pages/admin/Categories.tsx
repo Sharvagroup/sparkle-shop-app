@@ -30,6 +30,7 @@ import {
 } from '@/hooks/useCategories';
 import CategoryForm from '@/components/admin/CategoryForm';
 import { CategoryDisplayThemeDialog } from '@/components/admin/CategoryDisplayThemeDialog';
+import { CategoryItemThemeDialog } from '@/components/admin/CategoryItemThemeDialog';
 
 const Categories = () => {
   const { data: categories = [], isLoading } = useAdminCategories();
@@ -42,6 +43,7 @@ const Categories = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [itemThemeCategory, setItemThemeCategory] = useState<Category | null>(null);
 
   const handleAdd = () => {
     setEditingCategory(null);
@@ -199,7 +201,15 @@ const Categories = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setItemThemeCategory(category)}
+                        title="Theme"
+                      >
+                        <Paintbrush className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -259,6 +269,13 @@ const Categories = () => {
       <CategoryDisplayThemeDialog
         open={themeDialogOpen}
         onOpenChange={setThemeDialogOpen}
+      />
+
+      {/* Category Item Theme Dialog */}
+      <CategoryItemThemeDialog
+        open={!!itemThemeCategory}
+        onOpenChange={(open) => !open && setItemThemeCategory(null)}
+        category={itemThemeCategory}
       />
     </div>
   );

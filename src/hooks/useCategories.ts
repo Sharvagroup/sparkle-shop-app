@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface CategoryTheme {
+  display_shape?: 'circle' | 'square' | 'rounded';
+  image_size?: 'small' | 'medium' | 'large';
+  font_size?: 'small' | 'base' | 'large';
+  font_weight?: 'normal' | 'medium' | 'bold';
+  hover_effect?: 'none' | 'lift' | 'glow' | 'border';
+  hover_border_color?: string;
+  overlay_opacity?: number;
+  overlay_color?: string;
+  text_position?: 'below' | 'overlay';
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -9,6 +21,7 @@ export interface Category {
   parent_id: string | null;
   display_order: number;
   is_active: boolean;
+  theme: CategoryTheme | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +33,7 @@ export interface CategoryInput {
   parent_id?: string | null;
   display_order?: number;
   is_active?: boolean;
+  theme?: CategoryTheme | null;
 }
 
 // Fetch all active categories (for frontend)
@@ -63,7 +77,7 @@ export const useCreateCategory = () => {
     mutationFn: async (category: CategoryInput) => {
       const { data, error } = await supabase
         .from('categories')
-        .insert(category)
+        .insert(category as any)
         .select()
         .single();
 
@@ -85,7 +99,7 @@ export const useUpdateCategory = () => {
     mutationFn: async ({ id, ...category }: CategoryInput & { id: string }) => {
       const { data, error } = await supabase
         .from('categories')
-        .update(category)
+        .update(category as any)
         .eq('id', id)
         .select()
         .single();
