@@ -18,9 +18,14 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 
-const materials = ["Gold Plated", "Silver", "Brass", "Copper", "Oxidized"];
-const ITEMS_PER_PAGE = 12;
+interface ProductsPageSettings {
+  materials: string[];
+  itemsPerPage: number;
+  maxPriceFilter: number;
+  heroSubtitle: string;
+}
 
 const Products = () => {
   const [searchParams] = useSearchParams();
@@ -34,6 +39,12 @@ const Products = () => {
   const { data: categories = [] } = useCategories();
   const { data: collections = [] } = useCollections();
   const { data: allProducts = [], isLoading } = useProducts();
+  const { data: productsPageSettings } = useSiteSetting<ProductsPageSettings>("products_page");
+
+  const materials = productsPageSettings?.materials || ["Gold Plated", "Silver", "Brass", "Copper", "Oxidized"];
+  const ITEMS_PER_PAGE = productsPageSettings?.itemsPerPage || 12;
+  const maxPriceFilter = productsPageSettings?.maxPriceFilter || 50000;
+  const heroSubtitle = productsPageSettings?.heroSubtitle || "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life.";
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []
@@ -42,7 +53,7 @@ const Products = () => {
     collectionFromUrl ? [collectionFromUrl] : []
   );
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPriceFilter]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
@@ -244,7 +255,7 @@ const Products = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
             {searchQuery 
               ? `Found ${filteredProducts.length} results for your search`
-              : "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life."}
+              : heroSubtitle}
           </p>
         </section>
 

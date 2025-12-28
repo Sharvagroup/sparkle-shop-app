@@ -19,6 +19,16 @@ import { useCart, useClearCart } from "@/hooks/useCart";
 import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+
+interface ShippingSettings {
+  freeShippingThreshold: number;
+  standardShippingCost: number;
+  freeShippingText: string;
+  countries: string[];
+  states: { [country: string]: string[] };
+  paymentMethods: { card: boolean; upi: boolean; cod: boolean };
+}
 
 const Checkout = () => {
   const { user } = useAuth();
@@ -26,6 +36,14 @@ const Checkout = () => {
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const navigate = useNavigate();
+  const { data: shippingSettings } = useSiteSetting<ShippingSettings>("shipping_settings");
+
+  const freeShippingThreshold = shippingSettings?.freeShippingThreshold ?? 5000;
+  const standardShippingCost = shippingSettings?.standardShippingCost ?? 150;
+  const freeShippingText = shippingSettings?.freeShippingText || "Orders above ₹5,000 qualify for free shipping";
+  const availableCountries = shippingSettings?.countries || ["India", "USA", "UK"];
+  const availableStates = shippingSettings?.states?.["India"] || ["Maharashtra", "Karnataka", "Delhi", "Tamil Nadu", "Gujarat"];
+  const paymentMethods = shippingSettings?.paymentMethods || { card: true, upi: true, cod: true };
 
   const [email, setEmail] = useState(user?.email || "");
   const [newsletter, setNewsletter] = useState(false);
@@ -48,7 +66,7 @@ const Checkout = () => {
     (sum, item) => sum + (item.product?.price || 0) * item.quantity,
     0
   );
-  const shipping = subtotal > 5000 ? 0 : 150;
+  const shipping = subtotal > freeShippingThreshold ? 0 : standardShippingCost;
   const total = subtotal + shipping;
 
   const formatPrice = (price: number) => {
