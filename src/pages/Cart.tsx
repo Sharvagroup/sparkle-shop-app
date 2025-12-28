@@ -54,6 +54,7 @@ const Cart = () => {
       const discount = await validateDiscount.mutateAsync({
         code: promoCode,
         cartTotal: subtotal,
+        userId: user?.id,
       });
       setAppliedDiscount(discount);
       toast({ title: "Promo code applied!", description: `You saved ${formatPrice(discount.discountAmount)}` });
@@ -71,6 +72,7 @@ const Cart = () => {
   const handleProceedToCheckout = () => {
     const params = new URLSearchParams();
     if (appliedDiscount) {
+      params.set("discountCodeId", appliedDiscount.id);
       params.set("discountCode", appliedDiscount.code);
       params.set("discountAmount", appliedDiscount.discountAmount.toString());
     }

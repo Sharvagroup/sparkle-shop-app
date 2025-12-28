@@ -20,7 +20,9 @@ import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
+import { useRecordDiscountUsage } from "@/hooks/useDiscountCodeUsage";
 import { INDIAN_STATES } from "@/lib/constants";
+import { supabase } from "@/integrations/supabase/client";
 
 const Checkout = () => {
   const { user } = useAuth();
@@ -30,6 +32,10 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const incrementDiscountUsage = useIncrementDiscountUsage();
+  const recordDiscountUsage = useRecordDiscountUsage();
+
+  // Get discount from URL params (passed from Cart)
+  const discountCodeId = searchParams.get("discountCodeId");
 
   // Get discount from URL params (passed from Cart)
   const discountCode = searchParams.get("discountCode");
@@ -102,10 +108,30 @@ const Checkout = () => {
         items: orderItems,
       });
 
-      // Increment discount code usage if one was applied
-      if (discountCode) {
+      // Record per-user discount usage if one was applied
+      if (discountCodeId && discountCode) {
         await incrementDiscountUsage.mutateAsync(discountCode);
+        await recordDiscountUsage.mutateAsync({ discountCodeId, orderId: order.id });
       }
+
+      // Send order confirmation email (non-blocking)
+      supabase.functions.invoke("send-order-email", {
+        body: {
+          to: email,
+          orderNumber: order.order_number,
+          customerName: `${firstName} ${lastName}`,
+          items: orderItems.map(item => ({
+            name: item.product_snapshot.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          subtotal,
+          shipping,
+          discount: discountAmount,
+          total,
+          shippingAddress: shippingAddr,
+        },
+      }).catch(err => console.error("Failed to send order email:", err));
 
       await clearCart.mutateAsync();
       setOrderNumber(order.order_number);
