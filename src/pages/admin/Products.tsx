@@ -44,6 +44,7 @@ import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import ProductForm from '@/components/admin/ProductForm';
 import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
+import { ProductItemThemeDialog } from '@/components/admin/ProductItemThemeDialog';
 import { Plus, Pencil, Trash2, Search, Package, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -59,6 +60,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [itemThemeProduct, setItemThemeProduct] = useState<Product | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -304,6 +306,14 @@ const AdminProducts = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => setItemThemeProduct(product)}
+                        title="Theme"
+                      >
+                        <Paintbrush className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setEditingProduct(product)}
                       >
                         <Pencil className="w-4 h-4" />
@@ -377,6 +387,13 @@ const AdminProducts = () => {
       <ProductCardThemeDialog
         open={themeDialogOpen}
         onOpenChange={setThemeDialogOpen}
+      />
+
+      {/* Product Item Theme Dialog */}
+      <ProductItemThemeDialog
+        open={!!itemThemeProduct}
+        onOpenChange={(open) => !open && setItemThemeProduct(null)}
+        product={itemThemeProduct}
       />
     </div>
   );
