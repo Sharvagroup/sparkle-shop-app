@@ -14,11 +14,13 @@ import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useHomepageReviews } from "@/hooks/useReviews";
 import { HeroSectionThemeDialog } from "@/components/admin/HeroSectionThemeDialog";
+import { OfferBannerSectionThemeDialog } from "@/components/admin/OfferBannerSectionThemeDialog";
+import { SectionThemeDialog, sectionConfigs } from "@/components/admin/SectionThemeDialog";
 
 const sectionLabels: Record<string, { label: string; description: string }> = {
   hero: { label: "Hero Banner", description: "Main carousel/banner at the top" },
   offers_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" },
-  sale_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" }, // Backward compatibility alias
+  sale_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" },
   categories: { label: "Categories", description: "Product category showcase" },
   offers: { label: "Special Offers", description: "Promotional offers with popups" },
   new_arrivals: { label: "New Arrivals", description: "Latest products section" },
@@ -27,14 +29,15 @@ const sectionLabels: Record<string, { label: string; description: string }> = {
   testimonials: { label: "Testimonials", description: "Customer reviews section" },
 };
 
-// Canonical section keys (excluding aliases)
 const canonicalSections = ["hero", "offers_banner", "categories", "offers", "new_arrivals", "best_sellers", "celebrity_specials", "testimonials"];
+
+// Sections that have theme dialogs
+const themableSections = ["hero", "offers_banner", "sale_banner", "categories", "offers", "new_arrivals", "best_sellers", "celebrity_specials", "testimonials"];
 
 const Homepage = () => {
   const { data: settings, isLoading } = useSiteSettings();
   const updateSetting = useUpdateSiteSetting();
 
-  // Fetch content counts for each section
   const { data: banners = [] } = useBanners();
   const { data: activeOffers = [] } = useActiveOffers();
   const { data: categories = [] } = useCategories();
@@ -43,7 +46,6 @@ const Homepage = () => {
   const { data: celebritySpecials = [] } = useProducts({ isCelebritySpecial: true });
   const { data: homepageReviews = [] } = useHomepageReviews();
 
-  // Content mapping with admin panel links
   const sectionContent: Record<string, { count: number; adminPath: string; adminLabel: string }> = {
     hero: { count: banners.length, adminPath: "/admin/banners", adminLabel: "Banners" },
     offers_banner: { count: activeOffers.length, adminPath: "/admin/offers", adminLabel: "Offers" },
@@ -60,6 +62,8 @@ const Homepage = () => {
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [heroThemeOpen, setHeroThemeOpen] = useState(false);
+  const [offerBannerThemeOpen, setOfferBannerThemeOpen] = useState(false);
+  const [activeSectionTheme, setActiveSectionTheme] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings?.homepage) {
@@ -201,13 +205,21 @@ const Homepage = () => {
                       )
                     )}
 
-                    {/* Theme button for Hero section */}
-                    {section === "hero" && (
+                    {/* Theme buttons for sections */}
+                    {themableSections.includes(section) && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setHeroThemeOpen(true)}
-                        title="Hero Section Theme"
+                        onClick={() => {
+                          if (section === "hero") {
+                            setHeroThemeOpen(true);
+                          } else if (section === "offers_banner" || section === "sale_banner") {
+                            setOfferBannerThemeOpen(true);
+                          } else if (sectionConfigs[section]) {
+                            setActiveSectionTheme(section);
+                          }
+                        }}
+                        title={`${sectionLabels[section]?.label || section} Theme`}
                         className="h-8 w-8"
                       >
                         <Paintbrush className="h-4 w-4" />
@@ -262,6 +274,19 @@ const Homepage = () => {
         open={heroThemeOpen}
         onOpenChange={setHeroThemeOpen}
       />
+
+      <OfferBannerSectionThemeDialog
+        open={offerBannerThemeOpen}
+        onOpenChange={setOfferBannerThemeOpen}
+      />
+
+      {activeSectionTheme && sectionConfigs[activeSectionTheme] && (
+        <SectionThemeDialog
+          open={!!activeSectionTheme}
+          onOpenChange={(open) => !open && setActiveSectionTheme(null)}
+          config={sectionConfigs[activeSectionTheme]}
+        />
+      )}
     </div>
   );
 };

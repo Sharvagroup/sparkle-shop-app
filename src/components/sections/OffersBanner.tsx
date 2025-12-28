@@ -2,13 +2,40 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useOfferBanners } from "@/hooks/useOffers";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface OfferBannerTheme {
+  section_height: "small" | "medium" | "large";
+  auto_slide_speed: number;
+  section_padding: "small" | "medium" | "large";
+  overlay_enabled: boolean;
+  overlay_color: string;
+  overlay_opacity: number;
+  content_position: "left" | "center" | "right";
+}
+
+const defaultTheme: OfferBannerTheme = {
+  section_height: "medium",
+  auto_slide_speed: 5,
+  section_padding: "medium",
+  overlay_enabled: true,
+  overlay_color: "#000000",
+  overlay_opacity: 50,
+  content_position: "left",
+};
+
 const OffersBanner = () => {
   const { data: offers = [], isLoading } = useOfferBanners();
+  const { data: savedTheme } = useSiteSetting<OfferBannerTheme>("offer_banner_theme");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const theme: OfferBannerTheme = {
+    ...defaultTheme,
+    ...savedTheme,
+  };
 
   const nextSlide = useCallback(() => {
     if (offers.length > 0) {
@@ -22,24 +49,63 @@ const OffersBanner = () => {
     }
   }, [offers.length]);
 
-  // Auto-rotate carousel
+  // Auto-rotate carousel with theme speed
   useEffect(() => {
     if (!isAutoPlaying || offers.length <= 1) return;
 
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, theme.auto_slide_speed * 1000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, offers.length, nextSlide]);
+  }, [isAutoPlaying, offers.length, nextSlide, theme.auto_slide_speed]);
 
   // Reset index when offers change
   useEffect(() => {
     setCurrentIndex(0);
   }, [offers.length]);
 
+  // Get height class based on theme
+  const getHeightClass = () => {
+    switch (theme.section_height) {
+      case "small": return "h-[200px] md:h-[250px]";
+      case "large": return "h-[350px] md:h-[450px]";
+      default: return "h-[280px] md:h-[350px]";
+    }
+  };
+
+  // Get padding class based on theme
+  const getPaddingClass = () => {
+    switch (theme.section_padding) {
+      case "small": return "py-4 md:py-6";
+      case "large": return "py-12 md:py-16";
+      default: return "py-8 md:py-12";
+    }
+  };
+
+  // Get content position classes
+  const getContentPositionClass = () => {
+    switch (theme.content_position) {
+      case "center": return "items-center justify-center text-center";
+      case "right": return "items-center justify-end text-right";
+      default: return "items-center justify-start text-left";
+    }
+  };
+
+  // Get overlay gradient direction
+  const getOverlayGradient = () => {
+    if (!theme.overlay_enabled) return "transparent";
+    const opacity = Math.round(theme.overlay_opacity * 2.55).toString(16).padStart(2, '0');
+    const color = theme.overlay_color + opacity;
+    switch (theme.content_position) {
+      case "center": return `linear-gradient(to bottom, ${color}, transparent 30%, transparent 70%, ${color})`;
+      case "right": return `linear-gradient(to left, ${color} 0%, transparent 70%)`;
+      default: return `linear-gradient(to right, ${color} 0%, transparent 70%)`;
+    }
+  };
+
   if (isLoading) {
     return (
-      <section className="py-8 md:py-12 px-4">
+      <section className={`${getPaddingClass()} px-4`}>
         <div className="container mx-auto">
-          <Skeleton className="h-[250px] md:h-[350px] max-w-6xl mx-auto rounded-lg" />
+          <Skeleton className={`${getHeightClass()} max-w-6xl mx-auto rounded-lg`} />
         </div>
       </section>
     );
@@ -50,7 +116,7 @@ const OffersBanner = () => {
   const currentOffer = offers[currentIndex];
 
   return (
-    <section className="py-8 md:py-12 px-4">
+    <section className={`${getPaddingClass()} px-4`}>
       <div className="container mx-auto">
         <div 
           className="relative max-w-6xl mx-auto rounded-lg overflow-hidden shadow-xl"
@@ -58,7 +124,7 @@ const OffersBanner = () => {
           onMouseLeave={() => setIsAutoPlaying(true)}
         >
           {/* Carousel Container */}
-          <div className="relative aspect-[21/9] md:aspect-[3/1] bg-card">
+          <div className={`relative ${getHeightClass()} bg-card`}>
             {offers.map((offer, index) => (
               <div
                 key={offer.id}
@@ -74,11 +140,14 @@ const OffersBanner = () => {
                 />
                 
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+                <div 
+                  className="absolute inset-0" 
+                  style={{ background: getOverlayGradient() }}
+                />
                 
                 {/* Content */}
-                <div className="absolute inset-0 flex items-center">
-                  <div className="px-8 md:px-16 max-w-xl">
+                <div className={`absolute inset-0 flex ${getContentPositionClass()}`}>
+                  <div className={`px-8 md:px-16 max-w-xl ${theme.content_position === "center" ? "mx-auto" : ""}`}>
                     <h2 className="text-2xl md:text-4xl font-display text-white mb-3 drop-shadow-md animate-fade-in">
                       {offer.title}
                     </h2>
