@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, HomepageSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBanners } from "@/hooks/useBanners";
+import { useActiveOffers } from "@/hooks/useOffers";
+import { useCategories } from "@/hooks/useCategories";
+import { useProducts } from "@/hooks/useProducts";
+import { useHomepageReviews } from "@/hooks/useReviews";
 
 const sectionLabels: Record<string, { label: string; description: string }> = {
   hero: { label: "Hero Banner", description: "Main carousel/banner at the top" },
   offers_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" },
+  sale_banner: { label: "Offers Banner", description: "Featured offer from Offers panel" }, // Backward compatibility alias
   categories: { label: "Categories", description: "Product category showcase" },
   offers: { label: "Special Offers", description: "Promotional offers with popups" },
   new_arrivals: { label: "New Arrivals", description: "Latest products section" },
@@ -18,9 +26,34 @@ const sectionLabels: Record<string, { label: string; description: string }> = {
   testimonials: { label: "Testimonials", description: "Customer reviews section" },
 };
 
+// Canonical section keys (excluding aliases)
+const canonicalSections = ["hero", "offers_banner", "categories", "offers", "new_arrivals", "best_sellers", "celebrity_specials", "testimonials"];
+
 const Homepage = () => {
   const { data: settings, isLoading } = useSiteSettings();
   const updateSetting = useUpdateSiteSetting();
+
+  // Fetch content counts for each section
+  const { data: banners = [] } = useBanners();
+  const { data: activeOffers = [] } = useActiveOffers();
+  const { data: categories = [] } = useCategories();
+  const { data: newArrivals = [] } = useProducts({ isNewArrival: true });
+  const { data: bestSellers = [] } = useProducts({ isBestSeller: true });
+  const { data: celebritySpecials = [] } = useProducts({ isCelebritySpecial: true });
+  const { data: homepageReviews = [] } = useHomepageReviews();
+
+  // Content mapping with admin panel links
+  const sectionContent: Record<string, { count: number; adminPath: string; adminLabel: string }> = {
+    hero: { count: banners.length, adminPath: "/admin/banners", adminLabel: "Banners" },
+    offers_banner: { count: activeOffers.length, adminPath: "/admin/offers", adminLabel: "Offers" },
+    sale_banner: { count: activeOffers.length, adminPath: "/admin/offers", adminLabel: "Offers" },
+    categories: { count: categories.length, adminPath: "/admin/categories", adminLabel: "Categories" },
+    offers: { count: activeOffers.length, adminPath: "/admin/offers", adminLabel: "Offers" },
+    new_arrivals: { count: newArrivals.length, adminPath: "/admin/products", adminLabel: "Products" },
+    best_sellers: { count: bestSellers.length, adminPath: "/admin/products", adminLabel: "Products" },
+    celebrity_specials: { count: celebritySpecials.length, adminPath: "/admin/products", adminLabel: "Products" },
+    testimonials: { count: homepageReviews.length, adminPath: "/admin/reviews", adminLabel: "Reviews" },
+  };
 
   const [sections, setSections] = useState<string[]>([]);
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
@@ -29,9 +62,15 @@ const Homepage = () => {
   useEffect(() => {
     if (settings?.homepage) {
       const homepageSettings = settings.homepage as unknown as HomepageSettings;
-      setSections(homepageSettings.sections || Object.keys(sectionLabels));
+      // Migrate sale_banner to offers_banner for backward compatibility
+      const migratedSections = (homepageSettings.sections || canonicalSections).map(
+        s => s === 'sale_banner' ? 'offers_banner' : s
+      );
+      // Remove duplicates while preserving order
+      const uniqueSections = [...new Set(migratedSections)];
+      setSections(uniqueSections);
     } else {
-      setSections(Object.keys(sectionLabels));
+      setSections(canonicalSections);
     }
   }, [settings]);
 
@@ -135,7 +174,32 @@ const Homepage = () => {
                     <p className="text-sm text-muted-foreground">{config?.description}</p>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* Content status indicator */}
+                    {sectionContent[section] && (
+                      sectionContent[section].count > 0 ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {sectionContent[section].count} {sectionContent[section].count === 1 ? 'item' : 'items'}
+                        </Badge>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Empty
+                          </Badge>
+                          <Link 
+                            to={sectionContent[section].adminPath}
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            Add in {sectionContent[section].adminLabel}
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      )
+                    )}
+
+                    {/* Visibility toggle */}
                     <div className="flex items-center gap-2">
                       <Switch
                         id={`visible-${section}`}
