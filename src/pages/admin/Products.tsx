@@ -46,11 +46,14 @@ import { useAddProductAddon, useRemoveProductAddon, useAdminProductAddons } from
 import ProductForm from '@/components/admin/ProductForm';
 import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
 import { ProductItemThemeDialog } from '@/components/admin/ProductItemThemeDialog';
-import { Plus, Pencil, Trash2, Search, Package, Paintbrush } from 'lucide-react';
+import { BulkProductUpload } from '@/components/admin/BulkProductUpload';
+import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AdminProducts = () => {
+  const queryClient = useQueryClient();
   const { data: products = [], isLoading } = useAdminProducts();
   const { data: categories = [] } = useAdminCategories();
   const { data: collections = [] } = useAdminCollections();
@@ -63,6 +66,7 @@ const AdminProducts = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [itemThemeProduct, setItemThemeProduct] = useState<Product | null>(null);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,6 +174,10 @@ const AdminProducts = () => {
           <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
             <Paintbrush className="w-4 h-4 mr-2" />
             Card Theme
+          </Button>
+          <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
           </Button>
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -428,6 +436,16 @@ const AdminProducts = () => {
         open={!!itemThemeProduct}
         onOpenChange={(open) => !open && setItemThemeProduct(null)}
         product={itemThemeProduct}
+      />
+
+      {/* Bulk Upload Dialog */}
+      <BulkProductUpload
+        open={bulkUploadOpen}
+        onOpenChange={setBulkUploadOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+        }}
       />
     </div>
   );
