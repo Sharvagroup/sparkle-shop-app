@@ -223,23 +223,70 @@ const Orders = () => {
 
               <div>
                 <h4 className="font-medium mb-2">Items</h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {selectedOrder.items?.map((item) => {
-                    const snapshot = item.product_snapshot as Record<string, string> | null;
+                    const snapshot = item.product_snapshot;
+                    const selectedOptions = snapshot?.selected_options;
+                    const addons = snapshot?.addons;
+                    
                     return (
-                      <div key={item.id} className="flex items-center gap-3 p-2 bg-muted rounded">
-                        {snapshot?.image && (
-                          <img
-                            src={snapshot.image}
-                            alt={snapshot.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{snapshot?.name || "Product"}</p>
-                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                      <div key={item.id} className="p-3 bg-muted rounded space-y-2">
+                        <div className="flex items-center gap-3">
+                          {snapshot?.image && (
+                            <img
+                              src={snapshot.image}
+                              alt={snapshot.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{snapshot?.name || "Product"}</p>
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                            {/* Selected Options */}
+                            {selectedOptions && Object.keys(selectedOptions).length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {Object.entries(selectedOptions).map(([key, value]) => (
+                                  <Badge key={key} variant="outline" className="text-xs">
+                                    {key}: {value}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <p className="font-medium">{formatPrice(item.total)}</p>
                         </div>
-                        <p className="font-medium">{formatPrice(item.total)}</p>
+                        
+                        {/* Addons */}
+                        {addons && addons.length > 0 && (
+                          <div className="ml-6 pl-3 border-l-2 border-primary/20 space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">Add-ons:</p>
+                            {addons.map((addon, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                {addon.image && (
+                                  <img
+                                    src={addon.image}
+                                    alt={addon.name}
+                                    className="w-8 h-8 object-cover rounded"
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <span>{addon.name}</span>
+                                  <span className="text-muted-foreground ml-1">× {addon.quantity}</span>
+                                  {addon.selected_options && Object.keys(addon.selected_options).length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-0.5">
+                                      {Object.entries(addon.selected_options).map(([key, value]) => (
+                                        <Badge key={key} variant="outline" className="text-xs py-0">
+                                          {key}: {value}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-muted-foreground">{formatPrice(addon.total)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

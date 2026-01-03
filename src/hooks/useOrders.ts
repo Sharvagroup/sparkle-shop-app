@@ -16,6 +16,23 @@ export interface ShippingAddress {
   phone: string;
 }
 
+export interface OrderItemAddon {
+  name: string;
+  image?: string;
+  quantity: number;
+  price: number;
+  total: number;
+  selected_options?: Record<string, string | number>;
+}
+
+export interface OrderItemSnapshot {
+  name: string;
+  image: string;
+  slug: string;
+  selected_options?: Record<string, string | number>;
+  addons?: OrderItemAddon[];
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;
@@ -23,11 +40,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   total: number;
-  product_snapshot: {
-    name: string;
-    image: string;
-    slug: string;
-  } | null;
+  product_snapshot: OrderItemSnapshot | null;
   created_at: string;
 }
 
