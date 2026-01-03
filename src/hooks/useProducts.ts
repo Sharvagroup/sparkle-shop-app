@@ -147,7 +147,7 @@ export const useProducts = (filters?: ProductFilters) => {
       return (data as Product[]).map(product => {
         const created = new Date(product.created_at);
         if (!product.badge && created >= thresholdDate) {
-          return { ...product, badge: 'new' };
+          return { ...product, badge: 'new' as const };
         }
         return product;
       });

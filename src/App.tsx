@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
@@ -39,6 +40,8 @@ import AboutPage from "./pages/admin/AboutPage";
 import DiscountCodes from "./pages/admin/DiscountCodes";
 import ProductOptions from "./pages/admin/ProductOptions";
 import NavigationManager from "./pages/admin/NavigationManager";
+import FAQAdmin from "./pages/admin/FAQ";
+import SizeGuideAdmin from "./pages/admin/SizeGuide";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -46,59 +49,63 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/orders" element={<UserOrders />} />
-              <Route path="/announcements" element={<Announcements />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/size-guide" element={<SizeGuide />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
+    <HelmetProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/orders" element={<UserOrders />} />
+                <Route path="/announcements" element={<Announcements />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/size-guide" element={<SizeGuide />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
 
-              {/* Admin routes with shared layout */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="collections" element={<Collections />} />
-                <Route path="banners" element={<Banners />} />
-                <Route path="offers" element={<Offers />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="reviews" element={<Reviews />} />
-                <Route path="announcements" element={<AdminAnnouncements />} />
-                <Route path="homepage" element={<Homepage />} />
-                <Route path="footer-links" element={<FooterLinks />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="team" element={<Team />} />
-                <Route path="about-page" element={<AboutPage />} />
-                <Route path="discount-codes" element={<DiscountCodes />} />
-                <Route path="product-options" element={<ProductOptions />} />
-                <Route path="navigation" element={<NavigationManager />} />
-              </Route>
+                {/* Admin routes with shared layout */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="categories" element={<Categories />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="collections" element={<Collections />} />
+                  <Route path="banners" element={<Banners />} />
+                  <Route path="offers" element={<Offers />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="reviews" element={<Reviews />} />
+                  <Route path="announcements" element={<AdminAnnouncements />} />
+                  <Route path="homepage" element={<Homepage />} />
+                  <Route path="footer-links" element={<FooterLinks />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="team" element={<Team />} />
+                  <Route path="about-page" element={<AboutPage />} />
+                  <Route path="discount-codes" element={<DiscountCodes />} />
+                  <Route path="product-options" element={<ProductOptions />} />
+                  <Route path="navigation" element={<NavigationManager />} />
+                  <Route path="faq" element={<FAQAdmin />} />
+                  <Route path="size-guide" element={<SizeGuideAdmin />} />
+                </Route>
 
-              <Route path="/access-denied" element={<AccessDenied />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </AuthProvider>
+                <Route path="/access-denied" element={<AccessDenied />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 
