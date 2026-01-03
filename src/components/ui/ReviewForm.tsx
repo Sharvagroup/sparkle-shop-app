@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useCreateReview, uploadReviewImage } from "@/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { validateWebPImage, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 
 interface ReviewFormProps {
   productId: string;
@@ -32,7 +33,20 @@ const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
       return;
     }
     
-    const newImages = [...images, ...files].slice(0, 3);
+    // Validate WebP format for all files
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const formatCheck = validateWebPImage(file);
+      if (!formatCheck.valid) {
+        toast({ title: formatCheck.error, variant: "destructive" });
+        continue;
+      }
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length === 0) return;
+    
+    const newImages = [...images, ...validFiles].slice(0, 3);
     setImages(newImages);
     
     // Create previews
@@ -200,7 +214,7 @@ const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
               <ImagePlus size={24} className="text-muted-foreground" />
               <input
                 type="file"
-                accept="image/*"
+                accept={ALLOWED_IMAGE_ACCEPT}
                 multiple
                 onChange={handleImageChange}
                 className="hidden"
@@ -209,7 +223,7 @@ const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Up to 3 images (JPG, PNG)
+          Up to 3 images (WebP only)
         </p>
       </div>
 

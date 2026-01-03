@@ -41,6 +41,8 @@ import { Plus, Pencil, Trash2, Search, Eye, Loader2, Upload, FileText } from "lu
 import { useAnnouncements, useCreateAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement, Announcement, AnnouncementInsert, uploadAnnouncementImage } from "@/hooks/useAnnouncements";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { toast } from "sonner";
 
 const Announcements = () => {
   const { data: announcements = [], isLoading } = useAnnouncements();
@@ -102,12 +104,26 @@ const Announcements = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const formatCheck = validateWebPImage(file);
+    if (!formatCheck.valid) {
+      toast.error(formatCheck.error);
+      return;
+    }
+
+    const sizeCheck = validateImageSize(file, 5);
+    if (!sizeCheck.valid) {
+      toast.error(sizeCheck.error);
+      return;
+    }
+
     setUploading(true);
     try {
       const url = await uploadAnnouncementImage(file);
       setFeaturedImage(url);
     } catch (error) {
       console.error("Upload failed:", error);
+      toast.error("Failed to upload image");
     } finally {
       setUploading(false);
     }
@@ -293,7 +309,7 @@ const Announcements = () => {
               <div className="flex gap-4 items-center">
                 {featuredImage && <img src={featuredImage} alt="Featured" className="w-24 h-16 object-cover rounded border" />}
                 <div>
-                  <Input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="announcement-image" />
+                  <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={handleImageUpload} className="hidden" id="announcement-image" />
                   <Button type="button" variant="outline" onClick={() => document.getElementById("announcement-image")?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
                     Upload

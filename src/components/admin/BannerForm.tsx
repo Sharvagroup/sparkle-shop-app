@@ -19,6 +19,8 @@ import {
   useUpdateBanner,
   uploadBannerImage,
 } from "@/hooks/useBanners";
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { toast } from "sonner";
 
 interface BannerFormProps {
   open: boolean;
@@ -73,6 +75,18 @@ export function BannerForm({ open, onOpenChange, banner }: BannerFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const formatCheck = validateWebPImage(file);
+    if (!formatCheck.valid) {
+      toast.error(formatCheck.error);
+      return;
+    }
+
+    const sizeCheck = validateImageSize(file, 5);
+    if (!sizeCheck.valid) {
+      toast.error(sizeCheck.error);
+      return;
+    }
+
     setUploading(true);
     try {
       const url = await uploadBannerImage(file);
@@ -80,6 +94,7 @@ export function BannerForm({ open, onOpenChange, banner }: BannerFormProps) {
       setImagePreview(url);
     } catch (error) {
       console.error("Failed to upload image:", error);
+      toast.error("Failed to upload image");
     } finally {
       setUploading(false);
     }
@@ -146,7 +161,7 @@ export function BannerForm({ open, onOpenChange, banner }: BannerFormProps) {
               <label className="flex flex-col items-center justify-center aspect-[16/9] border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors bg-muted/50">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_ACCEPT}
                   onChange={handleImageUpload}
                   className="hidden"
                   disabled={uploading}
