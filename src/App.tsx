@@ -37,6 +37,7 @@ import Settings from "./pages/admin/Settings";
 import Team from "./pages/admin/Team";
 import AboutPage from "./pages/admin/AboutPage";
 import DiscountCodes from "./pages/admin/DiscountCodes";
+import ProductOptions from "./pages/admin/ProductOptions";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="team" element={<Team />} />
               <Route path="about-page" element={<AboutPage />} />
               <Route path="discount-codes" element={<DiscountCodes />} />
+              <Route path="product-options" element={<ProductOptions />} />
             </Route>
             
             <Route path="/access-denied" element={<AccessDenied />} />

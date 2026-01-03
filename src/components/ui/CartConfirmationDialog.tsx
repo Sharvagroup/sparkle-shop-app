@@ -1,0 +1,407 @@
+import { useState, useEffect } from "react";
+import { X, Plus, Minus, ShoppingCart, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Product } from "@/hooks/useProducts";
+import { ProductOption } from "@/hooks/useProductOptions";
+import { ProductAddon } from "@/hooks/useProductAddons";
+
+interface SelectedAddonState {
+  productId: string;
+  quantity: number;
+  options: Record<string, any>;
+}
+
+interface CartConfirmationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  product: Product;
+  productOptions: ProductOption[];
+  productAddons: ProductAddon[];
+  enabledOptionIds: string[];
+  onConfirm: (data: {
+    quantity: number;
+    selectedOptions: Record<string, any>;
+    selectedAddons: SelectedAddonState[];
+  }) => void;
+  isLoading?: boolean;
+}
+
+const CartConfirmationDialog = ({
+  open,
+  onOpenChange,
+  product,
+  productOptions,
+  productAddons,
+  enabledOptionIds,
+  onConfirm,
+  isLoading,
+}: CartConfirmationDialogProps) => {
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddonState[]>([]);
+
+  // Filter options to only show enabled ones for this product
+  const activeOptions = productOptions.filter(
+    (opt) => enabledOptionIds.includes(opt.id) || opt.is_mandatory
+  );
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setQuantity(1);
+      setSelectedOptions({});
+      setSelectedAddons([]);
+    }
+  }, [open]);
+
+  const handleOptionChange = (optionId: string, value: any) => {
+    setSelectedOptions((prev) => ({ ...prev, [optionId]: value }));
+  };
+
+  const toggleAddon = (addonProductId: string) => {
+    setSelectedAddons((prev) => {
+      const exists = prev.find((a) => a.productId === addonProductId);
+      if (exists) {
+        return prev.filter((a) => a.productId !== addonProductId);
+      }
+      return [...prev, { productId: addonProductId, quantity: 1, options: {} }];
+    });
+  };
+
+  const updateAddonQuantity = (addonProductId: string, qty: number) => {
+    if (qty < 1) return;
+    setSelectedAddons((prev) =>
+      prev.map((a) =>
+        a.productId === addonProductId ? { ...a, quantity: qty } : a
+      )
+    );
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // Calculate total
+  const productTotal = product.price * quantity;
+  const addonsTotal = selectedAddons.reduce((sum, addon) => {
+    const addonProduct = productAddons.find(
+      (a) => a.addon_product_id === addon.productId
+    );
+    const price =
+      addonProduct?.price_override ?? addonProduct?.addon_product?.price ?? 0;
+    return sum + price * addon.quantity;
+  }, 0);
+  const grandTotal = productTotal + addonsTotal;
+
+  const handleConfirm = () => {
+    onConfirm({
+      quantity,
+      selectedOptions,
+      selectedAddons,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Confirm Your Selection</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Product Info */}
+          <div className="flex gap-4">
+            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <img
+                src={product.images?.[0] || "/placeholder.svg"}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium">{product.name}</h3>
+              <p className="text-lg font-bold text-primary">
+                {formatPrice(product.price)}
+              </p>
+            </div>
+          </div>
+
+          {/* Quantity */}
+          <div className="space-y-2">
+            <Label>Quantity</Label>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <Input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                className="w-20 text-center"
+                min={1}
+                max={product.stock_quantity}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                  setQuantity(Math.min(product.stock_quantity, quantity + 1))
+                }
+                disabled={quantity >= product.stock_quantity}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Dynamic Options */}
+          {activeOptions.length > 0 && (
+            <div className="space-y-4">
+              <Label className="text-sm font-medium">Options</Label>
+              {activeOptions.map((option) => (
+                <div key={option.id} className="space-y-2">
+                  <Label className="text-sm">
+                    {option.name}
+                    {option.is_mandatory && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                    {option.unit && (
+                      <span className="text-muted-foreground ml-1">
+                        ({option.unit})
+                      </span>
+                    )}
+                  </Label>
+
+                  {option.type === "number" && (
+                    <Input
+                      type="number"
+                      min={option.min_value ?? undefined}
+                      max={option.max_value ?? undefined}
+                      step={option.step_value ?? 1}
+                      value={selectedOptions[option.id] ?? option.min_value ?? ""}
+                      onChange={(e) =>
+                        handleOptionChange(option.id, Number(e.target.value))
+                      }
+                      placeholder={`Enter ${option.name.toLowerCase()}`}
+                    />
+                  )}
+
+                  {option.type === "select" && (
+                    <Select
+                      value={selectedOptions[option.id] || ""}
+                      onValueChange={(value) => handleOptionChange(option.id, value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Select ${option.name.toLowerCase()}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {option.select_options?.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {option.type === "text" && (
+                    <Input
+                      value={selectedOptions[option.id] || ""}
+                      onChange={(e) => handleOptionChange(option.id, e.target.value)}
+                      placeholder={`Enter ${option.name.toLowerCase()}`}
+                    />
+                  )}
+
+                  {option.type === "boolean" && (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={!!selectedOptions[option.id]}
+                        onCheckedChange={(checked) =>
+                          handleOptionChange(option.id, checked)
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        Include {option.name.toLowerCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add-ons */}
+          {productAddons.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Add-ons & Suggestions</Label>
+              <div className="space-y-2">
+                {productAddons.map((addon) => {
+                  const isSelected = selectedAddons.some(
+                    (a) => a.productId === addon.addon_product_id
+                  );
+                  const selectedAddon = selectedAddons.find(
+                    (a) => a.productId === addon.addon_product_id
+                  );
+                  const price =
+                    addon.price_override ?? addon.addon_product?.price ?? 0;
+
+                  return (
+                    <div
+                      key={addon.id}
+                      className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                        isSelected ? "border-primary bg-primary/5" : "bg-muted/30"
+                      }`}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleAddon(addon.addon_product_id)}
+                      />
+                      <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                        <img
+                          src={addon.addon_product?.images?.[0] || "/placeholder.svg"}
+                          alt={addon.addon_product?.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {addon.addon_product?.name}
+                        </p>
+                        <p className="text-sm text-primary font-medium">
+                          +{formatPrice(price)}
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() =>
+                              updateAddonQuantity(
+                                addon.addon_product_id,
+                                (selectedAddon?.quantity || 1) - 1
+                              )
+                            }
+                            disabled={(selectedAddon?.quantity || 1) <= 1}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-6 text-center text-sm">
+                            {selectedAddon?.quantity || 1}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() =>
+                              updateAddonQuantity(
+                                addon.addon_product_id,
+                                (selectedAddon?.quantity || 1) + 1
+                              )
+                            }
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Order Summary */}
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>
+                {product.name} x {quantity}
+              </span>
+              <span>{formatPrice(productTotal)}</span>
+            </div>
+            {selectedAddons.map((addon) => {
+              const addonProduct = productAddons.find(
+                (a) => a.addon_product_id === addon.productId
+              );
+              const price =
+                addonProduct?.price_override ??
+                addonProduct?.addon_product?.price ??
+                0;
+              return (
+                <div key={addon.productId} className="flex justify-between text-sm text-muted-foreground">
+                  <span>
+                    + {addonProduct?.addon_product?.name} x {addon.quantity}
+                  </span>
+                  <span>{formatPrice(price * addon.quantity)}</span>
+                </div>
+              );
+            })}
+            <div className="flex justify-between font-bold text-lg pt-2 border-t">
+              <span>Total</span>
+              <span className="text-primary">{formatPrice(grandTotal)}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={handleConfirm}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                "Adding..."
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default CartConfirmationDialog;

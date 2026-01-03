@@ -18,12 +18,14 @@ import {
   Users,
   LogOut,
   FileText,
+  Sliders,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
   { icon: Package, label: 'Products', path: '/admin/products' },
+  { icon: Sliders, label: 'Product Options', path: '/admin/product-options' },
   { icon: FolderTree, label: 'Categories', path: '/admin/categories' },
   { icon: Layers, label: 'Collections', path: '/admin/collections' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
