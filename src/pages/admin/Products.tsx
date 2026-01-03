@@ -42,11 +42,13 @@ import {
 } from '@/hooks/useProducts';
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
+import { useAddProductAddon, useRemoveProductAddon, useAdminProductAddons } from '@/hooks/useProductAddons';
 import ProductForm from '@/components/admin/ProductForm';
 import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
 import { ProductItemThemeDialog } from '@/components/admin/ProductItemThemeDialog';
 import { Plus, Pencil, Trash2, Search, Package, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminProducts = () => {
   const { data: products = [], isLoading } = useAdminProducts();
@@ -86,7 +88,22 @@ const AdminProducts = () => {
   });
   const handleCreate = async (data: any) => {
     try {
-      await createProduct.mutateAsync(data);
+      const { addons, ...productData } = data;
+      const result = await createProduct.mutateAsync(productData);
+      
+      // Save addons if any
+      if (addons && addons.length > 0 && result?.id) {
+        for (const addon of addons) {
+          await supabase.from('product_addons').insert({
+            product_id: result.id,
+            addon_product_id: addon.addon_product_id,
+            addon_type: addon.addon_type,
+            price_override: addon.price_override,
+            display_order: addon.display_order,
+          });
+        }
+      }
+      
       toast.success('Product created successfully');
       setIsFormOpen(false);
     } catch (error: any) {
@@ -97,7 +114,24 @@ const AdminProducts = () => {
   const handleUpdate = async (data: any) => {
     if (!editingProduct) return;
     try {
-      await updateProduct.mutateAsync({ id: editingProduct.id, ...data });
+      const { addons, ...productData } = data;
+      await updateProduct.mutateAsync({ id: editingProduct.id, ...productData });
+      
+      // Update addons: delete existing and re-add
+      await supabase.from('product_addons').delete().eq('product_id', editingProduct.id);
+      
+      if (addons && addons.length > 0) {
+        for (const addon of addons) {
+          await supabase.from('product_addons').insert({
+            product_id: editingProduct.id,
+            addon_product_id: addon.addon_product_id,
+            addon_type: addon.addon_type,
+            price_override: addon.price_override,
+            display_order: addon.display_order,
+          });
+        }
+      }
+      
       toast.success('Product updated successfully');
       setEditingProduct(null);
     } catch (error: any) {

@@ -118,6 +118,7 @@ export type Database = {
           id: string
           product_id: string
           quantity: number
+          selected_options: Json | null
           updated_at: string
           user_id: string
         }
@@ -126,6 +127,7 @@ export type Database = {
           id?: string
           product_id: string
           quantity?: number
+          selected_options?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -134,6 +136,7 @@ export type Database = {
           id?: string
           product_id?: string
           quantity?: number
+          selected_options?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -150,6 +153,48 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_item_addons: {
+        Row: {
+          addon_product_id: string
+          cart_item_id: string
+          created_at: string | null
+          id: string
+          quantity: number | null
+          selected_options: Json | null
+        }
+        Insert: {
+          addon_product_id: string
+          cart_item_id: string
+          created_at?: string | null
+          id?: string
+          quantity?: number | null
+          selected_options?: Json | null
+        }
+        Update: {
+          addon_product_id?: string
+          cart_item_id?: string
+          created_at?: string | null
+          id?: string
+          quantity?: number | null
+          selected_options?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_item_addons_addon_product_id_fkey"
+            columns: ["addon_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_item_addons_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "cart"
             referencedColumns: ["id"]
           },
         ]
@@ -548,6 +593,102 @@ export type Database = {
           },
         ]
       }
+      product_addons: {
+        Row: {
+          addon_product_id: string
+          addon_type: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          price_override: number | null
+          product_id: string
+        }
+        Insert: {
+          addon_product_id: string
+          addon_type?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_override?: number | null
+          product_id: string
+        }
+        Update: {
+          addon_product_id?: string
+          addon_type?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_override?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_addons_addon_product_id_fkey"
+            columns: ["addon_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_enabled: boolean | null
+          is_mandatory: boolean | null
+          max_value: number | null
+          min_value: number | null
+          name: string
+          select_options: Json | null
+          step_value: number | null
+          type: string
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          is_mandatory?: boolean | null
+          max_value?: number | null
+          min_value?: number | null
+          name: string
+          select_options?: Json | null
+          step_value?: number | null
+          type?: string
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          is_mandatory?: boolean | null
+          max_value?: number | null
+          min_value?: number | null
+          name?: string
+          select_options?: Json | null
+          step_value?: number | null
+          type?: string
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           badge: string | null
@@ -557,6 +698,8 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number | null
+          enabled_options: Json | null
+          has_addons: boolean | null
           id: string
           images: string[] | null
           is_active: boolean | null
@@ -586,6 +729,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          enabled_options?: Json | null
+          has_addons?: boolean | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
@@ -615,6 +760,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          enabled_options?: Json | null
+          has_addons?: boolean | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null

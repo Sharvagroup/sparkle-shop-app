@@ -37,6 +37,8 @@ export interface Product {
   rating: number;
   review_count: number;
   theme: ProductTheme | null;
+  enabled_options: string[];
+  has_addons: boolean;
   created_at: string;
   updated_at: string;
   // Joined relations
@@ -67,6 +69,8 @@ export interface ProductInput {
   display_order?: number;
   is_active?: boolean;
   theme?: ProductTheme | null;
+  enabled_options?: string[];
+  has_addons?: boolean;
 }
 
 export interface ProductFilters {

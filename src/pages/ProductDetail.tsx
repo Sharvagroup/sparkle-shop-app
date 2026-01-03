@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/accordion";
 import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useAddToCart } from "@/hooks/useCart";
+import { useProductOptions } from "@/hooks/useProductOptions";
+import { useProductAddons } from "@/hooks/useProductAddons";
+import { useAddCartItemAddon } from "@/hooks/useCartItemAddons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductReviews } from "@/hooks/useReviews";
 import ProductCard from "@/components/ui/ProductCard";
@@ -32,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import ReviewForm from "@/components/ui/ReviewForm";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
+import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -40,19 +44,56 @@ const ProductDetail = () => {
   const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: allProducts = [] } = useProducts();
   const { data: productReviews = [] } = useProductReviews(product?.id || "");
+  const { data: productOptions = [] } = useProductOptions();
+  const { data: productAddons = [] } = useProductAddons(product?.id || "");
   const addToCart = useAddToCart();
+  const addCartItemAddon = useAddCartItemAddon();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [buyNowMode, setBuyNowMode] = useState(false);
 
-  const handleAddToCart = async () => {
+  // Check if product has options or addons that require confirmation dialog
+  const hasOptionsOrAddons = 
+    (product?.enabled_options && product.enabled_options.length > 0) ||
+    (product?.has_addons && productAddons.length > 0);
+
+  const handleAddToCartClick = () => {
     if (!user) {
       toast({ title: "Please sign in to add items to cart", variant: "destructive" });
       navigate("/auth");
       return;
     }
     if (!product) return;
-    
+
+    if (hasOptionsOrAddons) {
+      setBuyNowMode(false);
+      setShowConfirmDialog(true);
+    } else {
+      // Direct add to cart
+      handleDirectAddToCart();
+    }
+  };
+
+  const handleBuyNowClick = () => {
+    if (!user) {
+      toast({ title: "Please sign in to continue", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    if (!product) return;
+
+    if (hasOptionsOrAddons) {
+      setBuyNowMode(true);
+      setShowConfirmDialog(true);
+    } else {
+      handleDirectBuyNow();
+    }
+  };
+
+  const handleDirectAddToCart = async () => {
+    if (!product) return;
     setIsAddingToCart(true);
     try {
       await addToCart.mutateAsync({ productId: product.id, quantity: 1 });
@@ -61,18 +102,47 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = async () => {
-    if (!user) {
-      toast({ title: "Please sign in to continue", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
+  const handleDirectBuyNow = async () => {
     if (!product) return;
-    
     setIsAddingToCart(true);
     try {
       await addToCart.mutateAsync({ productId: product.id, quantity: 1 });
       navigate("/checkout");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleConfirmAddToCart = async (data: {
+    quantity: number;
+    selectedOptions: Record<string, any>;
+    selectedAddons: { productId: string; quantity: number; options: Record<string, any> }[];
+  }) => {
+    if (!product) return;
+    setIsAddingToCart(true);
+    try {
+      // Add main product to cart
+      const result = await addToCart.mutateAsync({
+        productId: product.id,
+        quantity: data.quantity,
+        selectedOptions: data.selectedOptions,
+      });
+
+      // Add addons to cart_item_addons
+      for (const addon of data.selectedAddons) {
+        await addCartItemAddon.mutateAsync({
+          cart_item_id: result.id,
+          addon_product_id: addon.productId,
+          quantity: addon.quantity,
+          selected_options: addon.options,
+        });
+      }
+
+      setShowConfirmDialog(false);
+      
+      if (buyNowMode) {
+        navigate("/checkout");
+      }
     } finally {
       setIsAddingToCart(false);
     }
@@ -363,7 +433,7 @@ const ProductDetail = () => {
                   variant="outline"
                   className="flex-1 py-6 font-bold uppercase tracking-wider"
                   disabled={product.stock_quantity === 0 || isAddingToCart}
-                  onClick={handleAddToCart}
+                  onClick={handleAddToCartClick}
                 >
                   {isAddingToCart ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
                   Add to Cart
@@ -371,7 +441,7 @@ const ProductDetail = () => {
                 <Button
                   className="flex-1 py-6 bg-primary hover:bg-primary-dark text-primary-foreground font-bold uppercase tracking-wider shadow-lg shadow-primary/20"
                   disabled={product.stock_quantity === 0 || isAddingToCart}
-                  onClick={handleBuyNow}
+                  onClick={handleBuyNowClick}
                 >
                   {isAddingToCart ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
                   Buy Now
@@ -482,14 +552,14 @@ const ProductDetail = () => {
               variant="outline"
               className="flex-1 font-bold uppercase text-xs tracking-wider py-3.5"
               disabled={product.stock_quantity === 0 || isAddingToCart}
-              onClick={handleAddToCart}
+              onClick={handleAddToCartClick}
             >
               {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : "Add to Cart"}
             </Button>
             <Button
               className="flex-1 bg-primary text-primary-foreground font-bold uppercase text-xs tracking-wider py-3.5"
               disabled={product.stock_quantity === 0 || isAddingToCart}
-              onClick={handleBuyNow}
+              onClick={handleBuyNowClick}
             >
               {isAddingToCart ? <Loader2 className="animate-spin" size={16} /> : "Buy Now"}
             </Button>
@@ -596,6 +666,20 @@ const ProductDetail = () => {
 
       <Footer />
       <WhatsAppButton />
+
+      {/* Cart Confirmation Dialog */}
+      {product && (
+        <CartConfirmationDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+          product={product}
+          productOptions={productOptions}
+          productAddons={productAddons}
+          enabledOptionIds={product.enabled_options || []}
+          onConfirm={handleConfirmAddToCart}
+          isLoading={isAddingToCart}
+        />
+      )}
     </div>
   );
 };

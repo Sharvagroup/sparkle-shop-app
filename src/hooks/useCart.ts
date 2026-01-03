@@ -8,6 +8,7 @@ export interface CartItem {
   user_id: string;
   product_id: string;
   quantity: number;
+  selected_options: Record<string, any>;
   created_at: string;
   updated_at: string;
   product?: {
@@ -18,6 +19,8 @@ export interface CartItem {
     images: string[] | null;
     slug: string;
     stock_quantity: number | null;
+    enabled_options: string[] | null;
+    has_addons: boolean | null;
   };
 }
 
@@ -33,7 +36,7 @@ export const useCart = () => {
         .from("cart")
         .select(`
           *,
-          product:products(id, name, price, original_price, images, slug, stock_quantity)
+          product:products(id, name, price, original_price, images, slug, stock_quantity, enabled_options, has_addons)
         `)
         .eq("user_id", user.id);
 
@@ -49,19 +52,27 @@ export const useAddToCart = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
+    mutationFn: async ({ 
+      productId, 
+      quantity = 1, 
+      selectedOptions = {} 
+    }: { 
+      productId: string; 
+      quantity?: number;
+      selectedOptions?: Record<string, any>;
+    }) => {
       if (!user) throw new Error("Please sign in to add items to cart");
 
-      // Check if item already exists in cart
+      // Check if item already exists in cart with same options
       const { data: existingItem } = await supabase
         .from("cart")
-        .select("id, quantity")
+        .select("id, quantity, selected_options")
         .eq("user_id", user.id)
         .eq("product_id", productId)
         .maybeSingle();
 
-      if (existingItem) {
-        // Update quantity
+      if (existingItem && JSON.stringify(existingItem.selected_options || {}) === JSON.stringify(selectedOptions)) {
+        // Update quantity if options match
         const { data, error } = await supabase
           .from("cart")
           .update({ quantity: existingItem.quantity + quantity })
@@ -75,7 +86,12 @@ export const useAddToCart = () => {
         // Insert new item
         const { data, error } = await supabase
           .from("cart")
-          .insert({ user_id: user.id, product_id: productId, quantity })
+          .insert({ 
+            user_id: user.id, 
+            product_id: productId, 
+            quantity,
+            selected_options: selectedOptions
+          })
           .select()
           .single();
 

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -25,7 +26,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
-import { Product, uploadProductImages, deleteProductImage } from '@/hooks/useProducts';
+import { useAdminProducts, Product, uploadProductImages, deleteProductImage } from '@/hooks/useProducts';
+import { useAdminProductOptions, ProductOption } from '@/hooks/useProductOptions';
+import { useAdminProductAddons, useAddProductAddon, useRemoveProductAddon } from '@/hooks/useProductAddons';
+import ProductAddonsSelector, { SelectedAddon } from '@/components/admin/ProductAddonsSelector';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -55,7 +59,7 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (data: ProductFormData & { images: string[] }) => Promise<void>;
+  onSubmit: (data: ProductFormData & { images: string[]; enabled_options: string[]; has_addons: boolean; addons: SelectedAddon[] }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -63,8 +67,14 @@ interface ProductFormProps {
 const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProps) => {
   const { data: categories = [] } = useAdminCategories();
   const { data: collections = [] } = useAdminCollections();
+  const { data: allProducts = [] } = useAdminProducts();
+  const { data: productOptions = [] } = useAdminProductOptions();
+  const { data: existingAddons = [] } = useAdminProductAddons(product?.id || '');
+  
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [enabledOptions, setEnabledOptions] = useState<string[]>(product?.enabled_options || []);
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -90,6 +100,20 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       is_active: product?.is_active ?? true,
     },
   });
+
+  // Initialize addons from existing data
+  useEffect(() => {
+    if (existingAddons.length > 0) {
+      setSelectedAddons(
+        existingAddons.map((a) => ({
+          addon_product_id: a.addon_product_id,
+          addon_type: a.addon_type as 'addon' | 'suggestion' | 'bundle',
+          price_override: a.price_override,
+          display_order: a.display_order,
+        }))
+      );
+    }
+  }, [existingAddons]);
 
   // Auto-generate slug from name
   const name = form.watch('name');
@@ -131,10 +155,21 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     }
   };
 
+  const toggleOption = (optionId: string) => {
+    setEnabledOptions((prev) =>
+      prev.includes(optionId)
+        ? prev.filter((id) => id !== optionId)
+        : [...prev, optionId]
+    );
+  };
+
   const handleFormSubmit = async (data: ProductFormData) => {
     await onSubmit({
       ...data,
       images,
+      enabled_options: enabledOptions,
+      has_addons: selectedAddons.length > 0,
+      addons: selectedAddons,
       category_id: data.category_id || null,
       collection_id: data.collection_id || null,
       original_price: data.original_price || null,
@@ -614,6 +649,59 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
             </div>
           </CardContent>
         </Card>
+
+        {/* Product Options */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Product Options</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Select which options customers can configure when adding this product to cart.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {productOptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No product options available. Create them in Product Options settings.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {productOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
+                      enabledOptions.includes(option.id)
+                        ? 'border-primary bg-primary/5'
+                        : ''
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <Label className="text-base">{option.name}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {option.type === 'number' && option.unit
+                          ? `${option.type} (${option.unit})`
+                          : option.type}
+                        {option.is_mandatory && ' • Required'}
+                      </p>
+                    </div>
+                    <Checkbox
+                      checked={enabledOptions.includes(option.id) || option.is_mandatory}
+                      onCheckedChange={() => toggleOption(option.id)}
+                      disabled={option.is_mandatory}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Add-ons & Suggestions */}
+        <ProductAddonsSelector
+          products={allProducts}
+          currentProductId={product?.id}
+          selectedAddons={selectedAddons}
+          onChange={setSelectedAddons}
+        />
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
