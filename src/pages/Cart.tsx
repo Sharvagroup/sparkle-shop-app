@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ArrowLeft, Lock, CreditCard, Building2, ShieldCheck, Loader2, X, Tag } from "lucide-react";
 import { useCart, useUpdateCartItem, useRemoveFromCart } from "@/hooks/useCart";
+import { useAllCartAddons, useRemoveCartItemAddon } from "@/hooks/useCartItemAddons";
+import { useProductOptions } from "@/hooks/useProductOptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useValidateDiscountCode, AppliedDiscount } from "@/hooks/useDiscountCodes";
@@ -14,12 +16,32 @@ import { toast } from "@/hooks/use-toast";
 const Cart = () => {
   const { user } = useAuth();
   const { data: cartItems = [], isLoading } = useCart();
+  const { data: allAddons = [], isLoading: addonsLoading } = useAllCartAddons();
+  const { data: productOptions = [] } = useProductOptions();
   const updateCartItem = useUpdateCartItem();
   const removeFromCart = useRemoveFromCart();
+  const removeAddon = useRemoveCartItemAddon();
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const validateDiscount = useValidateDiscountCode();
+
+  // Group addons by cart item id
+  const addonsByCartItem = useMemo(() => {
+    return allAddons.reduce((acc, addon) => {
+      if (!acc[addon.cart_item_id]) acc[addon.cart_item_id] = [];
+      acc[addon.cart_item_id].push(addon);
+      return acc;
+    }, {} as Record<string, typeof allAddons>);
+  }, [allAddons]);
+
+  // Create option name lookup
+  const optionNameMap = useMemo(() => {
+    return productOptions.reduce((acc, opt) => {
+      acc[opt.id] = opt.name;
+      return acc;
+    }, {} as Record<string, string>);
+  }, [productOptions]);
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -33,15 +55,41 @@ const Cart = () => {
     removeFromCart.mutate(id);
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-    0
-  );
+  const handleRemoveAddon = (addonId: string, cartItemId: string) => {
+    removeAddon.mutate({ id: addonId, cart_item_id: cartItemId });
+  };
+
+  // Calculate subtotal including addons
+  const subtotal = useMemo(() => {
+    let total = 0;
+    cartItems.forEach((item) => {
+      // Main product price
+      total += (item.product?.price || 0) * item.quantity;
+      // Add addons for this item
+      const itemAddons = addonsByCartItem[item.id] || [];
+      itemAddons.forEach((addon) => {
+        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
+      });
+    });
+    return total;
+  }, [cartItems, addonsByCartItem]);
 
   const discountAmount = appliedDiscount?.discountAmount || 0;
 
   const formatPrice = (price: number) => {
     return `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  };
+
+  // Format selected options for display
+  const formatOptions = (selectedOptions: Record<string, any> | null) => {
+    if (!selectedOptions || Object.keys(selectedOptions).length === 0) return null;
+    
+    return Object.entries(selectedOptions)
+      .map(([optionId, value]) => {
+        const optionName = optionNameMap[optionId] || optionId;
+        return `${optionName}: ${value}`;
+      })
+      .join(" | ");
   };
 
   const handleApplyPromo = async () => {
@@ -105,7 +153,7 @@ const Cart = () => {
         <div className="container mx-auto px-4 md:px-8 py-8">
           <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">Your Cart</h1>
 
-          {isLoading ? (
+          {isLoading || addonsLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-4">
                 {[1, 2].map((i) => (
@@ -125,66 +173,124 @@ const Cart = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
                 <div className="divide-y divide-border">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="py-6">
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <div className="md:col-span-5 flex gap-4">
-                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                            <img
-                              src={item.product?.images?.[0] || "/placeholder.svg"}
-                              alt={item.product?.name}
-                              className="w-full h-full object-cover"
-                            />
+                  {cartItems.map((item) => {
+                    const itemAddons = addonsByCartItem[item.id] || [];
+                    const formattedOptions = formatOptions(item.selected_options);
+                    const itemTotal = (item.product?.price || 0) * item.quantity;
+                    const addonsTotal = itemAddons.reduce(
+                      (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
+                      0
+                    );
+
+                    return (
+                      <div key={item.id} className="py-6">
+                        {/* Main Product */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                          <div className="md:col-span-5 flex gap-4">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                              <img
+                                src={item.product?.images?.[0] || "/placeholder.svg"}
+                                alt={item.product?.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <Link
+                                to={`/product/${item.product?.slug}`}
+                                className="font-display font-semibold text-foreground hover:text-primary"
+                              >
+                                {item.product?.name}
+                              </Link>
+                              {/* Display selected options */}
+                              {formattedOptions && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formattedOptions}
+                                </p>
+                              )}
+                              <button
+                                onClick={() => removeItem(item.id)}
+                                className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Remove
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex flex-col justify-center">
-                            <Link
-                              to={`/product/${item.product?.slug}`}
-                              className="font-display font-semibold text-foreground hover:text-primary"
-                            >
-                              {item.product?.name}
-                            </Link>
-                            <button
-                              onClick={() => removeItem(item.id)}
-                              className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Remove
-                            </button>
+
+                          <div className="md:col-span-2 text-center">
+                            <span className="font-medium text-foreground">
+                              {formatPrice(item.product?.price || 0)}
+                            </span>
+                          </div>
+
+                          <div className="md:col-span-3 flex justify-center">
+                            <div className="flex items-center border border-border rounded-md">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="p-2 hover:bg-muted"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
+                              <span className="w-12 text-center font-medium">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                className="p-2 hover:bg-muted"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="md:col-span-2 text-right">
+                            <span className="font-semibold text-foreground">
+                              {formatPrice(itemTotal)}
+                            </span>
                           </div>
                         </div>
 
-                        <div className="md:col-span-2 text-center">
-                          <span className="font-medium text-foreground">
-                            {formatPrice(item.product?.price || 0)}
-                          </span>
-                        </div>
-
-                        <div className="md:col-span-3 flex justify-center">
-                          <div className="flex items-center border border-border rounded-md">
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="p-2 hover:bg-muted"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-12 text-center font-medium">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="p-2 hover:bg-muted"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+                        {/* Addons for this item */}
+                        {itemAddons.length > 0 && (
+                          <div className="mt-4 ml-8 md:ml-28 space-y-2">
+                            {itemAddons.map((addon) => (
+                              <div
+                                key={addon.id}
+                                className="flex items-center gap-3 p-2 bg-muted/50 rounded-md"
+                              >
+                                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={addon.addon_product?.images?.[0] || "/placeholder.svg"}
+                                    alt={addon.addon_product?.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">
+                                    + {addon.addon_product?.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Qty: {addon.quantity || 1}
+                                  </p>
+                                </div>
+                                <div className="text-sm font-medium">
+                                  {formatPrice((addon.addon_product?.price || 0) * (addon.quantity || 1))}
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveAddon(addon.id, item.id)}
+                                  className="text-muted-foreground hover:text-destructive p-1"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                            {/* Item subtotal with addons */}
+                            <div className="flex justify-end text-sm text-muted-foreground pt-1">
+                              Item Total: <span className="font-medium ml-1">{formatPrice(itemTotal + addonsTotal)}</span>
+                            </div>
                           </div>
-                        </div>
-
-                        <div className="md:col-span-2 text-right">
-                          <span className="font-semibold text-foreground">
-                            {formatPrice((item.product?.price || 0) * item.quantity)}
-                          </span>
-                        </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="mt-6">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Loader2, CheckCircle, Tag } from "lucide-react";
 import { useCart, useClearCart } from "@/hooks/useCart";
+import { useAllCartAddons } from "@/hooks/useCartItemAddons";
+import { useProductOptions } from "@/hooks/useProductOptions";
 import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +29,8 @@ import { supabase } from "@/integrations/supabase/client";
 const Checkout = () => {
   const { user } = useAuth();
   const { data: cartItems = [], isLoading } = useCart();
+  const { data: allAddons = [], isLoading: addonsLoading } = useAllCartAddons();
+  const { data: productOptions = [] } = useProductOptions();
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const navigate = useNavigate();
@@ -36,8 +40,6 @@ const Checkout = () => {
 
   // Get discount from URL params (passed from Cart)
   const discountCodeId = searchParams.get("discountCodeId");
-
-  // Get discount from URL params (passed from Cart)
   const discountCode = searchParams.get("discountCode");
   const discountAmount = parseFloat(searchParams.get("discountAmount") || "0");
 
@@ -56,10 +58,48 @@ const Checkout = () => {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-    0
-  );
+  // Group addons by cart item id
+  const addonsByCartItem = useMemo(() => {
+    return allAddons.reduce((acc, addon) => {
+      if (!acc[addon.cart_item_id]) acc[addon.cart_item_id] = [];
+      acc[addon.cart_item_id].push(addon);
+      return acc;
+    }, {} as Record<string, typeof allAddons>);
+  }, [allAddons]);
+
+  // Create option name lookup
+  const optionNameMap = useMemo(() => {
+    return productOptions.reduce((acc, opt) => {
+      acc[opt.id] = opt.name;
+      return acc;
+    }, {} as Record<string, string>);
+  }, [productOptions]);
+
+  // Format selected options for display
+  const formatOptions = (selectedOptions: Record<string, any> | null) => {
+    if (!selectedOptions || Object.keys(selectedOptions).length === 0) return null;
+    
+    return Object.entries(selectedOptions)
+      .map(([optionId, value]) => {
+        const optionName = optionNameMap[optionId] || optionId;
+        return `${optionName}: ${value}`;
+      })
+      .join(" | ");
+  };
+
+  // Calculate subtotal including addons
+  const subtotal = useMemo(() => {
+    let total = 0;
+    cartItems.forEach((item) => {
+      total += (item.product?.price || 0) * item.quantity;
+      const itemAddons = addonsByCartItem[item.id] || [];
+      itemAddons.forEach((addon) => {
+        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
+      });
+    });
+    return total;
+  }, [cartItems, addonsByCartItem]);
+
   const shipping = subtotal > 5000 ? 0 : 150;
   const total = subtotal - discountAmount + shipping;
 
@@ -84,17 +124,35 @@ const Checkout = () => {
       phone,
     };
 
-    const orderItems = cartItems.map((item) => ({
-      product_id: item.product_id,
-      quantity: item.quantity,
-      price: item.product?.price || 0,
-      total: (item.product?.price || 0) * item.quantity,
-      product_snapshot: {
-        name: item.product?.name || "",
-        image: item.product?.images?.[0] || "",
-        slug: item.product?.slug || "",
-      },
-    }));
+    // Build order items with full snapshot including options and addons
+    const orderItems = cartItems.map((item) => {
+      const itemAddons = addonsByCartItem[item.id] || [];
+      const itemTotal = (item.product?.price || 0) * item.quantity;
+      const addonsTotal = itemAddons.reduce(
+        (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
+        0
+      );
+
+      return {
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.product?.price || 0,
+        total: itemTotal + addonsTotal,
+        product_snapshot: {
+          name: item.product?.name || "",
+          image: item.product?.images?.[0] || "",
+          slug: item.product?.slug || "",
+          selected_options: item.selected_options || {},
+          addons: itemAddons.map((addon) => ({
+            name: addon.addon_product?.name || "",
+            image: addon.addon_product?.images?.[0] || "",
+            quantity: addon.quantity || 1,
+            price: addon.addon_product?.price || 0,
+            total: (addon.addon_product?.price || 0) * (addon.quantity || 1),
+          })),
+        },
+      };
+    });
 
     try {
       const order = await createOrder.mutateAsync({
@@ -191,7 +249,7 @@ const Checkout = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || addonsLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
@@ -342,20 +400,43 @@ const Checkout = () => {
                   <h3 className="font-display text-xl font-semibold mb-6">Order Summary</h3>
                   
                   <div className="space-y-4 mb-6 border-b border-border pb-6">
-                    {cartItems.map((item) => (
-                      <div key={item.id} className="flex gap-4 items-center">
-                        <div className="relative w-16 h-16 flex-shrink-0 bg-background border border-border rounded-sm overflow-hidden">
-                          <img src={item.product?.images?.[0] || "/placeholder.svg"} alt={item.product?.name} className="w-full h-full object-cover" />
-                          <span className="absolute -top-1 -right-1 bg-muted-foreground text-background text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
-                            {item.quantity}
-                          </span>
+                    {cartItems.map((item) => {
+                      const itemAddons = addonsByCartItem[item.id] || [];
+                      const formattedOptions = formatOptions(item.selected_options);
+
+                      return (
+                        <div key={item.id}>
+                          {/* Main product */}
+                          <div className="flex gap-4 items-start">
+                            <div className="relative w-16 h-16 flex-shrink-0 bg-background border border-border rounded-sm overflow-hidden">
+                              <img src={item.product?.images?.[0] || "/placeholder.svg"} alt={item.product?.name} className="w-full h-full object-cover" />
+                              <span className="absolute -top-1 -right-1 bg-muted-foreground text-background text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                                {item.quantity}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-display text-sm font-medium leading-tight">{item.product?.name}</h4>
+                              {formattedOptions && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{formattedOptions}</p>
+                              )}
+                            </div>
+                            <div className="text-sm font-medium">{formatPrice((item.product?.price || 0) * item.quantity)}</div>
+                          </div>
+
+                          {/* Addons */}
+                          {itemAddons.length > 0 && (
+                            <div className="ml-20 mt-2 space-y-1">
+                              {itemAddons.map((addon) => (
+                                <div key={addon.id} className="flex justify-between text-xs text-muted-foreground">
+                                  <span>+ {addon.addon_product?.name} × {addon.quantity || 1}</span>
+                                  <span>{formatPrice((addon.addon_product?.price || 0) * (addon.quantity || 1))}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-display text-sm font-medium leading-tight">{item.product?.name}</h4>
-                        </div>
-                        <div className="text-sm font-medium">{formatPrice((item.product?.price || 0) * item.quantity)}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-2">
