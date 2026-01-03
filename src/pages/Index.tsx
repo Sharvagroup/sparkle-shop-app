@@ -12,6 +12,7 @@ import Testimonials from "@/components/sections/Testimonials";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
+import SEO from "@/components/SEO";
 
 interface HomepageSettings {
   sections: string[];
@@ -52,6 +53,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO />
       <PromoBanner />
       <Header />
       <main>

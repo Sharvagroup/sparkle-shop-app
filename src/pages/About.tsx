@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import SEO from "@/components/SEO";
 
 interface Artisan {
   id: string;
@@ -98,6 +99,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title={`${settings.heroTitle} | Sharva`} description={settings.missionText.slice(0, 160)} />
       <PromoBanner />
       <Header />
       

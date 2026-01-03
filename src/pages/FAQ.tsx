@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import SEO from "@/components/SEO";
 
 interface FAQQuestion {
   id: string;
@@ -83,6 +84,7 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title={`${settings.pageTitle} | Sharva`} description={settings.pageSubtitle} />
       <PromoBanner />
       <Header />
       

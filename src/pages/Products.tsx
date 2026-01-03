@@ -27,6 +27,7 @@ import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
 import { useMaterials } from "@/hooks/useDynamicFilters";
 import { useSiteSetting, FilterSettings } from "@/hooks/useSiteSettings";
+import SEO from "@/components/SEO";
 
 // Commerce/store settings interface
 interface CommerceSettings {
@@ -235,6 +236,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="Shop All Products | Sharva" description="Explore our complete collection of handcrafted heritage jewelry." />
       <PromoBanner />
       <Header />
 

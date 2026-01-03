@@ -20,6 +20,8 @@ import {
   FileText,
   Sliders,
   Menu,
+  HelpCircle,
+  Ruler,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -37,6 +39,8 @@ const menuItems = [
   { icon: Bell, label: 'Announcements', path: '/admin/announcements' },
   { icon: Home, label: 'Homepage', path: '/admin/homepage' },
   { icon: FileText, label: 'About Page', path: '/admin/about-page' },
+  { icon: HelpCircle, label: 'FAQ', path: '/admin/faq' },
+  { icon: Ruler, label: 'Size Guide', path: '/admin/size-guide' },
   { icon: Link2, label: 'Footer Links', path: '/admin/footer-links' },
   { icon: Menu, label: 'Navigation', path: '/admin/navigation' },
   { icon: Settings, label: 'Site Settings', path: '/admin/settings' },
