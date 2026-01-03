@@ -16,6 +16,8 @@ import {
 import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { toast } from "sonner";
 
 interface ContactPageSettings {
   heroImage: string;
@@ -195,12 +197,26 @@ const Settings = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string, setter: (v: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const formatCheck = validateWebPImage(file);
+    if (!formatCheck.valid) {
+      toast.error(formatCheck.error);
+      return;
+    }
+
+    const sizeCheck = validateImageSize(file, 5);
+    if (!sizeCheck.valid) {
+      toast.error(sizeCheck.error);
+      return;
+    }
+
     setUploading(field);
     try {
       const url = await uploadSiteAsset(file, "branding");
       setter(url);
     } catch (error) {
       console.error("Upload failed:", error);
+      toast.error("Failed to upload image");
     } finally {
       setUploading(null);
     }
@@ -355,7 +371,7 @@ const Settings = () => {
                         {logoUrl ? <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("logo-upload")?.click()} disabled={uploading === "logo"}>
                           {uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -371,7 +387,7 @@ const Settings = () => {
                         {footerLogoUrl ? <img src={footerLogoUrl} alt="Footer Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("footer-logo-upload")?.click()} disabled={uploading === "footerLogo"}>
                           {uploading === "footerLogo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -389,7 +405,7 @@ const Settings = () => {
                         {faviconUrl ? <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("favicon-upload")?.click()} disabled={uploading === "favicon"}>
                           {uploading === "favicon" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -405,7 +421,7 @@ const Settings = () => {
                         {loadingImageUrl ? <img src={loadingImageUrl} alt="Loading" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
                           {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -542,7 +558,7 @@ const Settings = () => {
                         {contactHeroImage ? <img src={contactHeroImage} alt="Contact Hero" className="max-h-full max-w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
                       </div>
                       <div>
-                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("contact-hero-upload")?.click()} disabled={uploading === "contactHero"}>
                           {uploading === "contactHero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -877,7 +893,7 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground mb-2">Image shown when sharing on social media (1200x630px recommended)</p>
                   <div className="flex gap-4 items-center">
                     {ogImage && <img src={ogImage} alt="OG" className="h-20 w-auto rounded border" />}
-                    <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
+                    <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
                     <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("og-upload")?.click()} disabled={uploading === "og"}>
                       {uploading === "og" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Upload</>}
                     </Button>

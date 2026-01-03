@@ -13,6 +13,7 @@ import {
 import { Collection, CollectionInput, uploadCollectionImage } from '@/hooks/useCollections';
 import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from '@/lib/imageValidation';
 
 interface CollectionFormProps {
   open: boolean;
@@ -73,13 +74,15 @@ const CollectionForm = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+    const formatCheck = validateWebPImage(file);
+    if (!formatCheck.valid) {
+      toast.error(formatCheck.error);
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+    const sizeCheck = validateImageSize(file, 5);
+    if (!sizeCheck.valid) {
+      toast.error(sizeCheck.error);
       return;
     }
 
@@ -190,7 +193,7 @@ const CollectionForm = ({
                   </span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={ALLOWED_IMAGE_ACCEPT}
                     onChange={handleImageUpload}
                     className="hidden"
                     disabled={uploading}

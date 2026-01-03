@@ -32,6 +32,7 @@ import { useAdminProductAddons, useAddProductAddon, useRemoveProductAddon } from
 import ProductAddonsSelector, { SelectedAddon } from '@/components/admin/ProductAddonsSelector';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from '@/lib/imageValidation';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
@@ -131,11 +132,29 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     const files = e.target.files;
     if (!files?.length) return;
 
+    // Validate all files are WebP
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      const formatCheck = validateWebPImage(file);
+      if (!formatCheck.valid) {
+        toast.error(`${file.name}: ${formatCheck.error}`);
+        continue;
+      }
+      const sizeCheck = validateImageSize(file, 5);
+      if (!sizeCheck.valid) {
+        toast.error(`${file.name}: ${sizeCheck.error}`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
     setUploadingImages(true);
     try {
-      const newUrls = await uploadProductImages(Array.from(files));
+      const newUrls = await uploadProductImages(validFiles);
       setImages((prev) => [...prev, ...newUrls]);
-      toast.success(`${files.length} image(s) uploaded`);
+      toast.success(`${validFiles.length} image(s) uploaded`);
     } catch (error) {
       toast.error('Failed to upload images');
       console.error(error);
@@ -486,7 +505,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                   )}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={ALLOWED_IMAGE_ACCEPT}
                     multiple
                     className="hidden"
                     onChange={handleImageUpload}
