@@ -14,6 +14,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Types for dynamic navigation
+interface NavChild {
+  id: string;
+  label: string;
+  url: string;
+  isExternal?: boolean;
+}
+
+interface NavItem {
+  id: string;
+  label: string;
+  url: string;
+  type: "static" | "category_dropdown" | "collection_dropdown";
+  isExternal?: boolean;
+  isActive?: boolean;
+  children?: NavChild[];
+}
+
+interface NavigationSettings {
+  items: NavItem[];
+}
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,13 +49,54 @@ const Header = () => {
   const { data: cartItems = [] } = useCart();
   const { data: wishlistCount = 0 } = useWishlistCount();
   const { data: branding } = useSiteSetting<BrandingSettings>("branding");
+  const { data: navSettings } = useSiteSetting<NavigationSettings>("header_navigation");
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const siteName = branding?.siteName || "SHARVA";
   const logoUrl = branding?.logoUrl;
 
-  // Build nav items with dynamic categories
+  // Build nav items dynamically from CMS or fallback to hardcoded
   const navItems = useMemo(() => {
+    // If we have CMS navigation settings, use them
+    if (navSettings?.items && navSettings.items.length > 0) {
+      return navSettings.items
+        .filter((item) => item.isActive !== false)
+        .map((item) => {
+          let children: { label: string; href: string }[] = [];
+
+          if (item.type === "category_dropdown") {
+            children = [
+              { label: "All Products", href: "/products" },
+              ...categories.map((cat) => ({
+                label: cat.name,
+                href: `/products?category=${cat.slug}`,
+              })),
+            ];
+          } else if (item.type === "collection_dropdown") {
+            children = [
+              { label: "All Collections", href: "/products" },
+              ...collections.map((col) => ({
+                label: col.name,
+                href: `/products?collection=${col.slug}`,
+              })),
+            ];
+          } else if (item.children && item.children.length > 0) {
+            children = item.children.map((child) => ({
+              label: child.label,
+              href: child.url,
+            }));
+          }
+
+          return {
+            label: item.label,
+            href: item.url,
+            children: children.length > 0 ? children : undefined,
+            isExternal: item.isExternal,
+          };
+        });
+    }
+
+    // Fallback to hardcoded navigation
     const shopChildren = [
       { label: "All Products", href: "/products" },
       ...categories.map((cat) => ({
@@ -80,7 +144,7 @@ const Header = () => {
       },
       { label: "Contact", href: "/contact" },
     ];
-  }, [categories, collections]);
+  }, [categories, collections, navSettings]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -234,53 +298,55 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pt-4 border-t border-border">
-            {navItems.map((item) => (
-              <div key={item.label} className="py-2">
-                <Link
-                  to={item.href}
-                  className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-                {item.children && (
-                  <div className="pl-4 mt-2 space-y-2">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.label}
-                        to={child.href}
-                        className="block text-xs text-muted-foreground hover:text-primary transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
+            <ScrollArea className="h-[calc(100vh-120px)] pb-6">
+              {navItems.map((item) => (
+                <div key={item.label} className="py-2">
+                  <Link
+                    to={item.href}
+                    className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                  {item.children && (
+                    <div className="pl-4 mt-2 space-y-2">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="block text-xs text-muted-foreground hover:text-primary transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Mobile auth link */}
+              <div className="pt-4 mt-4 border-t border-border">
+                {user ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 text-sm text-destructive"
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                ) : (
+                  <Link
+                    to="/auth"
+                    className="flex items-center space-x-2 text-sm hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User size={16} />
+                    <span>Sign In</span>
+                  </Link>
                 )}
               </div>
-            ))}
-            
-            {/* Mobile auth link */}
-            <div className="pt-4 mt-4 border-t border-border">
-              {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-2 text-sm text-destructive"
-                >
-                  <LogOut size={16} />
-                  <span>Sign Out</span>
-                </button>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="flex items-center space-x-2 text-sm hover:text-primary"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User size={16} />
-                  <span>Sign In</span>
-                </Link>
-              )}
-            </div>
+            </ScrollArea>
           </nav>
         )}
       </div>

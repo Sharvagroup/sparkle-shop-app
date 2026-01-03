@@ -83,7 +83,7 @@ const Cart = () => {
   // Format selected options for display
   const formatOptions = (selectedOptions: Record<string, any> | null) => {
     if (!selectedOptions || Object.keys(selectedOptions).length === 0) return null;
-    
+
     return Object.entries(selectedOptions)
       .map(([optionId, value]) => {
         const optionName = optionNameMap[optionId] || optionId;
@@ -186,65 +186,132 @@ const Cart = () => {
                       <div key={item.id} className="py-6">
                         {/* Main Product */}
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                          <div className="md:col-span-5 flex gap-4">
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              <img
-                                src={item.product?.images?.[0] || "/placeholder.svg"}
-                                alt={item.product?.name}
-                                className="w-full h-full object-cover"
-                              />
+                          {/* Desktop View (Base) / Tablet */}
+                          <div className="hidden md:contents">
+                            <div className="md:col-span-5 flex gap-4">
+                              <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                <img
+                                  src={item.product?.images?.[0] || "/placeholder.svg"}
+                                  alt={item.product?.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex flex-col justify-center">
+                                <Link
+                                  to={`/product/${item.product?.slug}`}
+                                  className="font-display font-semibold text-foreground hover:text-primary"
+                                >
+                                  {item.product?.name}
+                                </Link>
+                                {/* Display selected options */}
+                                {formattedOptions && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formattedOptions}
+                                  </p>
+                                )}
+                                <button
+                                  onClick={() => removeItem(item.id)}
+                                  className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Remove
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex flex-col justify-center">
+
+                            <div className="md:col-span-2 text-center flex items-center justify-center h-full">
+                              <span className="font-medium text-foreground">
+                                {formatPrice(item.product?.price || 0)}
+                              </span>
+                            </div>
+
+                            <div className="md:col-span-3 flex justify-center items-center h-full">
+                              <div className="flex items-center border border-border rounded-md">
+                                <button
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="p-2 hover:bg-muted"
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="w-12 text-center font-medium">{item.quantity}</span>
+                                <button
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  className="p-2 hover:bg-muted"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 text-right flex items-center justify-end h-full">
+                              <span className="font-semibold text-foreground">
+                                {formatPrice(itemTotal)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Mobile View (Card Style) */}
+                          <div className="flex flex-col gap-4 md:hidden w-full">
+                            <div className="flex gap-4">
                               <Link
                                 to={`/product/${item.product?.slug}`}
-                                className="font-display font-semibold text-foreground hover:text-primary"
+                                className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0"
                               >
-                                {item.product?.name}
+                                <img
+                                  src={item.product?.images?.[0] || "/placeholder.svg"}
+                                  alt={item.product?.name}
+                                  className="w-full h-full object-cover"
+                                />
                               </Link>
-                              {/* Display selected options */}
-                              {formattedOptions && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {formattedOptions}
-                                </p>
-                              )}
-                              <button
-                                onClick={() => removeItem(item.id)}
-                                className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 mt-2"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Remove
-                              </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start gap-2">
+                                  <Link
+                                    to={`/product/${item.product?.slug}`}
+                                    className="font-display font-semibold text-foreground hover:text-primary line-clamp-2"
+                                  >
+                                    {item.product?.name}
+                                  </Link>
+                                  <button
+                                    onClick={() => removeItem(item.id)}
+                                    className="text-muted-foreground hover:text-destructive p-1 -mt-1 -mr-1"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                {formattedOptions && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                    {formattedOptions}
+                                  </p>
+                                )}
+                                <div className="mt-2 text-sm font-medium">
+                                  {formatPrice(item.product?.price || 0)}
+                                </div>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="md:col-span-2 text-center">
-                            <span className="font-medium text-foreground">
-                              {formatPrice(item.product?.price || 0)}
-                            </span>
-                          </div>
-
-                          <div className="md:col-span-3 flex justify-center">
-                            <div className="flex items-center border border-border rounded-md">
-                              <button
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="p-2 hover:bg-muted"
-                              >
-                                <Minus className="w-4 h-4" />
-                              </button>
-                              <span className="w-12 text-center font-medium">{item.quantity}</span>
-                              <button
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="p-2 hover:bg-muted"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
+                            <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border border-border/50">
+                              <div className="flex items-center bg-background border border-border rounded-md shadow-sm h-9">
+                                <button
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="h-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                <button
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  className="h-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</span>
+                                <span className="font-bold text-foreground">
+                                  {formatPrice(itemTotal)}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-
-                          <div className="md:col-span-2 text-right">
-                            <span className="font-semibold text-foreground">
-                              {formatPrice(itemTotal)}
-                            </span>
                           </div>
                         </div>
 

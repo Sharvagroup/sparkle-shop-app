@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useSiteSetting, BrandingSettings } from "@/hooks/useSiteSettings";
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -38,6 +39,7 @@ const Auth = () => {
   const { signIn, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: branding } = useSiteSetting<BrandingSettings>("branding");
 
   useEffect(() => {
     if (user) {
@@ -66,8 +68,8 @@ const Auth = () => {
     if (error) {
       toast({
         title: 'Sign in failed',
-        description: error.message === 'Invalid login credentials' 
-          ? 'Invalid email or password. Please try again.' 
+        description: error.message === 'Invalid login credentials'
+          ? 'Invalid email or password. Please try again.'
           : error.message,
         variant: 'destructive',
       });
@@ -149,12 +151,18 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary/5 items-center justify-center p-12">
-        <div className="text-center">
+      <div className="hidden lg:flex lg:w-1/2 bg-primary/5 items-center justify-center p-12 relative overflow-hidden">
+        {branding?.authBackgroundImage && (
+          <div className="absolute inset-0 z-0">
+            <img src={branding.authBackgroundImage} className="w-full h-full object-cover" alt="Background" />
+            <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px]" />
+          </div>
+        )}
+        <div className="text-center relative z-10">
           <Link to="/" className="inline-block mb-8">
             <h1 className="text-4xl font-serif tracking-widest text-primary">SHARVA</h1>
           </Link>
-          <p className="text-muted-foreground text-lg max-w-md">
+          <p className="text-muted-foreground text-lg max-w-md font-medium">
             Discover exquisite handcrafted jewelry that tells your unique story
           </p>
         </div>

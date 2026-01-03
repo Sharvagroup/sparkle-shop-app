@@ -90,6 +90,17 @@ export const useProducts = (filters?: ProductFilters) => {
   return useQuery({
     queryKey: ['products', filters],
     queryFn: async () => {
+      // Fetch commerce settings for new arrival threshold
+      const { data: settingsData } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'commerce')
+        .maybeSingle();
+
+      const newArrivalDays = (settingsData?.value as any)?.newArrivalDays || 30;
+      const thresholdDate = new Date();
+      thresholdDate.setDate(thresholdDate.getDate() - newArrivalDays);
+
       let query = supabase
         .from('products')
         .select(`
@@ -131,7 +142,15 @@ export const useProducts = (filters?: ProductFilters) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as Product[];
+
+      // Inject dynamic "New" badge if no badge is manually set
+      return (data as Product[]).map(product => {
+        const created = new Date(product.created_at);
+        if (!product.badge && created >= thresholdDate) {
+          return { ...product, badge: 'new' };
+        }
+        return product;
+      });
     },
   });
 };

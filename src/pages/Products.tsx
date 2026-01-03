@@ -15,12 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
 import { useMaterials } from "@/hooks/useDynamicFilters";
+import { useSiteSetting, FilterSettings } from "@/hooks/useSiteSettings";
 
-const ITEMS_PER_PAGE = 12;
+// Commerce/store settings interface
+interface CommerceSettings {
+  productsPerPage?: number;
+  defaultSort?: string;
+  newArrivalDays?: number;
+}
 
 const Products = () => {
   const [searchParams] = useSearchParams();
@@ -35,6 +48,14 @@ const Products = () => {
   const { data: collections = [] } = useCollections();
   const { data: allProducts = [], isLoading } = useProducts();
   const { data: materials = [] } = useMaterials();
+  const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
+  const { data: filterSettings } = useSiteSetting<FilterSettings>("filters");
+
+  // Dynamic store settings from CMS
+  const ITEMS_PER_PAGE = commerceSettings?.productsPerPage || 12;
+  const defaultSortOption = commerceSettings?.defaultSort || "featured";
+  const enabledFilters = filterSettings?.enabledFilters || ["category", "collection", "price", "material", "availability"];
+  const enabledSortOptions = filterSettings?.enabledSortOptions || ["featured", "newest", "price-low", "price-high", "best-selling"];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []
@@ -45,7 +66,7 @@ const Products = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("featured");
+  const [sortBy, setSortBy] = useState(defaultSortOption);
   const [currentPage, setCurrentPage] = useState(1);
   const [isNewArrival, setIsNewArrival] = useState(isNewFromUrl);
   const [isBestSeller, setIsBestSeller] = useState(isBestsellerFromUrl);
@@ -235,15 +256,15 @@ const Products = () => {
             {searchQuery
               ? `Search: "${searchQuery}"`
               : isNewArrival
-              ? "New Arrivals"
-              : isBestSeller
-              ? "Best Sellers"
-              : isCelebritySpecial
-              ? "Celebrity Specials"
-              : "All Products"}
+                ? "New Arrivals"
+                : isBestSeller
+                  ? "Best Sellers"
+                  : isCelebritySpecial
+                    ? "Celebrity Specials"
+                    : "All Products"}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
-            {searchQuery 
+            {searchQuery
               ? `Found ${filteredProducts.length} results for your search`
               : "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life."}
           </p>
@@ -254,13 +275,179 @@ const Products = () => {
           <div className="container mx-auto px-4 md:px-8 py-3 md:py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <button className="flex items-center space-x-2 text-xs md:text-sm font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors group">
-                  <SlidersHorizontal
-                    size={18}
-                    className="group-hover:text-primary transition-colors"
-                  />
-                  <span>Filter By</span>
-                </button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button className="flex items-center space-x-2 text-xs md:text-sm font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors group">
+                      <SlidersHorizontal
+                        size={18}
+                        className="group-hover:text-primary transition-colors"
+                      />
+                      <span>Filter By</span>
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle className="font-display text-left">Filters</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-8 space-y-10">
+                      {/* Category Filter */}
+                      {enabledFilters.includes('category') && (
+                        <div className="border-b border-border pb-6">
+                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                            Category
+                          </h3>
+                          <div className="space-y-3">
+                            {categories.map((category) => (
+                              <label
+                                key={category.id}
+                                className="flex items-center space-x-3 cursor-pointer group"
+                              >
+                                <Checkbox
+                                  checked={selectedCategories.includes(category.slug)}
+                                  onCheckedChange={() =>
+                                    toggleFilter(
+                                      category.slug,
+                                      selectedCategories,
+                                      setSelectedCategories
+                                    )
+                                  }
+                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                                  {category.name}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Collection Filter */}
+                      {enabledFilters.includes('collection') && (
+                        <div className="border-b border-border pb-6">
+                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                            Collection
+                          </h3>
+                          <div className="space-y-3">
+                            {collections.map((collection) => (
+                              <label
+                                key={collection.id}
+                                className="flex items-center space-x-3 cursor-pointer group"
+                              >
+                                <Checkbox
+                                  checked={selectedCollections.includes(collection.slug)}
+                                  onCheckedChange={() =>
+                                    toggleFilter(
+                                      collection.slug,
+                                      selectedCollections,
+                                      setSelectedCollections
+                                    )
+                                  }
+                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                                  {collection.name}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Price Range Filter */}
+                      {enabledFilters.includes('price') && (
+                        <div className="border-b border-border pb-6">
+                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                            Price Range
+                          </h3>
+                          <div className="flex items-center space-x-4 mb-4">
+                            <div className="flex-1">
+                              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                                Min
+                              </label>
+                              <input
+                                type="number"
+                                value={priceRange[0]}
+                                onChange={(e) =>
+                                  setPriceRange([Number(e.target.value), priceRange[1]])
+                                }
+                                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+                              />
+                            </div>
+                            <span className="text-border mt-4">-</span>
+                            <div className="flex-1">
+                              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                                Max
+                              </label>
+                              <input
+                                type="number"
+                                value={priceRange[1]}
+                                onChange={(e) =>
+                                  setPriceRange([priceRange[0], Number(e.target.value)])
+                                }
+                                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <Slider
+                            value={[priceRange[0], priceRange[1]]}
+                            onValueChange={(val) => setPriceRange([val[0], val[1]])}
+                            max={50000}
+                            step={100}
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+
+                      {/* Material Filter */}
+                      {enabledFilters.includes('material') && (
+                        <div className="border-b border-border pb-6">
+                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                            Material
+                          </h3>
+                          <div className="space-y-3">
+                            {materials.map((material) => (
+                              <label
+                                key={material}
+                                className="flex items-center space-x-3 cursor-pointer group"
+                              >
+                                <Checkbox
+                                  checked={selectedMaterials.includes(material)}
+                                  onCheckedChange={() =>
+                                    toggleFilter(material, selectedMaterials, setSelectedMaterials)
+                                  }
+                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                                  {material}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Availability Filter */}
+                      {enabledFilters.includes('availability') && (
+                        <div>
+                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                            Availability
+                          </h3>
+                          <label className="flex items-center space-x-3 cursor-pointer group">
+                            <Checkbox
+                              checked={inStockOnly}
+                              onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
+                              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            />
+                            <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                              In Stock Only
+                            </span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
                 <span className="text-sm text-muted-foreground">
                   {filteredProducts.length} products
                 </span>
@@ -274,11 +461,15 @@ const Products = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="featured">Featured</SelectItem>
-                    <SelectItem value="newest">Newest Arrivals</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="best-selling">Best Selling</SelectItem>
+                    {[
+                      { id: "featured", label: "Featured" },
+                      { id: "newest", label: "Newest Arrivals" },
+                      { id: "price-low", label: "Price: Low to High" },
+                      { id: "price-high", label: "Price: High to Low" },
+                      { id: "best-selling", label: "Best Selling" }
+                    ].filter(opt => enabledSortOptions.includes(opt.id)).map(opt => (
+                      <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -292,150 +483,160 @@ const Products = () => {
             {/* Sidebar Filters */}
             <aside className="hidden lg:block w-64 flex-shrink-0 space-y-10">
               {/* Category Filter */}
-              <div className="border-b border-border pb-6">
-                <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                  Category
-                </h3>
-                <div className="space-y-3">
-                  {categories.map((category) => (
-                    <label
-                      key={category.id}
-                      className="flex items-center space-x-3 cursor-pointer group"
-                    >
-                      <Checkbox
-                        checked={selectedCategories.includes(category.slug)}
-                        onCheckedChange={() =>
-                          toggleFilter(
-                            category.slug,
-                            selectedCategories,
-                            setSelectedCategories
-                          )
-                        }
-                        className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                        {category.name}
-                      </span>
-                    </label>
-                  ))}
+              {enabledFilters.includes('category') && (
+                <div className="border-b border-border pb-6">
+                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                    Category
+                  </h3>
+                  <div className="space-y-3">
+                    {categories.map((category) => (
+                      <label
+                        key={category.id}
+                        className="flex items-center space-x-3 cursor-pointer group"
+                      >
+                        <Checkbox
+                          checked={selectedCategories.includes(category.slug)}
+                          onCheckedChange={() =>
+                            toggleFilter(
+                              category.slug,
+                              selectedCategories,
+                              setSelectedCategories
+                            )
+                          }
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                          {category.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Collection Filter */}
-              <div className="border-b border-border pb-6">
-                <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                  Collection
-                </h3>
-                <div className="space-y-3">
-                  {collections.map((collection) => (
-                    <label
-                      key={collection.id}
-                      className="flex items-center space-x-3 cursor-pointer group"
-                    >
-                      <Checkbox
-                        checked={selectedCollections.includes(collection.slug)}
-                        onCheckedChange={() =>
-                          toggleFilter(
-                            collection.slug,
-                            selectedCollections,
-                            setSelectedCollections
-                          )
-                        }
-                        className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                        {collection.name}
-                      </span>
-                    </label>
-                  ))}
+              {enabledFilters.includes('collection') && (
+                <div className="border-b border-border pb-6">
+                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                    Collection
+                  </h3>
+                  <div className="space-y-3">
+                    {collections.map((collection) => (
+                      <label
+                        key={collection.id}
+                        className="flex items-center space-x-3 cursor-pointer group"
+                      >
+                        <Checkbox
+                          checked={selectedCollections.includes(collection.slug)}
+                          onCheckedChange={() =>
+                            toggleFilter(
+                              collection.slug,
+                              selectedCollections,
+                              setSelectedCollections
+                            )
+                          }
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                          {collection.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Price Range Filter */}
-              <div className="border-b border-border pb-6">
-                <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                  Price Range
-                </h3>
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex-1">
-                    <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                      Min
-                    </label>
-                    <input
-                      type="number"
-                      value={priceRange[0]}
-                      onChange={(e) =>
-                        setPriceRange([Number(e.target.value), priceRange[1]])
-                      }
-                      className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                    />
+              {enabledFilters.includes('price') && (
+                <div className="border-b border-border pb-6">
+                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                    Price Range
+                  </h3>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex-1">
+                      <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                        Min
+                      </label>
+                      <input
+                        type="number"
+                        value={priceRange[0]}
+                        onChange={(e) =>
+                          setPriceRange([Number(e.target.value), priceRange[1]])
+                        }
+                        className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+                      />
+                    </div>
+                    <span className="text-border mt-4">-</span>
+                    <div className="flex-1">
+                      <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                        Max
+                      </label>
+                      <input
+                        type="number"
+                        value={priceRange[1]}
+                        onChange={(e) =>
+                          setPriceRange([priceRange[0], Number(e.target.value)])
+                        }
+                        className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <span className="text-border mt-4">-</span>
-                  <div className="flex-1">
-                    <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                      Max
-                    </label>
-                    <input
-                      type="number"
-                      value={priceRange[1]}
-                      onChange={(e) =>
-                        setPriceRange([priceRange[0], Number(e.target.value)])
-                      }
-                      className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                    />
-                  </div>
+                  <Slider
+                    value={[priceRange[0], priceRange[1]]}
+                    onValueChange={(val) => setPriceRange([val[0], val[1]])}
+                    max={50000}
+                    step={100}
+                    className="w-full"
+                  />
                 </div>
-                <Slider
-                  value={[priceRange[0], priceRange[1]]}
-                  onValueChange={(val) => setPriceRange([val[0], val[1]])}
-                  max={50000}
-                  step={100}
-                  className="w-full"
-                />
-              </div>
+              )}
 
               {/* Material Filter */}
-              <div className="border-b border-border pb-6">
-                <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                  Material
-                </h3>
-                <div className="space-y-3">
-                  {materials.map((material) => (
-                    <label
-                      key={material}
-                      className="flex items-center space-x-3 cursor-pointer group"
-                    >
-                      <Checkbox
-                        checked={selectedMaterials.includes(material)}
-                        onCheckedChange={() =>
-                          toggleFilter(material, selectedMaterials, setSelectedMaterials)
-                        }
-                        className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                        {material}
-                      </span>
-                    </label>
-                  ))}
+              {enabledFilters.includes('material') && (
+                <div className="border-b border-border pb-6">
+                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                    Material
+                  </h3>
+                  <div className="space-y-3">
+                    {materials.map((material) => (
+                      <label
+                        key={material}
+                        className="flex items-center space-x-3 cursor-pointer group"
+                      >
+                        <Checkbox
+                          checked={selectedMaterials.includes(material)}
+                          onCheckedChange={() =>
+                            toggleFilter(material, selectedMaterials, setSelectedMaterials)
+                          }
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                          {material}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Availability Filter */}
-              <div>
-                <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                  Availability
-                </h3>
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <Checkbox
-                    checked={inStockOnly}
-                    onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
-                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                    In Stock Only
-                  </span>
-                </label>
-              </div>
+              {enabledFilters.includes('availability') && (
+                <div>
+                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+                    Availability
+                  </h3>
+                  <label className="flex items-center space-x-3 cursor-pointer group">
+                    <Checkbox
+                      checked={inStockOnly}
+                      onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                      In Stock Only
+                    </span>
+                  </label>
+                </div>
+              )}
             </aside>
 
             {/* Product Grid */}
@@ -467,7 +668,7 @@ const Products = () => {
                       image={product.images?.[0] || "/placeholder.svg"}
                       rating={product.rating}
                       reviewCount={product.review_count}
-                      badge={product.badge || undefined}
+                      badge={product.badge as "new" | "sale" | "trending" | undefined}
                     />
                   ))}
                 </div>
@@ -489,11 +690,10 @@ const Products = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                          currentPage === page
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-primary"
-                        }`}
+                        className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${currentPage === page
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-primary"
+                          }`}
                       >
                         {page}
                       </button>

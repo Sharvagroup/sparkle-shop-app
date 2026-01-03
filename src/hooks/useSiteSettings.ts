@@ -7,8 +7,10 @@ export interface BrandingSettings {
   siteName: string;
   tagline: string;
   logoUrl: string;
+  footerLogoUrl?: string;
   faviconUrl: string;
   loadingImageUrl: string;
+  authBackgroundImage?: string;
 }
 
 export interface ContactSettings {
@@ -45,6 +47,11 @@ export interface SeoSettings {
   ogImage: string;
 }
 
+export interface FilterSettings {
+  enabledFilters: string[];
+  enabledSortOptions: string[];
+}
+
 export interface SiteSetting {
   id: string;
   key: string;
@@ -63,12 +70,12 @@ export const useSiteSettings = () => {
         .select("*");
 
       if (error) throw error;
-      
+
       const settings: Record<string, Record<string, unknown>> = {};
       (data as SiteSetting[]).forEach((item) => {
         settings[item.key] = item.value;
       });
-      
+
       return settings;
     },
   });

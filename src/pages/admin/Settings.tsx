@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin } from "lucide-react";
-import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Filter } from "lucide-react";
+import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings, FilterSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
@@ -55,6 +55,14 @@ interface BusinessHoursSettings {
   hours: BusinessHour[];
 }
 
+interface CommerceSettings {
+  shippingFlatRate: number;
+  freeShippingThreshold: number;
+  taxRate: number;
+  currencyCode: string;
+  currencySymbol: string;
+}
+
 const fontOptions = [
   { value: "Playfair Display", label: "Playfair Display (Elegant Serif)" },
   { value: "Lato", label: "Lato (Clean Sans-Serif)" },
@@ -77,6 +85,7 @@ const Settings = () => {
   const [footerLogoUrl, setFooterLogoUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [loadingImageUrl, setLoadingImageUrl] = useState("");
+  const [authBackgroundImage, setAuthBackgroundImage] = useState("");
 
   // Contact
   const [email, setEmail] = useState("");
@@ -126,6 +135,21 @@ const Settings = () => {
   const [contactHeroImage, setContactHeroImage] = useState("");
   const [mapEmbedUrl, setMapEmbedUrl] = useState("");
 
+  // Commerce Settings
+  const [shippingFlatRate, setShippingFlatRate] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [taxRate, setTaxRate] = useState(0);
+  const [currencyCode, setCurrencyCode] = useState("INR");
+  const [currencySymbol, setCurrencySymbol] = useState("₹");
+  // Store Settings
+  const [productsPerPage, setProductsPerPage] = useState(12);
+  const [defaultSort, setDefaultSort] = useState("featured");
+  const [newArrivalDays, setNewArrivalDays] = useState(30);
+
+  // Filter Settings
+  const [enabledFilters, setEnabledFilters] = useState<string[]>(["category", "collection", "price", "material", "availability"]);
+  const [enabledSortOptions, setEnabledSortOptions] = useState<string[]>(["featured", "newest", "price-low", "price-high"]);
+
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -145,6 +169,7 @@ const Settings = () => {
         setFooterLogoUrl(branding.footerLogoUrl || "");
         setFaviconUrl(branding.faviconUrl || "");
         setLoadingImageUrl(branding.loadingImageUrl || "");
+        setAuthBackgroundImage(branding.authBackgroundImage || "");
       }
       if (contact) {
         setEmail(contact.email || "");
@@ -190,6 +215,23 @@ const Settings = () => {
       if (contactPageData) {
         setContactHeroImage(contactPageData.heroImage || "");
         setMapEmbedUrl(contactPageData.mapEmbedUrl || "");
+      }
+      const commerceData = settings.commerce as unknown as CommerceSettings | undefined;
+      if (commerceData) {
+        setShippingFlatRate(commerceData.shippingFlatRate || 0);
+        setFreeShippingThreshold(commerceData.freeShippingThreshold || 0);
+        setTaxRate(commerceData.taxRate || 0);
+        setCurrencyCode(commerceData.currencyCode || "INR");
+        setCurrencySymbol(commerceData.currencySymbol || "₹");
+        setProductsPerPage((commerceData as any).productsPerPage || 12);
+        setDefaultSort((commerceData as any).defaultSort || "featured");
+        setNewArrivalDays((commerceData as any).newArrivalDays || 30);
+      }
+
+      const filters = settings.filters as unknown as FilterSettings | undefined;
+      if (filters) {
+        setEnabledFilters(filters.enabledFilters || ["category", "collection", "price", "material", "availability"]);
+        setEnabledSortOptions(filters.enabledSortOptions || ["featured", "newest", "price-low", "price-high"]);
       }
     }
   }, [settings]);
@@ -239,7 +281,7 @@ const Settings = () => {
   const saveBranding = async () => {
     await updateSetting.mutateAsync({
       key: "branding",
-      value: { siteName, tagline, logoUrl, footerLogoUrl, faviconUrl, loadingImageUrl },
+      value: { siteName, tagline, logoUrl, footerLogoUrl, faviconUrl, loadingImageUrl, authBackgroundImage },
       category: "branding",
     });
   };
@@ -316,6 +358,31 @@ const Settings = () => {
     });
   };
 
+  const saveCommerce = async () => {
+    await updateSetting.mutateAsync({
+      key: "commerce",
+      value: {
+        shippingFlatRate,
+        freeShippingThreshold,
+        taxRate,
+        currencyCode,
+        currencySymbol,
+        productsPerPage,
+        defaultSort,
+        newArrivalDays,
+      },
+      category: "commerce",
+    });
+  };
+
+  const saveFilters = async () => {
+    await updateSetting.mutateAsync({
+      key: "filters",
+      value: { enabledFilters, enabledSortOptions },
+      category: "filters",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -333,7 +400,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -341,6 +408,8 @@ const Settings = () => {
           <TabsTrigger value="promo" className="gap-2"><Megaphone className="h-4 w-4" /> Promo</TabsTrigger>
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
+          <TabsTrigger value="filters" className="gap-2"><Filter className="h-4 w-4" /> Filters</TabsTrigger>
+          <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -424,6 +493,22 @@ const Settings = () => {
                         <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
                           {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 p-4 border rounded-lg">
+                    <Label className="text-base font-medium">Auth Background</Label>
+                    <p className="text-xs text-muted-foreground">Image for Sign In/Sign Up pages</p>
+                    <div className="flex gap-4 items-center">
+                      <div className="w-16 h-16 bg-muted rounded flex items-center justify-center overflow-hidden">
+                        {authBackgroundImage ? <img src={authBackgroundImage} alt="Auth BG" className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">Default</span>}
+                      </div>
+                      <div>
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "authBg", setAuthBackgroundImage)} className="hidden" id="auth-bg-upload" />
+                        <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("auth-bg-upload")?.click()} disabled={uploading === "authBg"}>
+                          {uploading === "authBg" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
                       </div>
                     </div>
@@ -549,7 +634,7 @@ const Settings = () => {
                     <Image className="h-4 w-4 text-muted-foreground" />
                     <Label className="text-base font-medium">Contact Page Settings</Label>
                   </div>
-                  
+
                   <div className="space-y-3 p-4 border rounded-lg">
                     <Label>Hero Image</Label>
                     <p className="text-xs text-muted-foreground">Background image for the Contact page header</p>
@@ -568,10 +653,10 @@ const Settings = () => {
 
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Google Maps Embed URL</Label>
-                    <Input 
-                      value={mapEmbedUrl} 
-                      onChange={(e) => setMapEmbedUrl(e.target.value)} 
-                      placeholder="https://www.google.com/maps/embed?pb=..." 
+                    <Input
+                      value={mapEmbedUrl}
+                      onChange={(e) => setMapEmbedUrl(e.target.value)}
+                      placeholder="https://www.google.com/maps/embed?pb=..."
                     />
                     <p className="text-xs text-muted-foreground">
                       Get embed code from Google Maps: Share → Embed a map → Copy the src URL
@@ -916,6 +1001,188 @@ const Settings = () => {
                   <p className="text-xs text-green-600 truncate">yourstore.com</p>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{metaDescription || "Page description will appear here..."}</p>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="filters">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Filter Sidebars</CardTitle>
+                <CardDescription>Control which filters appear on the products page</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {["category", "collection", "price", "material", "availability"].map((filter) => (
+                  <div key={filter} className="flex items-center space-x-2">
+                    <Switch
+                      id={`filter-${filter}`}
+                      checked={enabledFilters.includes(filter)}
+                      onCheckedChange={(checked) => {
+                        if (checked) setEnabledFilters([...enabledFilters, filter]);
+                        else setEnabledFilters(enabledFilters.filter(f => f !== filter));
+                      }}
+                    />
+                    <Label htmlFor={`filter-${filter}`} className="capitalize">{filter}</Label>
+                  </div>
+                ))}
+                <div className="mt-4">
+                  <Button onClick={saveFilters} disabled={updateSetting.isPending} className="gap-2">
+                    {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Sort Options</CardTitle>
+                <CardDescription>Control available sorting options</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  { id: "featured", label: "Featured" },
+                  { id: "newest", label: "Newest Arrivals" },
+                  { id: "price-low", label: "Price: Low to High" },
+                  { id: "price-high", label: "Price: High to Low" },
+                  { id: "best-selling", label: "Best Selling" }
+                ].map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <Switch
+                      id={`sort-${option.id}`}
+                      checked={enabledSortOptions.includes(option.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) setEnabledSortOptions([...enabledSortOptions, option.id]);
+                        else setEnabledSortOptions(enabledSortOptions.filter(f => f !== option.id));
+                      }}
+                    />
+                    <Label htmlFor={`sort-${option.id}`}>{option.label}</Label>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="commerce">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Commerce Settings</CardTitle>
+                <CardDescription>Configure shipping, tax, and currency for your store</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2"><IndianRupee className="h-4 w-4" /> Currency Code</Label>
+                    <Input value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value.toUpperCase())} placeholder="INR" maxLength={3} />
+                    <p className="text-xs text-muted-foreground">ISO 4217 currency code (e.g., INR, USD)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Currency Symbol</Label>
+                    <Input value={currencySymbol} onChange={(e) => setCurrencySymbol(e.target.value)} placeholder="₹" maxLength={3} />
+                    <p className="text-xs text-muted-foreground">Symbol shown in prices</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium">Shipping</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Flat Rate Shipping ({currencySymbol})</Label>
+                      <Input type="number" value={shippingFlatRate} onChange={(e) => setShippingFlatRate(parseFloat(e.target.value) || 0)} min={0} />
+                      <p className="text-xs text-muted-foreground">Applied to all orders below threshold</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Free Shipping Threshold ({currencySymbol})</Label>
+                      <Input type="number" value={freeShippingThreshold} onChange={(e) => setFreeShippingThreshold(parseFloat(e.target.value) || 0)} min={0} />
+                      <p className="text-xs text-muted-foreground">Orders above this get free shipping</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Percent className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium">Tax</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tax Rate (%)</Label>
+                    <Input type="number" value={taxRate} onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)} min={0} max={100} step={0.1} />
+                    <p className="text-xs text-muted-foreground">Applied to subtotal (e.g., 18 for GST)</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium">Store Settings</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1"><SortAsc className="h-3 w-3" /> Default Sort</Label>
+                      <Select value={defaultSort} onValueChange={setDefaultSort}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="featured">Featured</SelectItem>
+                          <SelectItem value="newest">Newest First</SelectItem>
+                          <SelectItem value="price-low">Price: Low to High</SelectItem>
+                          <SelectItem value="price-high">Price: High to Low</SelectItem>
+                          <SelectItem value="name">Name A-Z</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Products Per Page</Label>
+                      <Input type="number" value={productsPerPage} onChange={(e) => setProductsPerPage(parseInt(e.target.value) || 12)} min={4} max={48} step={4} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1"><Sparkles className="h-3 w-3" /> New Badge (days)</Label>
+                      <Input type="number" value={newArrivalDays} onChange={(e) => setNewArrivalDays(parseInt(e.target.value) || 30)} min={1} max={365} />
+                      <p className="text-xs text-muted-foreground">Auto-badge products</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={saveCommerce} disabled={updateSetting.isPending} className="gap-2">
+                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Commerce Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>How prices will be calculated</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="p-4 bg-muted rounded-lg space-y-2">
+                  <p className="font-medium">Example Order: {currencySymbol}1,500</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>{currencySymbol}1,500</span>
+                  </div>
+                  {taxRate > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax ({taxRate}%)</span>
+                      <span>{currencySymbol}{(1500 * taxRate / 100).toFixed(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span>{freeShippingThreshold > 0 && 1500 >= freeShippingThreshold ? "Free" : `${currencySymbol}${shippingFlatRate}`}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>{currencySymbol}{(1500 + (1500 * taxRate / 100) + (freeShippingThreshold > 0 && 1500 >= freeShippingThreshold ? 0 : shippingFlatRate)).toFixed(0)}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {freeShippingThreshold > 0 && `Free shipping on orders over ${currencySymbol}${freeShippingThreshold}`}
+                </p>
               </CardContent>
             </Card>
           </div>

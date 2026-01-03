@@ -19,6 +19,7 @@ import {
   LogOut,
   FileText,
   Sliders,
+  Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: Home, label: 'Homepage', path: '/admin/homepage' },
   { icon: FileText, label: 'About Page', path: '/admin/about-page' },
   { icon: Link2, label: 'Footer Links', path: '/admin/footer-links' },
+  { icon: Menu, label: 'Navigation', path: '/admin/navigation' },
   { icon: Settings, label: 'Site Settings', path: '/admin/settings' },
   { icon: Users, label: 'Team', path: '/admin/team' },
 ];
@@ -67,11 +69,10 @@ const AdminSidebar = () => {
             <Link
               key={item.label}
               to={item.path}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm mb-1 transition-colors ${
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm mb-1 transition-colors ${isActive
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
             >
               <item.icon className="w-4 h-4" />
               {item.label}

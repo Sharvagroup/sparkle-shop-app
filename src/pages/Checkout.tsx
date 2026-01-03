@@ -14,23 +14,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle, Tag } from "lucide-react";
+import { Loader2, CheckCircle, Tag, Truck } from "lucide-react";
 import { useCart, useClearCart } from "@/hooks/useCart";
 import { useAllCartAddons } from "@/hooks/useCartItemAddons";
 import { useProductOptions } from "@/hooks/useProductOptions";
 import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
 import { useRecordDiscountUsage } from "@/hooks/useDiscountCodeUsage";
 import { INDIAN_STATES } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
 
+// Commerce settings interface
+interface CommerceSettings {
+  shippingFlatRate?: number;
+  freeShippingThreshold?: number;
+  taxRate?: number;
+  currencyCode?: string;
+  currencySymbol?: string;
+}
+
 const Checkout = () => {
   const { user } = useAuth();
   const { data: cartItems = [], isLoading } = useCart();
   const { data: allAddons = [], isLoading: addonsLoading } = useAllCartAddons();
   const { data: productOptions = [] } = useProductOptions();
+  const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const navigate = useNavigate();
@@ -78,7 +89,7 @@ const Checkout = () => {
   // Format selected options for display
   const formatOptions = (selectedOptions: Record<string, any> | null) => {
     if (!selectedOptions || Object.keys(selectedOptions).length === 0) return null;
-    
+
     return Object.entries(selectedOptions)
       .map(([optionId, value]) => {
         const optionName = optionNameMap[optionId] || optionId;
@@ -100,11 +111,18 @@ const Checkout = () => {
     return total;
   }, [cartItems, addonsByCartItem]);
 
-  const shipping = subtotal > 5000 ? 0 : 150;
-  const total = subtotal - discountAmount + shipping;
+  // Dynamic shipping calculation from Commerce Settings
+  const shippingFlatRate = commerceSettings?.shippingFlatRate ?? 150;
+  const freeShippingThreshold = commerceSettings?.freeShippingThreshold ?? 5000;
+  const taxRate = commerceSettings?.taxRate ?? 0;
+  const currencySymbol = commerceSettings?.currencySymbol ?? "₹";
+
+  const shipping = subtotal >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFlatRate;
+  const taxAmount = taxRate > 0 ? Math.round(subtotal * taxRate / 100) : 0;
+  const total = subtotal - discountAmount + shipping + taxAmount;
 
   const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    return `${currencySymbol}${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,7 +177,7 @@ const Checkout = () => {
         payment_method: paymentMethod,
         subtotal,
         shipping_amount: shipping,
-        tax_amount: 0,
+        tax_amount: taxAmount,
         discount_amount: discountAmount,
         total_amount: total,
         shipping_address: shippingAddr,
@@ -398,7 +416,7 @@ const Checkout = () => {
               <div className="w-full lg:w-2/5 xl:w-1/3">
                 <div className="bg-card p-6 md:p-8 shadow-sm border border-border rounded-sm sticky top-28">
                   <h3 className="font-display text-xl font-semibold mb-6">Order Summary</h3>
-                  
+
                   <div className="space-y-4 mb-6 border-b border-border pb-6">
                     {cartItems.map((item) => {
                       const itemAddons = addonsByCartItem[item.id] || [];
@@ -454,9 +472,25 @@ const Checkout = () => {
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
-                      <span>Shipping</span>
-                      <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+                      <span className="flex items-center gap-1">
+                        <Truck className="h-3 w-3" />
+                        Shipping
+                      </span>
+                      <span className={shipping === 0 ? "text-green-600 font-medium" : ""}>
+                        {shipping === 0 ? "FREE" : formatPrice(shipping)}
+                      </span>
                     </div>
+                    {taxAmount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Tax ({taxRate}%)</span>
+                        <span>{formatPrice(taxAmount)}</span>
+                      </div>
+                    )}
+                    {freeShippingThreshold > 0 && subtotal < freeShippingThreshold && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Add {formatPrice(freeShippingThreshold - subtotal)} more for free shipping!
+                      </p>
+                    )}
                     <div className="flex justify-between font-bold text-lg border-t border-border pt-4 mt-4">
                       <span>Total</span>
                       <span>{formatPrice(total)}</span>
