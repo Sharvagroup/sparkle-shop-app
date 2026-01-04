@@ -16,6 +16,7 @@ import SEO from "@/components/SEO";
 
 interface HomepageSettings {
   sections: string[];
+  hidden?: string[];
 }
 
 const sectionComponents: Record<string, React.ComponentType> = {
@@ -36,7 +37,9 @@ const Index = () => {
   const sectionsToRender = useMemo(() => {
     // Rely on settings from DB, or empty if not set.
     const sections = homepageSettings?.sections || [];
+    const hiddenSet = new Set(homepageSettings?.hidden || []);
     return sections
+      .filter((key) => !hiddenSet.has(key))
       .map((key) => ({ key, Component: sectionComponents[key] }))
       .filter((item) => item.Component);
   }, [homepageSettings]);

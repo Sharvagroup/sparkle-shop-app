@@ -18,6 +18,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { useUpdateSiteSetting, useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 export interface OfferBannerSectionTheme {
   section_height: "small" | "medium" | "large";
@@ -49,7 +50,9 @@ export const OfferBannerSectionThemeDialog = ({
   onOpenChange,
 }: OfferBannerSectionThemeDialogProps) => {
   const [theme, setTheme] = useState<OfferBannerSectionTheme>(defaultTheme);
+  const [sectionTitle, setSectionTitle] = useState("Featured Offer");
   const { data: savedTheme } = useSiteSetting<OfferBannerSectionTheme>("offer_banner_theme");
+  const { titles, updateTitle } = useSectionTitles();
   const updateSetting = useUpdateSiteSetting();
 
   useEffect(() => {
@@ -66,12 +69,19 @@ export const OfferBannerSectionThemeDialog = ({
     }
   }, [savedTheme]);
 
+  useEffect(() => {
+    if (titles.offersBanner) {
+      setSectionTitle(titles.offersBanner);
+    }
+  }, [titles]);
+
   const handleSave = async () => {
     await updateSetting.mutateAsync({
       key: "offer_banner_theme",
       value: theme as unknown as Record<string, unknown>,
       category: "homepage",
     });
+    await updateTitle("offersBanner", sectionTitle);
     onOpenChange(false);
   };
 
@@ -107,6 +117,18 @@ export const OfferBannerSectionThemeDialog = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Section Title */}
+          <div className="space-y-2">
+            <Label>Section Title</Label>
+            <Input
+              value={sectionTitle}
+              onChange={(e) => setSectionTitle(e.target.value)}
+              placeholder="Featured Offer"
+            />
+            <p className="text-xs text-muted-foreground">
+              The heading displayed for this section on the homepage
+            </p>
+          </div>
           {/* Section Padding */}
           <div className="space-y-2">
             <div className="flex justify-between">

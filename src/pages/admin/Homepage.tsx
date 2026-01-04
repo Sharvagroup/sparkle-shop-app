@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard, CheckCircle2, AlertTriangle, ExternalLink, Paintbrush, Type } from "lucide-react";
+import { GripVertical, Eye, EyeOff, Save, Loader2, LayoutDashboard, CheckCircle2, AlertTriangle, ExternalLink, Paintbrush } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, HomepageSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBanners } from "@/hooks/useBanners";
@@ -17,7 +16,6 @@ import { useHomepageReviews } from "@/hooks/useReviews";
 import { HeroSectionThemeDialog } from "@/components/admin/HeroSectionThemeDialog";
 import { OfferBannerSectionThemeDialog } from "@/components/admin/OfferBannerSectionThemeDialog";
 import { SectionThemeDialog, sectionConfigs } from "@/components/admin/SectionThemeDialog";
-import { SectionTitles } from "@/hooks/useSectionTitles";
 
 const sectionLabels: Record<string, { label: string; description: string }> = {
   hero: { label: "Hero Banner", description: "Main carousel/banner at the top" },
@@ -66,36 +64,32 @@ const Homepage = () => {
   const [heroThemeOpen, setHeroThemeOpen] = useState(false);
   const [offerBannerThemeOpen, setOfferBannerThemeOpen] = useState(false);
   const [activeSectionTheme, setActiveSectionTheme] = useState<string | null>(null);
-  
-  // Section Titles State
-  const defaultTitles: SectionTitles = {
-    categories: "Shop By Category",
-    offers: "Special Offers",
-    offersBanner: "Featured Offer",
-    newArrivals: "New Arrivals",
-    bestSellers: "Best Sellers",
-    celebritySpecials: "Celebrity Specials",
-    testimonials: "Our Happy Customers",
-  };
-  const [sectionTitles, setSectionTitles] = useState<SectionTitles>(defaultTitles);
 
   useEffect(() => {
     if (settings?.homepage) {
       const homepageSettings = settings.homepage as unknown as HomepageSettings;
       // Migrate sale_banner to offers_banner for backward compatibility
-      const migratedSections = (homepageSettings.sections || canonicalSections).map(
+      const savedSections = (homepageSettings.sections || []).map(
         s => s === 'sale_banner' ? 'offers_banner' : s
       );
       // Remove duplicates while preserving order
-      const uniqueSections = [...new Set(migratedSections)];
-      setSections(uniqueSections);
+      const uniqueSaved = [...new Set(savedSections)];
+      
+      // Ensure all canonical sections are present (add missing ones at end)
+      const allSections = [...uniqueSaved];
+      canonicalSections.forEach(section => {
+        if (!allSections.includes(section)) {
+          allSections.push(section);
+        }
+      });
+      setSections(allSections);
+      
+      // Load hidden sections from saved settings
+      if (homepageSettings.hidden) {
+        setHiddenSections(new Set(homepageSettings.hidden));
+      }
     } else {
       setSections(canonicalSections);
-    }
-    
-    // Load section titles
-    if (settings?.section_titles) {
-      setSectionTitles({ ...defaultTitles, ...(settings.section_titles as unknown as SectionTitles) });
     }
   }, [settings]);
 
@@ -129,18 +123,13 @@ const Homepage = () => {
   };
 
   const handleSave = async () => {
-    const visibleSections = sections.filter((s) => !hiddenSections.has(s));
+    // Save all sections with their order AND which ones are hidden
     await updateSetting.mutateAsync({
       key: "homepage",
-      value: { sections: visibleSections },
-      category: "homepage",
-    });
-  };
-
-  const handleSaveTitles = async () => {
-    await updateSetting.mutateAsync({
-      key: "section_titles",
-      value: sectionTitles as unknown as Record<string, unknown>,
+      value: { 
+        sections: sections,
+        hidden: Array.from(hiddenSections)
+      },
       category: "homepage",
     });
   };
@@ -174,7 +163,7 @@ const Homepage = () => {
             Section Order
           </CardTitle>
           <CardDescription>
-            Drag and drop sections to reorder. Toggle visibility to show/hide sections.
+            Drag and drop sections to reorder. Toggle visibility to show/hide sections. Click the paintbrush icon to customize each section's theme and title.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -246,7 +235,7 @@ const Homepage = () => {
                             setActiveSectionTheme(section);
                           }
                         }}
-                        title={`${sectionLabels[section]?.label || section} Theme`}
+                        title={`${sectionLabels[section]?.label || section} Theme & Title`}
                         className="h-8 w-8"
                       >
                         <Paintbrush className="h-4 w-4" />
@@ -273,90 +262,6 @@ const Homepage = () => {
               );
             })}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Section Titles */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Type className="h-5 w-5" />
-            Section Titles
-          </CardTitle>
-          <CardDescription>
-            Customize the headings displayed for each homepage section
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title-categories">Categories Section</Label>
-              <Input
-                id="title-categories"
-                value={sectionTitles.categories}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, categories: e.target.value }))}
-                placeholder="Shop By Category"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-offers">Offers Section</Label>
-              <Input
-                id="title-offers"
-                value={sectionTitles.offers}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, offers: e.target.value }))}
-                placeholder="Special Offers"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-offersBanner">Offers Banner Section</Label>
-              <Input
-                id="title-offersBanner"
-                value={sectionTitles.offersBanner}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, offersBanner: e.target.value }))}
-                placeholder="Featured Offer"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-newArrivals">New Arrivals Section</Label>
-              <Input
-                id="title-newArrivals"
-                value={sectionTitles.newArrivals}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, newArrivals: e.target.value }))}
-                placeholder="New Arrivals"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-bestSellers">Best Sellers Section</Label>
-              <Input
-                id="title-bestSellers"
-                value={sectionTitles.bestSellers}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, bestSellers: e.target.value }))}
-                placeholder="Best Sellers"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-celebritySpecials">Celebrity Specials Section</Label>
-              <Input
-                id="title-celebritySpecials"
-                value={sectionTitles.celebritySpecials}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, celebritySpecials: e.target.value }))}
-                placeholder="Celebrity Specials"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title-testimonials">Testimonials Section</Label>
-              <Input
-                id="title-testimonials"
-                value={sectionTitles.testimonials}
-                onChange={(e) => setSectionTitles((prev) => ({ ...prev, testimonials: e.target.value }))}
-                placeholder="Our Happy Customers"
-              />
-            </div>
-          </div>
-          <Button onClick={handleSaveTitles} disabled={updateSetting.isPending} className="gap-2">
-            {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save Titles
-          </Button>
         </CardContent>
       </Card>
 
