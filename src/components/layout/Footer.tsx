@@ -85,29 +85,9 @@ const Footer = () => {
           ))}
 
           {displaySections.length === 0 && (
-            <>
-              <div>
-                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Shop</h4>
-                <ul className="space-y-4 text-sm text-muted-foreground">
-                  <li><Link to="/products" className="hover:text-primary transition-colors">All Products</Link></li>
-                  <li><Link to="/products?new=true" className="hover:text-primary transition-colors">New Arrivals</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Support</h4>
-                <ul className="space-y-4 text-sm text-muted-foreground">
-                  <li><Link to="/about" className="hover:text-primary transition-colors">Our Story</Link></li>
-                  <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-display font-medium text-lg mb-6 text-foreground">Connect</h4>
-                <ul className="space-y-4 text-sm text-muted-foreground">
-                  <li><a href="#" className="hover:text-primary transition-colors">Instagram</a></li>
-                  <li><a href="#" className="hover:text-primary transition-colors">Pinterest</a></li>
-                </ul>
-              </div>
-            </>
+            <div className="col-span-full py-8 text-center text-muted-foreground border-dashed border rounded">
+              <p>Footer sections are not configured in settings.</p>
+            </div>
           )}
         </div>
 

@@ -55,8 +55,8 @@ const Products = () => {
   // Dynamic store settings from CMS
   const ITEMS_PER_PAGE = commerceSettings?.productsPerPage || 12;
   const defaultSortOption = commerceSettings?.defaultSort || "featured";
-  const enabledFilters = filterSettings?.enabledFilters || ["category", "collection", "price", "material", "availability"];
-  const enabledSortOptions = filterSettings?.enabledSortOptions || ["featured", "newest", "price-low", "price-high", "best-selling"];
+  const enabledFilters = filterSettings?.enabledFilters || [];
+  const enabledSortOptions = filterSettings?.enabledSortOptions || [];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []

@@ -69,3 +69,13 @@ export const DISCOUNT_TYPES = [
   { value: "percentage", label: "Percentage (%)" },
   { value: "fixed", label: "Fixed Amount (₹)" },
 ] as const;
+
+// Payment Methods
+export const PAYMENT_METHODS = [
+  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay" },
+  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc." },
+  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order" },
+] as const;
+
+export const DEFAULT_CURRENCY = "INR";
+export const DEFAULT_CURRENCY_SYMBOL = "₹";

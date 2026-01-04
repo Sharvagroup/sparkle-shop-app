@@ -30,22 +30,12 @@ const sectionComponents: Record<string, React.ComponentType> = {
   testimonials: Testimonials,
 };
 
-const defaultSections = [
-  "hero",
-  "offers_banner",
-  "categories",
-  "offers",
-  "new_arrivals",
-  "best_sellers",
-  "celebrity_specials",
-  "testimonials",
-];
-
 const Index = () => {
   const { data: homepageSettings } = useSiteSetting<HomepageSettings>("homepage");
 
   const sectionsToRender = useMemo(() => {
-    const sections = homepageSettings?.sections || defaultSections;
+    // Rely on settings from DB, or empty if not set.
+    const sections = homepageSettings?.sections || [];
     return sections
       .map((key) => ({ key, Component: sectionComponents[key] }))
       .filter((item) => item.Component);

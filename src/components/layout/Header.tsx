@@ -96,53 +96,10 @@ const Header = () => {
         });
     }
 
-    // Fallback to hardcoded navigation
-    const shopChildren = [
-      { label: "All Products", href: "/products" },
-      ...categories.map((cat) => ({
-        label: cat.name,
-        href: `/products?category=${cat.slug}`,
-      })),
-    ];
-
+    // Fallback to empty if no settings (or simple home link if preferred, but user asked to remove redundancy)
     return [
       { label: "Home", href: "/" },
-      {
-        label: "Shop",
-        href: "/products",
-        children: shopChildren,
-      },
-      {
-        label: "Collections",
-        href: "/products",
-        children: [
-          { label: "All Collections", href: "/products" },
-          ...collections.map((col) => ({
-            label: col.name,
-            href: `/products?collection=${col.slug}`,
-          })),
-        ],
-      },
-      {
-        label: "New In",
-        href: "/products?new=true",
-        children: [
-          { label: "New Arrivals", href: "/products?new=true" },
-          { label: "Best Sellers", href: "/products?bestseller=true" },
-          { label: "Celebrity Specials", href: "/products?celebrity=true" },
-          { label: "Announcements", href: "/announcements" },
-        ],
-      },
-      {
-        label: "About",
-        href: "/about",
-        children: [
-          { label: "Our Story", href: "/about" },
-          { label: "Size Guide", href: "/size-guide" },
-          { label: "FAQ", href: "/faq" },
-        ],
-      },
-      { label: "Contact", href: "/contact" },
+      { label: "Shop", href: "/products" }
     ];
   }, [categories, collections, navSettings]);
 

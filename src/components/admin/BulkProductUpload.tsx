@@ -107,6 +107,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ current: 0, total: 0, status: 'idle' });
   const [productImages, setProductImages] = useState<Record<string, File[]>>({});
+  const [uploadErrors, setUploadErrors] = useState<{ row: number; name: string; error: string }[]>([]);
 
   const csvInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -312,6 +313,24 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
         });
       }
 
+      // Check for duplicates within the CSV
+      const slugCounts: Record<string, number> = {};
+      const skuCounts: Record<string, number> = {};
+
+      products.forEach(p => {
+        slugCounts[p.slug] = (slugCounts[p.slug] || 0) + 1;
+        if (p.sku) skuCounts[p.sku] = (skuCounts[p.sku] || 0) + 1;
+      });
+
+      products.forEach(p => {
+        if (slugCounts[p.slug] > 1) {
+          p.errors.push(`Duplicate slug "${p.slug}" in CSV`);
+        }
+        if (p.sku && skuCounts[p.sku] > 1) {
+          p.errors.push(`Duplicate SKU "${p.sku}" in CSV`);
+        }
+      });
+
       setParsedProducts(products);
       setStep('images');
       toast.success(`Parsed ${products.length} products from CSV`);
@@ -358,7 +377,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
       // Try to match with product slug or SKU
       const product = parsedProducts.find(
         p => p.slug.toLowerCase() === identifier.toLowerCase() ||
-             p.sku.toLowerCase() === identifier.toLowerCase()
+          p.sku.toLowerCase() === identifier.toLowerCase()
       );
 
       if (product) {
@@ -371,7 +390,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
         // If no match, try partial matching
         const partialMatch = parsedProducts.find(
           p => identifier.toLowerCase().includes(p.slug.toLowerCase()) ||
-               (p.sku && identifier.toLowerCase().includes(p.sku.toLowerCase()))
+            (p.sku && identifier.toLowerCase().includes(p.sku.toLowerCase()))
         );
         if (partialMatch) {
           const key = partialMatch.slug;
@@ -420,9 +439,11 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
 
     setStep('progress');
     setUploadProgress({ current: 0, total: validProducts.length, status: 'uploading' });
+    setUploadErrors([]); // Clear previous errors
 
     let successCount = 0;
     let errorCount = 0;
+    const currentErrors: { row: number; name: string; error: string }[] = [];
 
     for (let i = 0; i < validProducts.length; i++) {
       const product = validProducts[i];
@@ -482,21 +503,27 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
 
         if (insertError) throw insertError;
         successCount++;
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to upload product: ${product.name}`, error);
         errorCount++;
+        currentErrors.push({
+          row: product.row,
+          name: product.name,
+          error: error.message || 'Unknown error'
+        });
       }
 
       setUploadProgress(prev => ({ ...prev, current: i + 1 }));
     }
 
+    setUploadErrors(currentErrors);
     setUploadProgress(prev => ({ ...prev, status: 'complete' }));
 
     if (successCount > 0) {
       toast.success(`Successfully uploaded ${successCount} products`);
     }
     if (errorCount > 0) {
-      toast.error(`Failed to upload ${errorCount} products`);
+      toast.error(`Failed to upload ${errorCount} products. Check the error logging below.`);
     }
 
     onSuccess();
@@ -507,6 +534,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
     setParsedProducts([]);
     setProductImages({});
     setUploadProgress({ current: 0, total: 0, status: 'idle' });
+    setUploadErrors([]); // Reset errors
     onOpenChange(false);
   };
 
@@ -685,8 +713,8 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
               <Button variant="outline" onClick={() => setStep('template')}>
                 Back
               </Button>
-              <Button 
-                onClick={uploadProducts} 
+              <Button
+                onClick={uploadProducts}
                 disabled={validProductCount === 0}
               >
                 <Upload className="w-4 h-4 mr-2" />
@@ -697,8 +725,8 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
         )}
 
         {step === 'progress' && (
-          <div className="py-8 space-y-6">
-            <div className="text-center space-y-2">
+          <div className="py-8 space-y-6 flex  flex-col h-full">
+            <div className="text-center space-y-2 flex-shrink-0">
               {uploadProgress.status === 'uploading' ? (
                 <>
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
@@ -706,13 +734,19 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
-                  <p className="font-medium">Upload complete!</p>
+                  {uploadErrors.length === 0 ? (
+                    <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
+                  ) : (
+                    <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+                  )}
+                  <p className="font-medium">
+                    {uploadErrors.length === 0 ? 'Upload complete!' : 'Upload finished with errors'}
+                  </p>
                 </>
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flex-shrink-0">
               <div className="flex justify-between text-sm">
                 <span>Progress</span>
                 <span>{uploadProgress.current} / {uploadProgress.total}</span>
@@ -720,8 +754,23 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
               <Progress value={(uploadProgress.current / uploadProgress.total) * 100} />
             </div>
 
+            {/* Error Report */}
+            {uploadErrors.length > 0 && uploadProgress.status === 'complete' && (
+              <ScrollArea className="flex-1 border rounded-md p-4 bg-muted/50 mt-4">
+                <h4 className="font-medium text-destructive mb-2">Failed Uploads ({uploadErrors.length})</h4>
+                <div className="space-y-2">
+                  {uploadErrors.map((err, idx) => (
+                    <div key={idx} className="text-sm border-b pb-2 last:border-0 border-destructive/20">
+                      <div className="font-medium">{err.name} (Row {err.row})</div>
+                      <div className="text-destructive text-xs">{err.error}</div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
             {uploadProgress.status === 'complete' && (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4 pt-4 flex-shrink-0">
                 <p className="text-sm text-muted-foreground">
                   You can now add addons to individual products by editing them.
                 </p>

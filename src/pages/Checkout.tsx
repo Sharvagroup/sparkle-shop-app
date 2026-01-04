@@ -24,7 +24,7 @@ import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
 import { useRecordDiscountUsage } from "@/hooks/useDiscountCodeUsage";
-import { INDIAN_STATES } from "@/lib/constants";
+import { INDIAN_STATES, PAYMENT_METHODS, DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
 
 // Commerce settings interface
@@ -112,10 +112,11 @@ const Checkout = () => {
   }, [cartItems, addonsByCartItem]);
 
   // Dynamic shipping calculation from Commerce Settings
-  const shippingFlatRate = commerceSettings?.shippingFlatRate ?? 150;
-  const freeShippingThreshold = commerceSettings?.freeShippingThreshold ?? 5000;
+  // Dynamic shipping calculation from Commerce Settings
+  const shippingFlatRate = commerceSettings?.shippingFlatRate ?? 0;
+  const freeShippingThreshold = commerceSettings?.freeShippingThreshold ?? 0;
   const taxRate = commerceSettings?.taxRate ?? 0;
-  const currencySymbol = commerceSettings?.currencySymbol ?? "₹";
+  const currencySymbol = commerceSettings?.currencySymbol ?? DEFAULT_CURRENCY_SYMBOL;
 
   const shipping = subtotal >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFlatRate;
   const taxAmount = taxRate > 0 ? Math.round(subtotal * taxRate / 100) : 0;
@@ -374,24 +375,21 @@ const Checkout = () => {
 
                   <div className="border border-border rounded-sm overflow-hidden">
                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <div className="p-4 border-b border-border bg-muted">
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem value="card" id="card" />
-                          <Label htmlFor="card" className="font-medium cursor-pointer">Credit/Debit Card</Label>
+                      {PAYMENT_METHODS.map((method, index) => (
+                        <div key={method.id} className={`p-4 ${index !== PAYMENT_METHODS.length - 1 ? 'border-b border-border' : ''} ${index % 2 === 0 ? 'bg-muted' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <RadioGroupItem value={method.id} id={method.id} />
+                            <div className="grid gap-1.5 leading-none">
+                              <Label htmlFor={method.id} className="font-medium cursor-pointer">
+                                {method.label}
+                              </Label>
+                              <p className="text-sm text-muted-foreground">
+                                {method.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem value="upi" id="upi" />
-                          <Label htmlFor="upi" className="font-medium cursor-pointer">UPI / NetBanking</Label>
-                        </div>
-                      </div>
-                      <div className="p-4 border-t border-border">
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem value="cod" id="cod" />
-                          <Label htmlFor="cod" className="font-medium cursor-pointer">Cash on Delivery</Label>
-                        </div>
-                      </div>
+                      ))}
                     </RadioGroup>
                   </div>
                 </div>

@@ -12,6 +12,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useValidateDiscountCode, AppliedDiscount } from "@/hooks/useDiscountCodes";
 import { toast } from "@/hooks/use-toast";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
+
+interface CommerceSettings {
+  currencySymbol?: string;
+}
 
 const Cart = () => {
   const { user } = useAuth();
@@ -25,6 +31,7 @@ const Cart = () => {
   const [promoCode, setPromoCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const validateDiscount = useValidateDiscountCode();
+  const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
 
   // Group addons by cart item id
   const addonsByCartItem = useMemo(() => {
@@ -77,7 +84,8 @@ const Cart = () => {
   const discountAmount = appliedDiscount?.discountAmount || 0;
 
   const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    const symbol = commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
+    return `${symbol}${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
   };
 
   // Format selected options for display
