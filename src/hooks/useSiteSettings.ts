@@ -39,6 +39,7 @@ export interface ThemeSettings {
 
 export interface HomepageSettings {
   sections: string[];
+  hidden?: string[];
 }
 
 export interface SeoSettings {

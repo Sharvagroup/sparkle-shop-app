@@ -83,12 +83,25 @@ const Homepage = () => {
     if (settings?.homepage) {
       const homepageSettings = settings.homepage as unknown as HomepageSettings;
       // Migrate sale_banner to offers_banner for backward compatibility
-      const migratedSections = (homepageSettings.sections || canonicalSections).map(
+      const savedSections = (homepageSettings.sections || []).map(
         s => s === 'sale_banner' ? 'offers_banner' : s
       );
       // Remove duplicates while preserving order
-      const uniqueSections = [...new Set(migratedSections)];
-      setSections(uniqueSections);
+      const uniqueSaved = [...new Set(savedSections)];
+      
+      // Ensure all canonical sections are present (add missing ones at end)
+      const allSections = [...uniqueSaved];
+      canonicalSections.forEach(section => {
+        if (!allSections.includes(section)) {
+          allSections.push(section);
+        }
+      });
+      setSections(allSections);
+      
+      // Load hidden sections from saved settings
+      if (homepageSettings.hidden) {
+        setHiddenSections(new Set(homepageSettings.hidden));
+      }
     } else {
       setSections(canonicalSections);
     }
@@ -129,10 +142,13 @@ const Homepage = () => {
   };
 
   const handleSave = async () => {
-    const visibleSections = sections.filter((s) => !hiddenSections.has(s));
+    // Save all sections with their order AND which ones are hidden
     await updateSetting.mutateAsync({
       key: "homepage",
-      value: { sections: visibleSections },
+      value: { 
+        sections: sections,
+        hidden: Array.from(hiddenSections)
+      },
       category: "homepage",
     });
   };
