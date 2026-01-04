@@ -1,4 +1,5 @@
-import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
+import { useCallback } from "react";
 
 export interface SectionTitles {
   categories: string;
@@ -22,9 +23,22 @@ const defaultTitles: SectionTitles = {
 
 export const useSectionTitles = () => {
   const { data: titles, isLoading } = useSiteSetting<SectionTitles>("section_titles");
+  const updateSetting = useUpdateSiteSetting();
+
+  const mergedTitles = { ...defaultTitles, ...titles };
+
+  const updateTitle = useCallback(async (key: string, value: string) => {
+    const updatedTitles = { ...mergedTitles, [key]: value };
+    await updateSetting.mutateAsync({
+      key: "section_titles",
+      value: updatedTitles as unknown as Record<string, unknown>,
+      category: "homepage",
+    });
+  }, [mergedTitles, updateSetting]);
 
   return {
-    titles: { ...defaultTitles, ...titles },
+    titles: mergedTitles,
     isLoading,
+    updateTitle,
   };
 };

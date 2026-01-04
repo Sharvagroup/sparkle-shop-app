@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -16,6 +17,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { useUpdateSiteSetting, useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSectionTitles } from "@/hooks/useSectionTitles";
 
 export interface SectionTheme {
   section_padding: "small" | "medium" | "large";
@@ -37,6 +39,8 @@ interface SectionConfig {
   title: string;
   description: string;
   settingKey: string;
+  titleKey?: string;
+  defaultTitle?: string;
   showColumns?: boolean;
   showAutoSlide?: boolean;
   minItems?: number;
@@ -62,7 +66,9 @@ export const SectionThemeDialog = ({
     items_to_show: config.defaultItems || 8,
     columns: config.defaultColumns || 4,
   });
+  const [sectionTitle, setSectionTitle] = useState(config.defaultTitle || "");
   const { data: savedTheme } = useSiteSetting<SectionTheme>(config.settingKey);
+  const { titles, updateTitle } = useSectionTitles();
   const updateSetting = useUpdateSiteSetting();
 
   useEffect(() => {
@@ -77,12 +83,23 @@ export const SectionThemeDialog = ({
     }
   }, [savedTheme, config.defaultItems, config.defaultColumns]);
 
+  useEffect(() => {
+    if (config.titleKey && titles[config.titleKey as keyof typeof titles]) {
+      setSectionTitle(titles[config.titleKey as keyof typeof titles]);
+    }
+  }, [titles, config.titleKey]);
+
   const handleSave = async () => {
+    // Save theme settings
     await updateSetting.mutateAsync({
       key: config.settingKey,
       value: theme as unknown as Record<string, unknown>,
       category: "homepage",
     });
+    // Save section title if titleKey is provided
+    if (config.titleKey) {
+      await updateTitle(config.titleKey, sectionTitle);
+    }
     onOpenChange(false);
   };
 
@@ -109,6 +126,20 @@ export const SectionThemeDialog = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Section Title */}
+          {config.titleKey && (
+            <div className="space-y-2">
+              <Label>Section Title</Label>
+              <Input
+                value={sectionTitle}
+                onChange={(e) => setSectionTitle(e.target.value)}
+                placeholder={config.defaultTitle || "Section Title"}
+              />
+              <p className="text-xs text-muted-foreground">
+                The heading displayed for this section on the homepage
+              </p>
+            </div>
+          )}
           {/* Section Padding */}
           <div className="space-y-2">
             <div className="flex justify-between">
@@ -235,6 +266,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "Categories Section Theme",
     description: "Configure the categories grid layout",
     settingKey: "categories_theme",
+    titleKey: "categories",
+    defaultTitle: "Shop By Category",
     showColumns: true,
     minItems: 4,
     maxItems: 12,
@@ -246,6 +279,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "Special Offers Section Theme",
     description: "Configure the special offers grid layout",
     settingKey: "offers_theme",
+    titleKey: "offers",
+    defaultTitle: "Special Offers",
     showColumns: true,
     minItems: 2,
     maxItems: 8,
@@ -257,6 +292,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "New Arrivals Section Theme",
     description: "Configure the new arrivals product grid",
     settingKey: "new_arrivals_theme",
+    titleKey: "newArrivals",
+    defaultTitle: "New Arrivals",
     showColumns: true,
     minItems: 4,
     maxItems: 16,
@@ -268,6 +305,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "Best Sellers Section Theme",
     description: "Configure the best sellers product grid",
     settingKey: "best_sellers_theme",
+    titleKey: "bestSellers",
+    defaultTitle: "Best Sellers",
     showColumns: true,
     minItems: 4,
     maxItems: 16,
@@ -279,6 +318,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "Celebrity Specials Section Theme",
     description: "Configure the celebrity specials product grid",
     settingKey: "celebrity_specials_theme",
+    titleKey: "celebritySpecials",
+    defaultTitle: "Celebrity Specials",
     showColumns: true,
     minItems: 4,
     maxItems: 16,
@@ -290,6 +331,8 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     title: "Testimonials Section Theme",
     description: "Configure the testimonials carousel",
     settingKey: "testimonials_theme",
+    titleKey: "testimonials",
+    defaultTitle: "Our Happy Customers",
     showColumns: true,
     showAutoSlide: true,
     minItems: 3,
