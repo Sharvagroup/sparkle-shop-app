@@ -39,6 +39,7 @@ import {
 import { Plus, Pencil, Trash2, Link as LinkIcon, ExternalLink, Loader2, GripVertical } from "lucide-react";
 import { useFooterLinks, useCreateFooterLink, useUpdateFooterLink, useDeleteFooterLink, FooterLink, FooterLinkInsert } from "@/hooks/useFooterLinks";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LinkUrlAutocomplete } from "@/components/admin/LinkUrlAutocomplete";
 
 const sectionLabels: Record<string, string> = {
   shop: "Shop",
@@ -246,7 +247,7 @@ const FooterLinks = () => {
               </div>
               <div className="space-y-2">
                 <Label>URL *</Label>
-                <Input value={url} onChange={(e) => setUrl(e.target.value)} required placeholder="/about or https://..." />
+                <LinkUrlAutocomplete value={url} onChange={setUrl} placeholder="Select a page or type a URL..." />
               </div>
             </div>
 

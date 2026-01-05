@@ -15,6 +15,7 @@ import { Loader2, Save, Plus, Trash2, GripVertical, ExternalLink, ChevronDown, H
 import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { LinkUrlAutocomplete } from "@/components/admin/LinkUrlAutocomplete";
 
 // Types for navigation items
 interface NavChild {
@@ -244,9 +245,9 @@ const NavigationManager = () => {
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-xs">URL</Label>
-                                        <Input
+                                        <LinkUrlAutocomplete
                                             value={item.url}
-                                            onChange={(e) => updateNavItem(item.id, "url", e.target.value)}
+                                            onChange={(value) => updateNavItem(item.id, "url", value)}
                                             placeholder="/path or https://..."
                                         />
                                     </div>
@@ -311,13 +312,12 @@ const NavigationManager = () => {
                                                             placeholder="Label"
                                                             className="h-8 text-xs flex-1"
                                                         />
-                                                        <Input
+                                                        <LinkUrlAutocomplete
                                                             value={child.url}
-                                                            onChange={(e) =>
-                                                                updateChildItem(item.id, child.id, "url", e.target.value)
+                                                            onChange={(value) =>
+                                                                updateChildItem(item.id, child.id, "url", value)
                                                             }
                                                             placeholder="/path"
-                                                            className="h-8 text-xs flex-1"
                                                         />
                                                         <Button
                                                             variant="ghost"
