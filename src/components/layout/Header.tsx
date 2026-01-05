@@ -4,6 +4,8 @@ import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, LogOut } from "
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
+import { useProducts } from "@/hooks/useProducts";
+import { usePublishedAnnouncements } from "@/hooks/useAnnouncements";
 import { useCart } from "@/hooks/useCart";
 import { useWishlistCount } from "@/hooks/useWishlist";
 import { useSiteSetting, BrandingSettings } from "@/hooks/useSiteSettings";
@@ -17,6 +19,16 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types for dynamic navigation
+type NavItemType = 
+  | "static" 
+  | "category_dropdown" 
+  | "collection_dropdown" 
+  | "new_in_dropdown" 
+  | "best_sellers_dropdown" 
+  | "new_arrivals_dropdown" 
+  | "celebrity_specials_dropdown" 
+  | "announcements_dropdown";
+
 interface NavChild {
   id: string;
   label: string;
@@ -28,7 +40,7 @@ interface NavItem {
   id: string;
   label: string;
   url: string;
-  type: "static" | "category_dropdown" | "collection_dropdown";
+  type: NavItemType;
   isExternal?: boolean;
   isActive?: boolean;
   children?: NavChild[];
@@ -50,6 +62,13 @@ const Header = () => {
   const { data: wishlistCount = 0 } = useWishlistCount();
   const { data: branding } = useSiteSetting<BrandingSettings>("branding");
   const { data: navSettings } = useSiteSetting<NavigationSettings>("header_navigation");
+  const { data: allProducts = [] } = useProducts();
+  const { data: announcements = [] } = usePublishedAnnouncements();
+
+  // Derive dynamic product lists
+  const bestSellers = useMemo(() => allProducts.filter(p => p.is_best_seller), [allProducts]);
+  const newArrivals = useMemo(() => allProducts.filter(p => p.is_new_arrival), [allProducts]);
+  const celebritySpecials = useMemo(() => allProducts.filter(p => p.is_celebrity_special), [allProducts]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const siteName = branding?.siteName || "SHARVA";
@@ -64,27 +83,76 @@ const Header = () => {
         .map((item) => {
           let children: { label: string; href: string }[] = [];
 
-          if (item.type === "category_dropdown") {
-            children = [
-              { label: "All Products", href: "/products" },
-              ...categories.map((cat) => ({
-                label: cat.name,
-                href: `/products?category=${cat.slug}`,
-              })),
-            ];
-          } else if (item.type === "collection_dropdown") {
-            children = [
-              { label: "All Collections", href: "/products" },
-              ...collections.map((col) => ({
-                label: col.name,
-                href: `/products?collection=${col.slug}`,
-              })),
-            ];
-          } else if (item.children && item.children.length > 0) {
-            children = item.children.map((child) => ({
-              label: child.label,
-              href: child.url,
-            }));
+          switch (item.type) {
+            case "category_dropdown":
+              children = [
+                { label: "All Products", href: "/products" },
+                ...categories.map((cat) => ({
+                  label: cat.name,
+                  href: `/products?category=${cat.slug}`,
+                })),
+              ];
+              break;
+            case "collection_dropdown":
+              children = [
+                { label: "All Collections", href: "/products" },
+                ...collections.map((col) => ({
+                  label: col.name,
+                  href: `/products?collection=${col.slug}`,
+                })),
+              ];
+              break;
+            case "new_in_dropdown":
+              children = [
+                { label: "Best Sellers", href: "/products?filter=best-sellers" },
+                { label: "New Arrivals", href: "/products?filter=new-arrivals" },
+                { label: "Celebrity Specials", href: "/products?filter=celebrity-specials" },
+                { label: "Announcements", href: "/announcements" },
+              ];
+              break;
+            case "best_sellers_dropdown":
+              children = bestSellers.slice(0, 8).map((p) => ({
+                label: p.name,
+                href: `/products/${p.slug}`,
+              }));
+              if (bestSellers.length > 0) {
+                children.unshift({ label: "View All Best Sellers", href: "/products?filter=best-sellers" });
+              }
+              break;
+            case "new_arrivals_dropdown":
+              children = newArrivals.slice(0, 8).map((p) => ({
+                label: p.name,
+                href: `/products/${p.slug}`,
+              }));
+              if (newArrivals.length > 0) {
+                children.unshift({ label: "View All New Arrivals", href: "/products?filter=new-arrivals" });
+              }
+              break;
+            case "celebrity_specials_dropdown":
+              children = celebritySpecials.slice(0, 8).map((p) => ({
+                label: p.name,
+                href: `/products/${p.slug}`,
+              }));
+              if (celebritySpecials.length > 0) {
+                children.unshift({ label: "View All Celebrity Specials", href: "/products?filter=celebrity-specials" });
+              }
+              break;
+            case "announcements_dropdown":
+              children = announcements.slice(0, 6).map((a) => ({
+                label: a.title,
+                href: `/announcements/${a.slug}`,
+              }));
+              if (announcements.length > 0) {
+                children.unshift({ label: "View All Announcements", href: "/announcements" });
+              }
+              break;
+            default:
+              if (item.children && item.children.length > 0) {
+                children = item.children.map((child) => ({
+                  label: child.label,
+                  href: child.url,
+                }));
+              }
           }
 
           return {
@@ -101,7 +169,7 @@ const Header = () => {
       { label: "Home", href: "/" },
       { label: "Shop", href: "/products" }
     ];
-  }, [categories, collections, navSettings]);
+  }, [categories, collections, navSettings, bestSellers, newArrivals, celebritySpecials, announcements]);
 
   const handleSignOut = async () => {
     await signOut();
