@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Filter } from "lucide-react";
-import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings, FilterSettings } from "@/hooks/useSiteSettings";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles } from "lucide-react";
+import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
@@ -146,9 +146,6 @@ const Settings = () => {
   const [defaultSort, setDefaultSort] = useState("featured");
   const [newArrivalDays, setNewArrivalDays] = useState(30);
 
-  // Filter Settings
-  const [enabledFilters, setEnabledFilters] = useState<string[]>(["category", "collection", "price", "material", "availability"]);
-  const [enabledSortOptions, setEnabledSortOptions] = useState<string[]>(["featured", "newest", "price-low", "price-high"]);
 
   const [uploading, setUploading] = useState<string | null>(null);
 
@@ -228,11 +225,6 @@ const Settings = () => {
         setNewArrivalDays((commerceData as any).newArrivalDays || 30);
       }
 
-      const filters = settings.filters as unknown as FilterSettings | undefined;
-      if (filters) {
-        setEnabledFilters(filters.enabledFilters || ["category", "collection", "price", "material", "availability"]);
-        setEnabledSortOptions(filters.enabledSortOptions || ["featured", "newest", "price-low", "price-high"]);
-      }
     }
   }, [settings]);
 
@@ -375,13 +367,6 @@ const Settings = () => {
     });
   };
 
-  const saveFilters = async () => {
-    await updateSetting.mutateAsync({
-      key: "filters",
-      value: { enabledFilters, enabledSortOptions },
-      category: "filters",
-    });
-  };
 
   if (isLoading) {
     return (
@@ -408,7 +393,6 @@ const Settings = () => {
           <TabsTrigger value="promo" className="gap-2"><Megaphone className="h-4 w-4" /> Promo</TabsTrigger>
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
-          <TabsTrigger value="filters" className="gap-2"><Filter className="h-4 w-4" /> Filters</TabsTrigger>
           <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
         </TabsList>
 
@@ -1006,64 +990,6 @@ const Settings = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="filters">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Filter Sidebars</CardTitle>
-                <CardDescription>Control which filters appear on the products page</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {["category", "collection", "price", "material", "availability"].map((filter) => (
-                  <div key={filter} className="flex items-center space-x-2">
-                    <Switch
-                      id={`filter-${filter}`}
-                      checked={enabledFilters.includes(filter)}
-                      onCheckedChange={(checked) => {
-                        if (checked) setEnabledFilters([...enabledFilters, filter]);
-                        else setEnabledFilters(enabledFilters.filter(f => f !== filter));
-                      }}
-                    />
-                    <Label htmlFor={`filter-${filter}`} className="capitalize">{filter}</Label>
-                  </div>
-                ))}
-                <div className="mt-4">
-                  <Button onClick={saveFilters} disabled={updateSetting.isPending} className="gap-2">
-                    {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Filters
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Sort Options</CardTitle>
-                <CardDescription>Control available sorting options</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { id: "featured", label: "Featured" },
-                  { id: "newest", label: "Newest Arrivals" },
-                  { id: "price-low", label: "Price: Low to High" },
-                  { id: "price-high", label: "Price: High to Low" },
-                  { id: "best-selling", label: "Best Selling" }
-                ].map((option) => (
-                  <div key={option.id} className="flex items-center space-x-2">
-                    <Switch
-                      id={`sort-${option.id}`}
-                      checked={enabledSortOptions.includes(option.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) setEnabledSortOptions([...enabledSortOptions, option.id]);
-                        else setEnabledSortOptions(enabledSortOptions.filter(f => f !== option.id));
-                      }}
-                    />
-                    <Label htmlFor={`sort-${option.id}`}>{option.label}</Label>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
         <TabsContent value="commerce">
           <div className="grid gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">

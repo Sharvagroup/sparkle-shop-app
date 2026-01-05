@@ -48,10 +48,7 @@ export interface SeoSettings {
   ogImage: string;
 }
 
-export interface FilterSettings {
-  enabledFilters: string[];
-  enabledSortOptions: string[];
-}
+// FilterSettings removed - filters are now fully automated based on product data
 
 export interface SiteSetting {
   id: string;

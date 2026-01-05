@@ -22,11 +22,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useCategories } from "@/hooks/useCategories";
-import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
-import { useMaterials } from "@/hooks/useDynamicFilters";
-import { useSiteSetting, FilterSettings } from "@/hooks/useSiteSettings";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 import SEO from "@/components/SEO";
 
 // Commerce/store settings interface
@@ -35,6 +32,15 @@ interface CommerceSettings {
   defaultSort?: string;
   newArrivalDays?: number;
 }
+
+// Sort options - always available
+const SORT_OPTIONS = [
+  { id: "featured", label: "Featured" },
+  { id: "newest", label: "Newest Arrivals" },
+  { id: "price-low", label: "Price: Low to High" },
+  { id: "price-high", label: "Price: High to Low" },
+  { id: "best-selling", label: "Best Selling" },
+];
 
 const Products = () => {
   const [searchParams] = useSearchParams();
@@ -45,18 +51,59 @@ const Products = () => {
   const isBestsellerFromUrl = searchParams.get("bestseller") === "true";
   const isCelebrityFromUrl = searchParams.get("celebrity") === "true";
 
-  const { data: categories = [] } = useCategories();
-  const { data: collections = [] } = useCollections();
   const { data: allProducts = [], isLoading } = useProducts();
-  const { data: materials = [] } = useMaterials();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
-  const { data: filterSettings } = useSiteSetting<FilterSettings>("filters");
 
   // Dynamic store settings from CMS
   const ITEMS_PER_PAGE = commerceSettings?.productsPerPage || 12;
   const defaultSortOption = commerceSettings?.defaultSort || "featured";
-  const enabledFilters = filterSettings?.enabledFilters || [];
-  const enabledSortOptions = filterSettings?.enabledSortOptions || [];
+
+  // Derive filter options from actual products
+  const filterOptions = useMemo(() => {
+    const categoriesMap = new Map<string, { slug: string; name: string }>();
+    const collectionsMap = new Map<string, { slug: string; name: string }>();
+    const materialsSet = new Set<string>();
+    let minPrice = Infinity;
+    let maxPrice = 0;
+
+    allProducts.forEach((product) => {
+      // Collect categories that have products
+      if (product.category) {
+        categoriesMap.set(product.category.slug, {
+          slug: product.category.slug,
+          name: product.category.name,
+        });
+      }
+      // Collect collections that have products
+      if (product.collection) {
+        collectionsMap.set(product.collection.slug, {
+          slug: product.collection.slug,
+          name: product.collection.name,
+        });
+      }
+      // Collect materials
+      if (product.material) {
+        materialsSet.add(product.material);
+      }
+      // Calculate price range
+      if (product.price < minPrice) minPrice = product.price;
+      if (product.price > maxPrice) maxPrice = product.price;
+    });
+
+    // Round price range for better UX
+    const roundedMinPrice = Math.floor(minPrice / 100) * 100;
+    const roundedMaxPrice = Math.ceil(maxPrice / 100) * 100;
+
+    return {
+      categories: Array.from(categoriesMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      collections: Array.from(collectionsMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      materials: Array.from(materialsSet).sort(),
+      priceRange: {
+        min: roundedMinPrice === Infinity ? 0 : roundedMinPrice,
+        max: roundedMaxPrice === 0 ? 50000 : roundedMaxPrice,
+      },
+    };
+  }, [allProducts]);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryFromUrl ? [categoryFromUrl] : []
@@ -65,7 +112,10 @@ const Products = () => {
     collectionFromUrl ? [collectionFromUrl] : []
   );
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    filterOptions.priceRange.min,
+    filterOptions.priceRange.max,
+  ]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState(defaultSortOption);
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,6 +123,11 @@ const Products = () => {
   const [isBestSeller, setIsBestSeller] = useState(isBestsellerFromUrl);
   const [isCelebritySpecial, setIsCelebritySpecial] = useState(isCelebrityFromUrl);
   const [searchQuery, setSearchQuery] = useState(searchFromUrl || "");
+
+  // Update price range when filter options change (products loaded)
+  useEffect(() => {
+    setPriceRange([filterOptions.priceRange.min, filterOptions.priceRange.max]);
+  }, [filterOptions.priceRange.min, filterOptions.priceRange.max]);
 
   // Update filters from URL params
   useEffect(() => {
@@ -234,6 +289,166 @@ const Products = () => {
     sortBy,
   ]);
 
+  // Render filter section (reusable for both mobile sheet and desktop sidebar)
+  const renderFilters = () => (
+    <div className="space-y-10">
+      {/* Category Filter - only show if there are categories with products */}
+      {filterOptions.categories.length > 0 && (
+        <div className="border-b border-border pb-6">
+          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+            Category
+          </h3>
+          <div className="space-y-3">
+            {filterOptions.categories.map((category) => (
+              <label
+                key={category.slug}
+                className="flex items-center space-x-3 cursor-pointer group"
+              >
+                <Checkbox
+                  checked={selectedCategories.includes(category.slug)}
+                  onCheckedChange={() =>
+                    toggleFilter(
+                      category.slug,
+                      selectedCategories,
+                      setSelectedCategories
+                    )
+                  }
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  {category.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Collection Filter - only show if there are collections with products */}
+      {filterOptions.collections.length > 0 && (
+        <div className="border-b border-border pb-6">
+          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+            Collection
+          </h3>
+          <div className="space-y-3">
+            {filterOptions.collections.map((collection) => (
+              <label
+                key={collection.slug}
+                className="flex items-center space-x-3 cursor-pointer group"
+              >
+                <Checkbox
+                  checked={selectedCollections.includes(collection.slug)}
+                  onCheckedChange={() =>
+                    toggleFilter(
+                      collection.slug,
+                      selectedCollections,
+                      setSelectedCollections
+                    )
+                  }
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  {collection.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Price Range Filter - always show if there are products */}
+      {allProducts.length > 0 && (
+        <div className="border-b border-border pb-6">
+          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+            Price Range
+          </h3>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="flex-1">
+              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                Min
+              </label>
+              <input
+                type="number"
+                value={priceRange[0]}
+                onChange={(e) =>
+                  setPriceRange([Number(e.target.value), priceRange[1]])
+                }
+                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+              />
+            </div>
+            <span className="text-border mt-4">-</span>
+            <div className="flex-1">
+              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
+                Max
+              </label>
+              <input
+                type="number"
+                value={priceRange[1]}
+                onChange={(e) =>
+                  setPriceRange([priceRange[0], Number(e.target.value)])
+                }
+                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
+              />
+            </div>
+          </div>
+          <Slider
+            value={[priceRange[0], priceRange[1]]}
+            onValueChange={(val) => setPriceRange([val[0], val[1]])}
+            min={filterOptions.priceRange.min}
+            max={filterOptions.priceRange.max}
+            step={100}
+            className="w-full"
+          />
+        </div>
+      )}
+
+      {/* Material Filter - only show if there are materials */}
+      {filterOptions.materials.length > 0 && (
+        <div className="border-b border-border pb-6">
+          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+            Material
+          </h3>
+          <div className="space-y-3">
+            {filterOptions.materials.map((material) => (
+              <label
+                key={material}
+                className="flex items-center space-x-3 cursor-pointer group"
+              >
+                <Checkbox
+                  checked={selectedMaterials.includes(material)}
+                  onCheckedChange={() =>
+                    toggleFilter(material, selectedMaterials, setSelectedMaterials)
+                  }
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  {material}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Availability Filter - always show */}
+      <div>
+        <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+          Availability
+        </h3>
+        <label className="flex items-center space-x-3 cursor-pointer group">
+          <Checkbox
+            checked={inStockOnly}
+            onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
+            className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          />
+          <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+            In Stock Only
+          </span>
+        </label>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO title="Shop All Products | Sharva" description="Explore our complete collection of handcrafted heritage jewelry." />
@@ -291,162 +506,8 @@ const Products = () => {
                     <SheetHeader>
                       <SheetTitle className="font-display text-left">Filters</SheetTitle>
                     </SheetHeader>
-                    <div className="mt-8 space-y-10">
-                      {/* Category Filter */}
-                      {enabledFilters.includes('category') && (
-                        <div className="border-b border-border pb-6">
-                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                            Category
-                          </h3>
-                          <div className="space-y-3">
-                            {categories.map((category) => (
-                              <label
-                                key={category.id}
-                                className="flex items-center space-x-3 cursor-pointer group"
-                              >
-                                <Checkbox
-                                  checked={selectedCategories.includes(category.slug)}
-                                  onCheckedChange={() =>
-                                    toggleFilter(
-                                      category.slug,
-                                      selectedCategories,
-                                      setSelectedCategories
-                                    )
-                                  }
-                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                />
-                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                                  {category.name}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Collection Filter */}
-                      {enabledFilters.includes('collection') && (
-                        <div className="border-b border-border pb-6">
-                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                            Collection
-                          </h3>
-                          <div className="space-y-3">
-                            {collections.map((collection) => (
-                              <label
-                                key={collection.id}
-                                className="flex items-center space-x-3 cursor-pointer group"
-                              >
-                                <Checkbox
-                                  checked={selectedCollections.includes(collection.slug)}
-                                  onCheckedChange={() =>
-                                    toggleFilter(
-                                      collection.slug,
-                                      selectedCollections,
-                                      setSelectedCollections
-                                    )
-                                  }
-                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                />
-                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                                  {collection.name}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Price Range Filter */}
-                      {enabledFilters.includes('price') && (
-                        <div className="border-b border-border pb-6">
-                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                            Price Range
-                          </h3>
-                          <div className="flex items-center space-x-4 mb-4">
-                            <div className="flex-1">
-                              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                                Min
-                              </label>
-                              <input
-                                type="number"
-                                value={priceRange[0]}
-                                onChange={(e) =>
-                                  setPriceRange([Number(e.target.value), priceRange[1]])
-                                }
-                                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                              />
-                            </div>
-                            <span className="text-border mt-4">-</span>
-                            <div className="flex-1">
-                              <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                                Max
-                              </label>
-                              <input
-                                type="number"
-                                value={priceRange[1]}
-                                onChange={(e) =>
-                                  setPriceRange([priceRange[0], Number(e.target.value)])
-                                }
-                                className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                              />
-                            </div>
-                          </div>
-                          <Slider
-                            value={[priceRange[0], priceRange[1]]}
-                            onValueChange={(val) => setPriceRange([val[0], val[1]])}
-                            max={50000}
-                            step={100}
-                            className="w-full"
-                          />
-                        </div>
-                      )}
-
-                      {/* Material Filter */}
-                      {enabledFilters.includes('material') && (
-                        <div className="border-b border-border pb-6">
-                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                            Material
-                          </h3>
-                          <div className="space-y-3">
-                            {materials.map((material) => (
-                              <label
-                                key={material}
-                                className="flex items-center space-x-3 cursor-pointer group"
-                              >
-                                <Checkbox
-                                  checked={selectedMaterials.includes(material)}
-                                  onCheckedChange={() =>
-                                    toggleFilter(material, selectedMaterials, setSelectedMaterials)
-                                  }
-                                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                />
-                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                                  {material}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Availability Filter */}
-                      {enabledFilters.includes('availability') && (
-                        <div>
-                          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                            Availability
-                          </h3>
-                          <label className="flex items-center space-x-3 cursor-pointer group">
-                            <Checkbox
-                              checked={inStockOnly}
-                              onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
-                              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                              In Stock Only
-                            </span>
-                          </label>
-                        </div>
-                      )}
+                    <div className="mt-8">
+                      {renderFilters()}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -463,14 +524,10 @@ const Products = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[
-                      { id: "featured", label: "Featured" },
-                      { id: "newest", label: "Newest Arrivals" },
-                      { id: "price-low", label: "Price: Low to High" },
-                      { id: "price-high", label: "Price: High to Low" },
-                      { id: "best-selling", label: "Best Selling" }
-                    ].filter(opt => enabledSortOptions.includes(opt.id)).map(opt => (
-                      <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                    {SORT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -483,162 +540,8 @@ const Products = () => {
         <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">
           <div className="flex flex-col lg:flex-row gap-12">
             {/* Sidebar Filters */}
-            <aside className="hidden lg:block w-64 flex-shrink-0 space-y-10">
-              {/* Category Filter */}
-              {enabledFilters.includes('category') && (
-                <div className="border-b border-border pb-6">
-                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                    Category
-                  </h3>
-                  <div className="space-y-3">
-                    {categories.map((category) => (
-                      <label
-                        key={category.id}
-                        className="flex items-center space-x-3 cursor-pointer group"
-                      >
-                        <Checkbox
-                          checked={selectedCategories.includes(category.slug)}
-                          onCheckedChange={() =>
-                            toggleFilter(
-                              category.slug,
-                              selectedCategories,
-                              setSelectedCategories
-                            )
-                          }
-                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                          {category.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Collection Filter */}
-              {enabledFilters.includes('collection') && (
-                <div className="border-b border-border pb-6">
-                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                    Collection
-                  </h3>
-                  <div className="space-y-3">
-                    {collections.map((collection) => (
-                      <label
-                        key={collection.id}
-                        className="flex items-center space-x-3 cursor-pointer group"
-                      >
-                        <Checkbox
-                          checked={selectedCollections.includes(collection.slug)}
-                          onCheckedChange={() =>
-                            toggleFilter(
-                              collection.slug,
-                              selectedCollections,
-                              setSelectedCollections
-                            )
-                          }
-                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                          {collection.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Price Range Filter */}
-              {enabledFilters.includes('price') && (
-                <div className="border-b border-border pb-6">
-                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                    Price Range
-                  </h3>
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex-1">
-                      <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                        Min
-                      </label>
-                      <input
-                        type="number"
-                        value={priceRange[0]}
-                        onChange={(e) =>
-                          setPriceRange([Number(e.target.value), priceRange[1]])
-                        }
-                        className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                      />
-                    </div>
-                    <span className="text-border mt-4">-</span>
-                    <div className="flex-1">
-                      <label className="text-[10px] uppercase text-muted-foreground block mb-1">
-                        Max
-                      </label>
-                      <input
-                        type="number"
-                        value={priceRange[1]}
-                        onChange={(e) =>
-                          setPriceRange([priceRange[0], Number(e.target.value)])
-                        }
-                        className="w-full bg-muted border border-border rounded text-sm py-2 px-3 focus:border-primary focus:ring-0 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <Slider
-                    value={[priceRange[0], priceRange[1]]}
-                    onValueChange={(val) => setPriceRange([val[0], val[1]])}
-                    max={50000}
-                    step={100}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {/* Material Filter */}
-              {enabledFilters.includes('material') && (
-                <div className="border-b border-border pb-6">
-                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                    Material
-                  </h3>
-                  <div className="space-y-3">
-                    {materials.map((material) => (
-                      <label
-                        key={material}
-                        className="flex items-center space-x-3 cursor-pointer group"
-                      >
-                        <Checkbox
-                          checked={selectedMaterials.includes(material)}
-                          onCheckedChange={() =>
-                            toggleFilter(material, selectedMaterials, setSelectedMaterials)
-                          }
-                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                        <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                          {material}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Availability Filter */}
-              {enabledFilters.includes('availability') && (
-                <div>
-                  <h3 className="font-display font-medium text-lg mb-4 text-foreground">
-                    Availability
-                  </h3>
-                  <label className="flex items-center space-x-3 cursor-pointer group">
-                    <Checkbox
-                      checked={inStockOnly}
-                      onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
-                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                      In Stock Only
-                    </span>
-                  </label>
-                </div>
-              )}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              {renderFilters()}
             </aside>
 
             {/* Product Grid */}
