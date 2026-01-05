@@ -65,6 +65,9 @@ const Products = () => {
     const materialsSet = new Set<string>();
     let minPrice = Infinity;
     let maxPrice = 0;
+    let hasBestSellers = false;
+    let hasNewArrivals = false;
+    let hasCelebritySpecials = false;
 
     allProducts.forEach((product) => {
       // Collect categories that have products
@@ -88,6 +91,10 @@ const Products = () => {
       // Calculate price range
       if (product.price < minPrice) minPrice = product.price;
       if (product.price > maxPrice) maxPrice = product.price;
+      // Check for dynamic tags
+      if (product.is_best_seller) hasBestSellers = true;
+      if (product.is_new_arrival) hasNewArrivals = true;
+      if (product.is_celebrity_special) hasCelebritySpecials = true;
     });
 
     // Round price range for better UX
@@ -102,6 +109,9 @@ const Products = () => {
         min: roundedMinPrice === Infinity ? 0 : roundedMinPrice,
         max: roundedMaxPrice === 0 ? 50000 : roundedMaxPrice,
       },
+      hasBestSellers,
+      hasNewArrivals,
+      hasCelebritySpecials,
     };
   }, [allProducts]);
 
@@ -426,6 +436,53 @@ const Products = () => {
                 </span>
               </label>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Tags Filter */}
+      {(filterOptions.hasBestSellers || filterOptions.hasNewArrivals || filterOptions.hasCelebritySpecials) && (
+        <div className="border-b border-border pb-6">
+          <h3 className="font-display font-medium text-lg mb-4 text-foreground">
+            Featured
+          </h3>
+          <div className="space-y-3">
+            {filterOptions.hasBestSellers && (
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <Checkbox
+                  checked={isBestSeller}
+                  onCheckedChange={(checked) => setIsBestSeller(checked as boolean)}
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  Best Sellers
+                </span>
+              </label>
+            )}
+            {filterOptions.hasNewArrivals && (
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <Checkbox
+                  checked={isNewArrival}
+                  onCheckedChange={(checked) => setIsNewArrival(checked as boolean)}
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  New Arrivals
+                </span>
+              </label>
+            )}
+            {filterOptions.hasCelebritySpecials && (
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <Checkbox
+                  checked={isCelebritySpecial}
+                  onCheckedChange={(checked) => setIsCelebritySpecial(checked as boolean)}
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                  Celebrity Specials
+                </span>
+              </label>
+            )}
           </div>
         </div>
       )}

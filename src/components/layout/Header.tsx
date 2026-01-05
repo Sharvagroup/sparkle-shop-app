@@ -83,11 +83,19 @@ const Header = () => {
         .map((item) => {
           let children: { label: string; href: string }[] = [];
 
+          // Filter categories/collections that have products
+          const categoriesWithProducts = categories.filter(cat => 
+            allProducts.some(p => p.category?.slug === cat.slug)
+          );
+          const collectionsWithProducts = collections.filter(col => 
+            allProducts.some(p => p.collection?.slug === col.slug)
+          );
+
           switch (item.type) {
             case "category_dropdown":
               children = [
                 { label: "All Products", href: "/products" },
-                ...categories.map((cat) => ({
+                ...categoriesWithProducts.map((cat) => ({
                   label: cat.name,
                   href: `/products?category=${cat.slug}`,
                 })),
@@ -96,19 +104,26 @@ const Header = () => {
             case "collection_dropdown":
               children = [
                 { label: "All Collections", href: "/products" },
-                ...collections.map((col) => ({
+                ...collectionsWithProducts.map((col) => ({
                   label: col.name,
                   href: `/products?collection=${col.slug}`,
                 })),
               ];
               break;
             case "new_in_dropdown":
-              children = [
-                { label: "Best Sellers", href: "/products?filter=best-sellers" },
-                { label: "New Arrivals", href: "/products?filter=new-arrivals" },
-                { label: "Celebrity Specials", href: "/products?filter=celebrity-specials" },
-                { label: "Announcements", href: "/announcements" },
-              ];
+              children = [];
+              if (bestSellers.length > 0) {
+                children.push({ label: "Best Sellers", href: "/products?bestseller=true" });
+              }
+              if (newArrivals.length > 0) {
+                children.push({ label: "New Arrivals", href: "/products?new=true" });
+              }
+              if (celebritySpecials.length > 0) {
+                children.push({ label: "Celebrity Specials", href: "/products?celebrity=true" });
+              }
+              if (announcements.length > 0) {
+                children.push({ label: "Announcements", href: "/announcements" });
+              }
               break;
             case "best_sellers_dropdown":
               children = bestSellers.slice(0, 8).map((p) => ({
@@ -116,7 +131,7 @@ const Header = () => {
                 href: `/products/${p.slug}`,
               }));
               if (bestSellers.length > 0) {
-                children.unshift({ label: "View All Best Sellers", href: "/products?filter=best-sellers" });
+                children.unshift({ label: "View All Best Sellers", href: "/products?bestseller=true" });
               }
               break;
             case "new_arrivals_dropdown":
@@ -125,7 +140,7 @@ const Header = () => {
                 href: `/products/${p.slug}`,
               }));
               if (newArrivals.length > 0) {
-                children.unshift({ label: "View All New Arrivals", href: "/products?filter=new-arrivals" });
+                children.unshift({ label: "View All New Arrivals", href: "/products?new=true" });
               }
               break;
             case "celebrity_specials_dropdown":
@@ -134,7 +149,7 @@ const Header = () => {
                 href: `/products/${p.slug}`,
               }));
               if (celebritySpecials.length > 0) {
-                children.unshift({ label: "View All Celebrity Specials", href: "/products?filter=celebrity-specials" });
+                children.unshift({ label: "View All Celebrity Specials", href: "/products?celebrity=true" });
               }
               break;
             case "announcements_dropdown":
