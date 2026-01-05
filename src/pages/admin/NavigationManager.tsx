@@ -24,11 +24,21 @@ interface NavChild {
     isExternal?: boolean;
 }
 
+type NavItemType = 
+    | "static" 
+    | "category_dropdown" 
+    | "collection_dropdown" 
+    | "new_in_dropdown" 
+    | "best_sellers_dropdown" 
+    | "new_arrivals_dropdown" 
+    | "celebrity_specials_dropdown" 
+    | "announcements_dropdown";
+
 interface NavItem {
     id: string;
     label: string;
     url: string;
-    type: "static" | "category_dropdown" | "collection_dropdown";
+    type: NavItemType;
     isExternal?: boolean;
     isActive?: boolean;
     children?: NavChild[];
@@ -38,11 +48,22 @@ interface NavigationSettings {
     items: NavItem[];
 }
 
+const NAV_TYPE_LABELS: Record<NavItemType, string> = {
+    static: "Static Link",
+    category_dropdown: "Categories Dropdown",
+    collection_dropdown: "Collections Dropdown",
+    new_in_dropdown: "New In Dropdown (All Dynamic)",
+    best_sellers_dropdown: "Best Sellers Dropdown",
+    new_arrivals_dropdown: "New Arrivals Dropdown",
+    celebrity_specials_dropdown: "Celebrity Specials Dropdown",
+    announcements_dropdown: "Announcements Dropdown",
+};
+
 const defaultNavItems: NavItem[] = [
     { id: "home", label: "Home", url: "/", type: "static", isActive: true },
     { id: "shop", label: "Shop", url: "/products", type: "category_dropdown", isActive: true },
     { id: "collections", label: "Collections", url: "/products", type: "collection_dropdown", isActive: true },
-    { id: "new-in", label: "New In", url: "/products?filter=new", type: "static", isActive: true },
+    { id: "new-in", label: "New In", url: "/products", type: "new_in_dropdown", isActive: true },
     { id: "about", label: "About", url: "/about", type: "static", isActive: true },
     { id: "contact", label: "Contact", url: "/contact", type: "static", isActive: true },
 ];
@@ -193,7 +214,7 @@ const NavigationManager = () => {
                                     <span className="font-medium">{item.label}</span>
                                     {item.type !== "static" && (
                                         <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                            {item.type === "category_dropdown" ? "Categories" : "Collections"}
+                                            {NAV_TYPE_LABELS[item.type]?.replace(" Dropdown", "") || item.type}
                                         </span>
                                     )}
                                 </div>
@@ -239,9 +260,11 @@ const NavigationManager = () => {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="static">Static Link</SelectItem>
-                                                <SelectItem value="category_dropdown">Category Dropdown</SelectItem>
-                                                <SelectItem value="collection_dropdown">Collection Dropdown</SelectItem>
+                                                {Object.entries(NAV_TYPE_LABELS).map(([value, label]) => (
+                                                    <SelectItem key={value} value={value}>
+                                                        {label}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -314,8 +337,10 @@ const NavigationManager = () => {
                                 {item.type !== "static" && (
                                     <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
                                         <ChevronDown className="h-3 w-3 inline mr-1" />
-                                        Dropdown items will be auto-populated from{" "}
-                                        {item.type === "category_dropdown" ? "Categories" : "Collections"}.
+                                        {item.type === "new_in_dropdown" 
+                                            ? "Dropdown will show: Best Sellers, New Arrivals, Celebrity Specials, Announcements"
+                                            : `Dropdown items will be auto-populated from ${NAV_TYPE_LABELS[item.type]?.replace(" Dropdown", "") || item.type}.`
+                                        }
                                     </p>
                                 )}
                             </CardContent>
