@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Check, Link, Folder, Package, Tag, Sparkles } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Check, Link, Folder, Package, Tag, Sparkles, Newspaper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +17,7 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { useCollections } from "@/hooks/useCollections";
 import { useProducts } from "@/hooks/useProducts";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 
 interface LinkSuggestion {
   label: string;
@@ -30,6 +31,7 @@ interface LinkUrlAutocompleteProps {
   placeholder?: string;
 }
 
+// Customer-facing static pages only (no admin URLs)
 const staticPages: LinkSuggestion[] = [
   { label: "Home", value: "/", group: "Pages" },
   { label: "All Products", value: "/products", group: "Pages" },
@@ -37,12 +39,9 @@ const staticPages: LinkSuggestion[] = [
   { label: "Contact", value: "/contact", group: "Pages" },
   { label: "Wishlist", value: "/wishlist", group: "Pages" },
   { label: "Cart", value: "/cart", group: "Pages" },
-];
-
-const specialFilters: LinkSuggestion[] = [
-  { label: "New Arrivals", value: "/products?new=true", group: "Special Filters" },
-  { label: "Best Sellers", value: "/products?bestseller=true", group: "Special Filters" },
-  { label: "Celebrity Specials", value: "/products?celebrity=true", group: "Special Filters" },
+  { label: "Announcements", value: "/announcements", group: "Pages" },
+  { label: "FAQ", value: "/faq", group: "Pages" },
+  { label: "Size Guide", value: "/size-guide", group: "Pages" },
 ];
 
 export function LinkUrlAutocomplete({
@@ -57,36 +56,77 @@ export function LinkUrlAutocomplete({
   const { data: categories = [] } = useCategories();
   const { data: collections = [] } = useCollections();
   const { data: products = [] } = useProducts();
+  const { data: announcements = [] } = useAnnouncements();
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
+  // Filter only active items with products
+  const activeProducts = products.filter((p) => p.is_active);
+  
+  // Categories that have at least one active product
+  const activeCategories = categories.filter((cat) => 
+    cat.is_active && activeProducts.some((p) => p.category_id === cat.id)
+  );
+  
+  // Collections that have at least one active product
+  const activeCollections = collections.filter((col) => 
+    col.is_active && activeProducts.some((p) => p.collection_id === col.id)
+  );
+
+  // Published announcements only
+  const publishedAnnouncements = announcements.filter((a) => a.is_published);
+
+  // Build dynamic special filters based on product availability
+  const specialFilters: LinkSuggestion[] = useMemo(() => {
+    const filters: LinkSuggestion[] = [];
+    
+    if (activeProducts.some((p) => p.is_new_arrival)) {
+      filters.push({ label: "New Arrivals", value: "/products?new=true", group: "Special Filters" });
+    }
+    if (activeProducts.some((p) => p.is_best_seller)) {
+      filters.push({ label: "Best Sellers", value: "/products?bestseller=true", group: "Special Filters" });
+    }
+    if (activeProducts.some((p) => p.is_celebrity_special)) {
+      filters.push({ label: "Celebrity Specials", value: "/products?celebrity=true", group: "Special Filters" });
+    }
+    
+    return filters;
+  }, [activeProducts]);
+
   // Build suggestions from dynamic data
-  const categorySuggestions: LinkSuggestion[] = categories.map((cat) => ({
+  const categorySuggestions: LinkSuggestion[] = activeCategories.map((cat) => ({
     label: cat.name,
     value: `/products?category=${cat.slug}`,
     group: "Categories",
   }));
 
-  const collectionSuggestions: LinkSuggestion[] = collections.map((col) => ({
+  const collectionSuggestions: LinkSuggestion[] = activeCollections.map((col) => ({
     label: col.name,
     value: `/products?collection=${col.slug}`,
     group: "Collections",
   }));
 
-  const productSuggestions: LinkSuggestion[] = products.slice(0, 20).map((prod) => ({
+  const productSuggestions: LinkSuggestion[] = activeProducts.slice(0, 20).map((prod) => ({
     label: prod.name,
     value: `/product/${prod.slug}`,
     group: "Products",
   }));
 
+  const announcementSuggestions: LinkSuggestion[] = publishedAnnouncements.slice(0, 10).map((ann) => ({
+    label: ann.title,
+    value: `/announcements#${ann.slug}`,
+    group: "Announcements",
+  }));
+
   const allSuggestions = [
     ...staticPages,
+    ...specialFilters,
     ...categorySuggestions,
     ...collectionSuggestions,
-    ...specialFilters,
     ...productSuggestions,
+    ...announcementSuggestions,
   ];
 
   // Filter suggestions based on input
@@ -132,6 +172,8 @@ export function LinkUrlAutocomplete({
         return <Package className="h-3 w-3" />;
       case "Special Filters":
         return <Sparkles className="h-3 w-3" />;
+      case "Announcements":
+        return <Newspaper className="h-3 w-3" />;
       default:
         return <Link className="h-3 w-3" />;
     }
