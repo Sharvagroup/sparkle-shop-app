@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,12 +82,75 @@ const NavigationManager = () => {
     const updateSetting = useUpdateSiteSetting();
 
     const [navItems, setNavItems] = useState<NavItem[]>(defaultNavItems);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const dragNodeRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (navData?.items && navData.items.length > 0) {
             setNavItems(navData.items);
         }
     }, [navData]);
+
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        setDraggedIndex(index);
+        dragNodeRef.current = e.target as HTMLDivElement;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", index.toString());
+        // Add a slight delay before adding the dragging class for better visual feedback
+        setTimeout(() => {
+            if (dragNodeRef.current) {
+                dragNodeRef.current.style.opacity = "0.5";
+            }
+        }, 0);
+    };
+
+    const handleDragEnd = () => {
+        if (dragNodeRef.current) {
+            dragNodeRef.current.style.opacity = "1";
+        }
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+        dragNodeRef.current = null;
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        if (draggedIndex !== null && draggedIndex !== index) {
+            setDragOverIndex(index);
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            handleDragEnd();
+            return;
+        }
+
+        const newItems = [...navItems];
+        const [draggedItem] = newItems.splice(draggedIndex, 1);
+        newItems.splice(dropIndex, 0, draggedItem);
+        setNavItems(newItems);
+        handleDragEnd();
+        toast.info("Item reordered. Save to apply changes.");
+    };
+
+    const moveItem = (fromIndex: number, direction: "up" | "down") => {
+        const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
+        if (toIndex < 0 || toIndex >= navItems.length) return;
+        
+        const newItems = [...navItems];
+        const [movedItem] = newItems.splice(fromIndex, 1);
+        newItems.splice(toIndex, 0, movedItem);
+        setNavItems(newItems);
+    };
 
     const addNavItem = () => {
         setNavItems((prev) => [
@@ -204,27 +267,41 @@ const NavigationManager = () => {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-4">
+                <div className="lg:col-span-2 space-y-2">
                     {navItems.map((item, index) => (
-                        <Card key={item.id} className={!item.isActive ? "opacity-60" : ""}>
-                            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                                    <span className="text-sm text-muted-foreground">#{index + 1}</span>
-                                    {iconMap[item.id] || <ShoppingBag className="h-4 w-4 text-muted-foreground" />}
-                                    <span className="font-medium">{item.label}</span>
-                                    {item.type !== "static" && (
-                                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                            {NAV_TYPE_LABELS[item.type]?.replace(" Dropdown", "") || item.type}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Switch
-                                        checked={item.isActive !== false}
-                                        onCheckedChange={(checked) => updateNavItem(item.id, "isActive", checked)}
-                                    />
-                                    <Button
+                        <div
+                            key={item.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, index)}
+                            className={`transition-all duration-200 ${
+                                dragOverIndex === index && draggedIndex !== index
+                                    ? "border-t-2 border-primary pt-2"
+                                    : ""
+                            }`}
+                        >
+                            <Card className={`${!item.isActive ? "opacity-60" : ""} ${draggedIndex === index ? "ring-2 ring-primary" : ""}`}>
+                                <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors" />
+                                        <span className="text-sm text-muted-foreground font-mono">#{index + 1}</span>
+                                        {iconMap[item.id] || <ShoppingBag className="h-4 w-4 text-muted-foreground" />}
+                                        <span className="font-medium">{item.label}</span>
+                                        {item.type !== "static" && (
+                                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                                {NAV_TYPE_LABELS[item.type]?.replace(" Dropdown", "") || item.type}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Switch
+                                            checked={item.isActive !== false}
+                                            onCheckedChange={(checked) => updateNavItem(item.id, "isActive", checked)}
+                                        />
+                                        <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => removeNavItem(item.id)}
@@ -345,6 +422,7 @@ const NavigationManager = () => {
                                 )}
                             </CardContent>
                         </Card>
+                        </div>
                     ))}
 
                     <Button variant="outline" onClick={addNavItem} className="w-full gap-2">
