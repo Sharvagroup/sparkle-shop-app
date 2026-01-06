@@ -128,7 +128,7 @@ const ProductAddonsSelector = ({
                   <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab flex-shrink-0" />
                   
                   {/* Product Image */}
-                  <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
                     <img
                       src={product.images?.[0] || "/placeholder.svg"}
                       alt={product.name}
@@ -139,9 +139,18 @@ const ProductAddonsSelector = ({
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Original: {formatPrice(product.price)}
-                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>Price: {formatPrice(product.price)}</span>
+                      {product.original_price && product.original_price > product.price && (
+                        <span className="line-through">{formatPrice(product.original_price)}</span>
+                      )}
+                      {product.sku && <span>• SKU: {product.sku}</span>}
+                    </div>
+                    {product.badge && (
+                      <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                        {product.badge}
+                      </span>
+                    )}
                   </div>
 
                   {/* Type Selector */}
