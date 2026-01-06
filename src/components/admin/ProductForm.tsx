@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import { useAdminProducts, Product, uploadProductImages, deleteProductImage } from '@/hooks/useProducts';
-import { useAdminProductOptions, ProductOption } from '@/hooks/useProductOptions';
+import { useProductOptions, ProductOption } from '@/hooks/useProductOptions';
 import { useAdminProductAddons, useAddProductAddon, useRemoveProductAddon } from '@/hooks/useProductAddons';
 import ProductAddonsSelector, { SelectedAddon } from '@/components/admin/ProductAddonsSelector';
 import { X, Upload, Loader2 } from 'lucide-react';
@@ -69,7 +69,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const { data: categories = [] } = useAdminCategories();
   const { data: collections = [] } = useAdminCollections();
   const { data: allProducts = [] } = useAdminProducts();
-  const { data: productOptions = [] } = useAdminProductOptions();
+  const { data: productOptions = [] } = useProductOptions();
   const { data: existingAddons = [] } = useAdminProductAddons(product?.id || '');
   
   const [images, setImages] = useState<string[]>(product?.images || []);
@@ -115,6 +115,22 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       );
     }
   }, [existingAddons]);
+
+  // Initialize enabled options based on global settings
+  useEffect(() => {
+    if (productOptions.length > 0) {
+      if (product) {
+        // For existing products, merge saved options with mandatory options
+        const mandatoryIds = productOptions.filter(opt => opt.is_mandatory).map(opt => opt.id);
+        const existingIds = product.enabled_options || [];
+        const merged = [...new Set([...existingIds, ...mandatoryIds])];
+        setEnabledOptions(merged);
+      } else {
+        // For new products, enable all globally enabled options by default
+        setEnabledOptions(productOptions.map(opt => opt.id));
+      }
+    }
+  }, [productOptions, product]);
 
   // Auto-generate slug from name
   const name = form.watch('name');
@@ -183,10 +199,16 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   };
 
   const handleFormSubmit = async (data: ProductFormData) => {
+    // Ensure mandatory options are always included
+    const mandatoryOptionIds = productOptions
+      .filter(opt => opt.is_mandatory)
+      .map(opt => opt.id);
+    const finalEnabledOptions = [...new Set([...enabledOptions, ...mandatoryOptionIds])];
+
     await onSubmit({
       ...data,
       images,
-      enabled_options: enabledOptions,
+      enabled_options: finalEnabledOptions,
       has_addons: selectedAddons.length > 0,
       addons: selectedAddons,
       category_id: data.category_id || null,
@@ -694,17 +716,27 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                     }`}
                   >
                     <div className="space-y-0.5">
-                      <Label className="text-base">{option.name}</Label>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-base">{option.name}</Label>
+                        {option.is_mandatory && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                            Required
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {option.type === 'number' && option.unit
                           ? `${option.type} (${option.unit})`
                           : option.type}
-                        {option.is_mandatory && ' • Required'}
                       </p>
                     </div>
                     <Checkbox
-                      checked={enabledOptions.includes(option.id) || option.is_mandatory}
-                      onCheckedChange={() => toggleOption(option.id)}
+                      checked={option.is_mandatory || enabledOptions.includes(option.id)}
+                      onCheckedChange={() => {
+                        if (!option.is_mandatory) {
+                          toggleOption(option.id);
+                        }
+                      }}
                       disabled={option.is_mandatory}
                     />
                   </div>
