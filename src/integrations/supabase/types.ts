@@ -692,6 +692,7 @@ export type Database = {
       products: {
         Row: {
           badge: string | null
+          base_unit_value: number | null
           care_instructions: string | null
           category_id: string | null
           collection_id: string | null
@@ -712,6 +713,7 @@ export type Database = {
           name: string
           original_price: number | null
           price: number
+          pricing_by_option_id: string | null
           rating: number | null
           review_count: number | null
           sku: string | null
@@ -723,6 +725,7 @@ export type Database = {
         }
         Insert: {
           badge?: string | null
+          base_unit_value?: number | null
           care_instructions?: string | null
           category_id?: string | null
           collection_id?: string | null
@@ -743,6 +746,7 @@ export type Database = {
           name: string
           original_price?: number | null
           price: number
+          pricing_by_option_id?: string | null
           rating?: number | null
           review_count?: number | null
           sku?: string | null
@@ -754,6 +758,7 @@ export type Database = {
         }
         Update: {
           badge?: string | null
+          base_unit_value?: number | null
           care_instructions?: string | null
           category_id?: string | null
           collection_id?: string | null
@@ -774,6 +779,7 @@ export type Database = {
           name?: string
           original_price?: number | null
           price?: number
+          pricing_by_option_id?: string | null
           rating?: number | null
           review_count?: number | null
           sku?: string | null
@@ -796,6 +802,13 @@ export type Database = {
             columns: ["collection_id"]
             isOneToOne: false
             referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_pricing_by_option_id_fkey"
+            columns: ["pricing_by_option_id"]
+            isOneToOne: false
+            referencedRelation: "product_options"
             referencedColumns: ["id"]
           },
         ]

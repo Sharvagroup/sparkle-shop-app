@@ -39,6 +39,8 @@ export interface Product {
   theme: ProductTheme | null;
   enabled_options: string[];
   has_addons: boolean;
+  pricing_by_option_id: string | null;
+  base_unit_value: number | null;
   created_at: string;
   updated_at: string;
   // Joined relations
@@ -71,6 +73,8 @@ export interface ProductInput {
   theme?: ProductTheme | null;
   enabled_options?: string[];
   has_addons?: boolean;
+  pricing_by_option_id?: string | null;
+  base_unit_value?: number | null;
 }
 
 export interface ProductFilters {

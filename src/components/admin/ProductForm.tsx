@@ -60,7 +60,7 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (data: ProductFormData & { images: string[]; enabled_options: string[]; has_addons: boolean; addons: SelectedAddon[] }) => Promise<void>;
+  onSubmit: (data: ProductFormData & { images: string[]; enabled_options: string[]; has_addons: boolean; addons: SelectedAddon[]; pricing_by_option_id: string | null; base_unit_value: number | null }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -76,6 +76,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const [uploadingImages, setUploadingImages] = useState(false);
   const [enabledOptions, setEnabledOptions] = useState<string[]>(product?.enabled_options || []);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
+  const [pricingByOptionId, setPricingByOptionId] = useState<string | null>(product?.pricing_by_option_id || null);
+  const [baseUnitValue, setBaseUnitValue] = useState<number | null>(product?.base_unit_value || null);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -198,6 +200,22 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     );
   };
 
+  // Get number-type options for pricing strategy dropdown
+  const numberTypeOptions = productOptions.filter(opt => opt.type === 'number');
+
+  // When pricing option changes, auto-fill base unit value with min_value
+  const handlePricingOptionChange = (optionId: string | null) => {
+    setPricingByOptionId(optionId);
+    if (optionId) {
+      const selectedOption = productOptions.find(opt => opt.id === optionId);
+      if (selectedOption?.min_value) {
+        setBaseUnitValue(selectedOption.min_value);
+      }
+    } else {
+      setBaseUnitValue(null);
+    }
+  };
+
   const handleFormSubmit = async (data: ProductFormData) => {
     // Ensure mandatory options are always included
     const mandatoryOptionIds = productOptions
@@ -215,6 +233,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       collection_id: data.collection_id || null,
       original_price: data.original_price || null,
       badge: data.badge || null,
+      pricing_by_option_id: pricingByOptionId,
+      base_unit_value: baseUnitValue,
     });
   };
 
@@ -447,14 +467,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
           <CardHeader>
             <CardTitle className="text-lg">Pricing</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (₹) *</FormLabel>
+                    <FormLabel>Base Price (₹) *</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" min="0" {...field} />
                     </FormControl>
@@ -487,6 +507,93 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                 )}
               />
             </div>
+
+            {/* Pricing Strategy */}
+            {numberTypeOptions.length > 0 && (
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <Label className="text-base font-medium">Pricing Strategy</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Calculate price proportionally based on a product option
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Calculate price by</Label>
+                    <Select
+                      value={pricingByOptionId || "_none"}
+                      onValueChange={(val) => handlePricingOptionChange(val === "_none" ? null : val)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">None (Flat rate)</SelectItem>
+                        {numberTypeOptions.map((opt) => (
+                          <SelectItem key={opt.id} value={opt.id}>
+                            {opt.name} {opt.unit ? `(${opt.unit})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {pricingByOptionId && (
+                    <div className="space-y-2">
+                      <Label>
+                        Base unit value
+                        {(() => {
+                          const opt = productOptions.find(o => o.id === pricingByOptionId);
+                          return opt?.unit ? ` (${opt.unit})` : '';
+                        })()}
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={baseUnitValue || ''}
+                        onChange={(e) => setBaseUnitValue(e.target.value ? parseFloat(e.target.value) : null)}
+                        placeholder="e.g., 200 for 200g"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {pricingByOptionId && baseUnitValue && baseUnitValue > 0 && (
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <p className="text-sm font-medium">Pricing Preview</p>
+                    {(() => {
+                      const opt = productOptions.find(o => o.id === pricingByOptionId);
+                      const price = form.watch('price') || 0;
+                      const unit = opt?.unit || '';
+                      const perUnit = price / baseUnitValue;
+                      return (
+                        <>
+                          <p className="text-sm text-muted-foreground">
+                            ₹{price.toLocaleString()} is the price for {baseUnitValue}{unit}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Rate: ₹{perUnit.toFixed(2)} per {unit || 'unit'}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {[1, 2, 3].map(multiplier => {
+                              const value = baseUnitValue * multiplier;
+                              const calcPrice = perUnit * value;
+                              return (
+                                <span key={multiplier} className="text-xs bg-background px-2 py-1 rounded border">
+                                  {value}{unit} = ₹{calcPrice.toLocaleString()}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
