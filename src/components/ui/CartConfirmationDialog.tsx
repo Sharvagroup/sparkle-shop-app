@@ -106,8 +106,23 @@ const CartConfirmationDialog = ({
     }).format(price);
   };
 
+  // Calculate product price based on pricing strategy
+  const calculateProductPrice = () => {
+    let unitPrice = product.price;
+    
+    if (product.pricing_by_option_id && product.base_unit_value && product.base_unit_value > 0) {
+      const selectedValue = selectedOptions[product.pricing_by_option_id];
+      if (selectedValue && typeof selectedValue === 'number') {
+        // Scale price based on the option value
+        unitPrice = (product.price / product.base_unit_value) * selectedValue;
+      }
+    }
+    
+    return unitPrice * quantity;
+  };
+
   // Calculate total
-  const productTotal = product.price * quantity;
+  const productTotal = calculateProductPrice();
   const addonsTotal = selectedAddons.reduce((sum, addon) => {
     const addonProduct = productAddons.find(
       (a) => a.addon_product_id === addon.productId
@@ -117,6 +132,11 @@ const CartConfirmationDialog = ({
     return sum + price * addon.quantity;
   }, 0);
   const grandTotal = productTotal + addonsTotal;
+
+  // Get pricing option details for display
+  const pricingOption = product.pricing_by_option_id 
+    ? productOptions.find(opt => opt.id === product.pricing_by_option_id)
+    : null;
 
   const handleConfirm = () => {
     onConfirm({
@@ -182,7 +202,17 @@ const CartConfirmationDialog = ({
                   <h3 className="font-medium">{product.name}</h3>
                   <p className="text-lg font-bold text-primary">
                     {formatPrice(product.price)}
+                    {pricingOption && product.base_unit_value && (
+                      <span className="text-sm font-normal text-muted-foreground ml-1">
+                        for {product.base_unit_value}{pricingOption.unit || ''}
+                      </span>
+                    )}
                   </p>
+                  {pricingOption && product.base_unit_value && product.base_unit_value > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      ₹{(product.price / product.base_unit_value).toFixed(2)} per {pricingOption.unit || 'unit'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -300,7 +330,14 @@ const CartConfirmationDialog = ({
               {/* Summary for Step 1 */}
               <div className="border-t pt-4">
                 <div className="flex justify-between font-medium">
-                  <span>{product.name} × {quantity}</span>
+                  <span>
+                    {product.name} × {quantity}
+                    {pricingOption && selectedOptions[product.pricing_by_option_id!] && (
+                      <span className="text-muted-foreground font-normal ml-1">
+                        ({selectedOptions[product.pricing_by_option_id!]}{pricingOption.unit || ''} each)
+                      </span>
+                    )}
+                  </span>
                   <span className="text-primary">{formatPrice(productTotal)}</span>
                 </div>
               </div>

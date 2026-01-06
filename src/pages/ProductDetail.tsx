@@ -391,6 +391,23 @@ const ProductDetail = () => {
                     </span>
                   )}
                 </div>
+                {/* Dynamic pricing info */}
+                {product.pricing_by_option_id && product.base_unit_value && product.base_unit_value > 0 && (
+                  (() => {
+                    const pricingOption = productOptions.find(opt => opt.id === product.pricing_by_option_id);
+                    if (!pricingOption) return null;
+                    const perUnit = product.price / product.base_unit_value;
+                    return (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <span>Price for {product.base_unit_value}{pricingOption.unit || ''}</span>
+                        <span className="mx-2">•</span>
+                        <span className="font-medium text-foreground">
+                          ₹{perUnit.toFixed(2)} per {pricingOption.unit || 'unit'}
+                        </span>
+                      </div>
+                    );
+                  })()
+                )}
                 <span className="block text-xs text-muted-foreground mt-2">
                   Inclusive of all taxes. Free insured shipping.
                 </span>
