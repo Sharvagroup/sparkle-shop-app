@@ -40,6 +40,8 @@ interface CartConfirmationDialogProps {
     selectedAddons: SelectedAddonState[];
   }) => void;
   isLoading?: boolean;
+  initialQuantity?: number;
+  initialOptions?: Record<string, any>;
 }
 
 const CartConfirmationDialog = ({
@@ -51,10 +53,16 @@ const CartConfirmationDialog = ({
   enabledOptionIds,
   onConfirm,
   isLoading,
+  initialQuantity = 1,
+  initialOptions = {},
 }: CartConfirmationDialogProps) => {
+  // Start on step 2 (addons) if we have pre-selected options AND there are addons
+  const hasAddons = productAddons.length > 0;
+  const hasInitialSelections = Object.keys(initialOptions).length > 0;
+  
   const [currentStep, setCurrentStep] = useState(1);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
+  const [quantity, setQuantity] = useState(initialQuantity);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>(initialOptions);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddonState[]>([]);
 
   // Filter options to only show enabled ones for this product
@@ -62,18 +70,20 @@ const CartConfirmationDialog = ({
     (opt) => enabledOptionIds.includes(opt.id) || opt.is_mandatory
   );
 
-  const hasAddons = productAddons.length > 0;
   const totalSteps = hasAddons ? 2 : 1;
+  
+  // If options pre-selected and has addons, skip to step 2
+  const startStep = hasInitialSelections && hasAddons ? 2 : 1;
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setCurrentStep(1);
-      setQuantity(1);
-      setSelectedOptions({});
+      setCurrentStep(startStep);
+      setQuantity(initialQuantity);
+      setSelectedOptions(initialOptions);
       setSelectedAddons([]);
     }
-  }, [open]);
+  }, [open, startStep, initialQuantity, initialOptions]);
 
   const handleOptionChange = (optionId: string, value: any) => {
     setSelectedOptions((prev) => ({ ...prev, [optionId]: value }));
