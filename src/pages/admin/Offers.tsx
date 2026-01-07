@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -31,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type, Paintbrush } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type, Paintbrush, Save } from "lucide-react";
 import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer, Offer, OfferInsert, OfferType } from "@/hooks/useOffers";
 import { OfferForm } from "@/components/admin/OfferForm";
 import { OfferItemThemeDialog } from "@/components/admin/OfferItemThemeDialog";
@@ -52,10 +53,24 @@ const Offers = () => {
   const { data: scrollDismissData } = useSiteSetting<{ showDismiss: boolean } | undefined>("scroll_offer_dismiss");
 
   // No fallbacks - require explicit admin configuration
-  const scrollEnabled = scrollEnabledData?.enabled;
-  const scrollSpeed = scrollSpeedData?.seconds ?? 25;
-  const scrollSeparator = scrollSeparatorData?.separator ?? "•";
-  const scrollShowDismiss = scrollDismissData?.showDismiss ?? true;
+  const dbScrollEnabled = scrollEnabledData?.enabled;
+  const dbScrollSpeed = scrollSpeedData?.seconds ?? 25;
+  const dbScrollSeparator = scrollSeparatorData?.separator ?? "•";
+  const dbScrollShowDismiss = scrollDismissData?.showDismiss ?? true;
+
+  // Local state for manual saving
+  const [localScrollEnabled, setLocalScrollEnabled] = useState<boolean | undefined>(undefined);
+  const [localScrollSpeed, setLocalScrollSpeed] = useState<number>(25);
+  const [localScrollSeparator, setLocalScrollSeparator] = useState<string>("•");
+  const [localScrollDismiss, setLocalScrollDismiss] = useState<boolean>(true);
+
+  // Initialize local state from DB data
+  useEffect(() => {
+    if (scrollEnabledData) setLocalScrollEnabled(scrollEnabledData.enabled);
+    if (scrollSpeedData) setLocalScrollSpeed(scrollSpeedData.seconds);
+    if (scrollSeparatorData) setLocalScrollSeparator(scrollSeparatorData.separator);
+    if (scrollDismissData) setLocalScrollDismiss(scrollDismissData.showDismiss);
+  }, [scrollEnabledData, scrollSpeedData, scrollSeparatorData, scrollDismissData]);
 
   const [activeTab, setActiveTab] = useState<string>("offer_banner");
   const [search, setSearch] = useState("");
@@ -75,7 +90,7 @@ const Offers = () => {
   const scrollPreviewText = offers
     .filter(o => o.is_active)
     .map(o => o.discount_code ? `${o.title} - Use code: ${o.discount_code}` : o.title)
-    .join(" • ");
+    .join(` ${localScrollSeparator} `);
 
   const handleCreate = () => {
     setEditingOffer(null);
@@ -115,19 +130,34 @@ const Offers = () => {
   };
 
   const handleScrollEnabledChange = (enabled: string) => {
-    updateSetting.mutate({ key: "scroll_offer_enabled", value: { enabled: enabled === "enabled" }, category: "offers" });
+    setLocalScrollEnabled(enabled === "enabled");
   };
 
   const handleScrollSpeedChange = (seconds: number) => {
-    updateSetting.mutate({ key: "scroll_offer_speed", value: { seconds }, category: "offers" });
+    setLocalScrollSpeed(seconds);
   };
 
   const handleScrollSeparatorChange = (separator: string) => {
-    updateSetting.mutate({ key: "scroll_offer_separator", value: { separator }, category: "offers" });
+    setLocalScrollSeparator(separator);
   };
 
   const handleScrollDismissChange = (showDismiss: boolean) => {
-    updateSetting.mutate({ key: "scroll_offer_dismiss", value: { showDismiss }, category: "offers" });
+    setLocalScrollDismiss(showDismiss);
+  };
+
+  const handleSaveScrollSettings = async () => {
+    try {
+      if (localScrollEnabled !== undefined) {
+        await updateSetting.mutateAsync({ key: "scroll_offer_enabled", value: { enabled: localScrollEnabled }, category: "offers" });
+      }
+      await updateSetting.mutateAsync({ key: "scroll_offer_speed", value: { seconds: localScrollSpeed }, category: "offers" });
+      await updateSetting.mutateAsync({ key: "scroll_offer_separator", value: { separator: localScrollSeparator }, category: "offers" });
+      await updateSetting.mutateAsync({ key: "scroll_offer_dismiss", value: { showDismiss: localScrollDismiss }, category: "offers" });
+
+      toast.success("Scroll offer settings saved successfully");
+    } catch (error) {
+      toast.error("Failed to save settings");
+    }
   };
 
   const renderOfferTable = () => (
@@ -339,7 +369,7 @@ const Offers = () => {
                   <p className="text-sm text-muted-foreground">Show scrolling offers on the top of the page</p>
                 </div>
                 <Select
-                  value={scrollEnabled === undefined ? "" : scrollEnabled ? "enabled" : "disabled"}
+                  value={localScrollEnabled === undefined ? "" : localScrollEnabled ? "enabled" : "disabled"}
                   onValueChange={handleScrollEnabledChange}
                 >
                   <SelectTrigger className="w-[140px]">
@@ -356,13 +386,13 @@ const Offers = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Scroll Speed (seconds)</Label>
-                  <span className="text-sm text-muted-foreground">{scrollSpeed}s per cycle</span>
+                  <span className="text-sm text-muted-foreground">{localScrollSpeed}s per cycle</span>
                 </div>
                 <Input
                   type="number"
                   min={5}
                   max={120}
-                  value={scrollSpeed}
+                  value={localScrollSpeed}
                   onChange={(e) => handleScrollSpeedChange(parseInt(e.target.value) || 25)}
                   className="w-full"
                 />
@@ -374,7 +404,7 @@ const Offers = () => {
               {/* Separator Dropdown */}
               <div className="space-y-2">
                 <Label>Text Separator</Label>
-                <Select value={scrollSeparator} onValueChange={handleScrollSeparatorChange}>
+                <Select value={localScrollSeparator} onValueChange={handleScrollSeparatorChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -400,7 +430,7 @@ const Offers = () => {
                 </div>
                 <Switch
                   id="scroll-dismiss"
-                  checked={scrollShowDismiss}
+                  checked={localScrollDismiss}
                   onCheckedChange={handleScrollDismissChange}
                 />
               </div>
@@ -416,8 +446,20 @@ const Offers = () => {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  This text is auto-generated from all active Offer Banners and Special Offers
+                  This text is auto-generated from all active Offer Banners and Special Offers. The separator shown here is a preview.
                 </p>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  onClick={handleSaveScrollSettings}
+                  className="gap-2"
+                  disabled={updateSetting.isPending}
+                >
+                  <Save className="h-4 w-4" />
+                  Save Changes
+                </Button>
               </div>
             </CardContent>
           </Card>
