@@ -24,7 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useProduct, useProducts } from "@/hooks/useProducts";
-import { useAddToCart } from "@/hooks/useCart";
+import { useAddToCart, useCheckCartCollision } from "@/hooks/useCart";
 import { useProductOptions } from "@/hooks/useProductOptions";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddCartItemAddon } from "@/hooks/useCartItemAddons";
@@ -36,6 +36,7 @@ import { toast } from "@/hooks/use-toast";
 import ReviewForm from "@/components/ui/ReviewForm";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
+import CartCollisionDialog from "@/components/ui/CartCollisionDialog";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -48,11 +49,23 @@ const ProductDetail = () => {
   const { data: productAddons = [] } = useProductAddons(product?.id || "");
   const addToCart = useAddToCart();
   const addCartItemAddon = useAddCartItemAddon();
+  const checkCollision = useCheckCartCollision();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [buyNowMode, setBuyNowMode] = useState(false);
+  
+  // Collision dialog state
+  const [showCollisionDialog, setShowCollisionDialog] = useState(false);
+  const [collisionData, setCollisionData] = useState<{
+    existingItem: { id: string; quantity: number; selected_options: Record<string, any> | null };
+    pendingData: {
+      quantity: number;
+      selectedOptions: Record<string, any>;
+      selectedAddons: { productId: string; quantity: number; options: Record<string, any> }[];
+    };
+  } | null>(null);
 
   // Check if product has options or addons that require confirmation dialog
   const hasOptionsOrAddons = 
@@ -121,11 +134,52 @@ const ProductDetail = () => {
     if (!product) return;
     setIsAddingToCart(true);
     try {
+      // Check for collision first
+      const existingItems = await checkCollision.mutateAsync(product.id);
+      
+      if (existingItems.length > 0) {
+        // Show collision dialog - cast selected_options to correct type
+        const existing = existingItems[0];
+        setCollisionData({
+          existingItem: {
+            id: existing.id,
+            quantity: existing.quantity,
+            selected_options: (existing.selected_options as Record<string, any> | null) || null,
+          },
+          pendingData: data,
+        });
+        setShowConfirmDialog(false);
+        setShowCollisionDialog(true);
+        setIsAddingToCart(false);
+        return;
+      }
+
+      // No collision, proceed with add
+      await proceedWithCartAdd(data, 'add');
+    } catch (error) {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const proceedWithCartAdd = async (
+    data: {
+      quantity: number;
+      selectedOptions: Record<string, any>;
+      selectedAddons: { productId: string; quantity: number; options: Record<string, any> }[];
+    },
+    mode: 'add' | 'replace' | 'separate',
+    existingItemId?: string
+  ) => {
+    if (!product) return;
+    setIsAddingToCart(true);
+    try {
       // Add main product to cart
       const result = await addToCart.mutateAsync({
         productId: product.id,
         quantity: data.quantity,
         selectedOptions: data.selectedOptions,
+        mode,
+        existingItemId,
       });
 
       // Add addons to cart_item_addons
@@ -139,6 +193,8 @@ const ProductDetail = () => {
       }
 
       setShowConfirmDialog(false);
+      setShowCollisionDialog(false);
+      setCollisionData(null);
       
       if (buyNowMode) {
         navigate("/checkout");
@@ -146,6 +202,16 @@ const ProductDetail = () => {
     } finally {
       setIsAddingToCart(false);
     }
+  };
+
+  const handleCollisionReplace = () => {
+    if (!collisionData) return;
+    proceedWithCartAdd(collisionData.pendingData, 'replace', collisionData.existingItem.id);
+  };
+
+  const handleCollisionAddSeparate = () => {
+    if (!collisionData) return;
+    proceedWithCartAdd(collisionData.pendingData, 'separate');
   };
 
   // Get related products from same category
@@ -694,6 +760,23 @@ const ProductDetail = () => {
           productAddons={productAddons}
           enabledOptionIds={product.enabled_options || []}
           onConfirm={handleConfirmAddToCart}
+          isLoading={isAddingToCart}
+        />
+      )}
+
+      {/* Cart Collision Dialog */}
+      {product && collisionData && (
+        <CartCollisionDialog
+          open={showCollisionDialog}
+          onOpenChange={setShowCollisionDialog}
+          productName={product.name}
+          productImage={product.images?.[0]}
+          existingItem={collisionData.existingItem}
+          newQuantity={collisionData.pendingData.quantity}
+          newOptions={collisionData.pendingData.selectedOptions}
+          productOptions={productOptions}
+          onReplace={handleCollisionReplace}
+          onAddSeparate={handleCollisionAddSeparate}
           isLoading={isAddingToCart}
         />
       )}

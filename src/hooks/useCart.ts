@@ -21,6 +21,8 @@ export interface CartItem {
     stock_quantity: number | null;
     enabled_options: string[] | null;
     has_addons: boolean | null;
+    pricing_by_option_id: string | null;
+    base_unit_value: number | null;
   };
 }
 
@@ -36,7 +38,7 @@ export const useCart = () => {
         .from("cart")
         .select(`
           *,
-          product:products(id, name, price, original_price, images, slug, stock_quantity, enabled_options, has_addons)
+          product:products(id, name, price, original_price, images, slug, stock_quantity, enabled_options, has_addons, pricing_by_option_id, base_unit_value)
         `)
         .eq("user_id", user.id);
 
@@ -44,6 +46,26 @@ export const useCart = () => {
       return data as CartItem[];
     },
     enabled: !!user,
+  });
+};
+
+// Check if a product already exists in cart
+export const useCheckCartCollision = () => {
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("cart")
+        .select("id, quantity, selected_options")
+        .eq("user_id", user.id)
+        .eq("product_id", productId);
+
+      if (error) throw error;
+      return data || [];
+    },
   });
 };
 
@@ -55,41 +77,36 @@ export const useAddToCart = () => {
     mutationFn: async ({ 
       productId, 
       quantity = 1, 
-      selectedOptions = {} 
+      selectedOptions = {},
+      mode = 'add',
+      existingItemId
     }: { 
       productId: string; 
       quantity?: number;
       selectedOptions?: Record<string, any>;
+      mode?: 'add' | 'replace' | 'separate';
+      existingItemId?: string;
     }) => {
       if (!user) throw new Error("Please sign in to add items to cart");
 
-      // Check if item already exists in cart
-      const { data: existingItem } = await supabase
-        .from("cart")
-        .select("id, quantity, selected_options")
-        .eq("user_id", user.id)
-        .eq("product_id", productId)
-        .maybeSingle();
-
-      if (existingItem) {
-        // Update existing item - add quantity and replace options with new selection
-        const sameOptions = JSON.stringify(existingItem.selected_options || {}) === JSON.stringify(selectedOptions);
-        const newQuantity = sameOptions ? existingItem.quantity + quantity : quantity;
-        
+      // Mode: replace - update existing cart item
+      if (mode === 'replace' && existingItemId) {
         const { data, error } = await supabase
           .from("cart")
           .update({ 
-            quantity: newQuantity,
+            quantity,
             selected_options: selectedOptions
           })
-          .eq("id", existingItem.id)
+          .eq("id", existingItemId)
           .select()
           .single();
 
         if (error) throw error;
         return data;
-      } else {
-        // Insert new item
+      }
+
+      // Mode: separate - always insert new
+      if (mode === 'separate') {
         const { data, error } = await supabase
           .from("cart")
           .insert({ 
@@ -104,6 +121,46 @@ export const useAddToCart = () => {
         if (error) throw error;
         return data;
       }
+
+      // Mode: add (default) - check for existing with same options
+      const { data: existingItems } = await supabase
+        .from("cart")
+        .select("id, quantity, selected_options")
+        .eq("user_id", user.id)
+        .eq("product_id", productId);
+
+      // Find item with matching options
+      const matchingItem = existingItems?.find(
+        item => JSON.stringify(item.selected_options || {}) === JSON.stringify(selectedOptions)
+      );
+
+      if (matchingItem) {
+        // Update quantity for matching item
+        const { data, error } = await supabase
+          .from("cart")
+          .update({ quantity: matchingItem.quantity + quantity })
+          .eq("id", matchingItem.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+
+      // No matching item, insert new
+      const { data, error } = await supabase
+        .from("cart")
+        .insert({ 
+          user_id: user.id, 
+          product_id: productId, 
+          quantity,
+          selected_options: selectedOptions
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
