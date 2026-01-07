@@ -21,26 +21,28 @@ const PromoBanner = () => {
   // Check if scroll bar should be visible (require explicit admin setting)
   if (scrollEnabled !== true || dismissed || scrollTexts.length === 0) return null;
 
-  // Create a symmetrical block: Content + Separator
-  // This ensures the end of the block perfectly matches the start of the next block
-  // Use a safety check for separator to avoid undefined
-  const safeSeparator = scrollSeparator || "•";
-  const singleBlock = scrollTexts.join(` ${safeSeparator} `) + ` ${safeSeparator} `;
-
-  // Repeat the block 4 times to ensure we have enough content to fill the screen
-  // and to provide a clean loop point
-  const duplicatedContent = singleBlock.repeat(4);
+  // Combine texts with configured separator
+  const scrollContent = scrollTexts.join(` ${scrollSeparator} `);
 
   return (
     <div className="bg-secondary text-secondary-foreground py-2 text-xs md:text-sm font-medium tracking-wide relative overflow-hidden">
+      {/* Seamless infinite marquee using two identical content blocks */}
       <div
-        className="flex whitespace-nowrap animate-scroll"
+        className="flex whitespace-nowrap"
         style={{
-          animationDuration: `${scrollSpeed}s`,
+          animation: `marquee ${scrollSpeed}s linear infinite`,
         }}
       >
-        <span className="px-4">{duplicatedContent}</span>
+        {/* First copy */}
+        <span className="flex-shrink-0 px-4">
+          {scrollContent} {scrollSeparator}
+        </span>
+        {/* Second copy for seamless loop */}
+        <span className="flex-shrink-0 px-4">
+          {scrollContent} {scrollSeparator}
+        </span>
       </div>
+
       {showDismiss && (
         <button
           onClick={() => setDismissed(true)}
@@ -52,17 +54,13 @@ const PromoBanner = () => {
       )}
 
       <style>{`
-        @keyframes scroll {
+        @keyframes marquee {
           0% {
             transform: translateX(0);
           }
           100% {
-            /* Move exactly one block width (1/4 of total) to create seamless loop */
-            transform: translateX(-25%);
+            transform: translateX(-50%);
           }
-        }
-        .animate-scroll {
-          animation: scroll linear infinite;
         }
       `}</style>
     </div>
