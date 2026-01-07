@@ -170,9 +170,8 @@ const Categories = () => {
         <div className="relative flex items-center justify-center">
           <button
             onClick={handleScrollLeft}
-            className={`hidden md:flex absolute left-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
-              canScrollLeft ? "opacity-100" : "opacity-30 cursor-not-allowed"
-            }`}
+            className={`hidden md:flex absolute left-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${canScrollLeft ? "opacity-100" : "opacity-30 cursor-not-allowed"
+              }`}
             disabled={!canScrollLeft}
           >
             <ChevronLeft size={36} />
@@ -186,29 +185,29 @@ const Categories = () => {
             {displayCategories.map((category, index) => {
               // Merge individual item theme with display theme
               const itemTheme: CategoryTheme = { ...defaultItemTheme, ...category.theme };
-              
+
               // Get individual shape or fallback to global display
               const itemShape = itemTheme.display_shape || display.display_shape;
               const itemShapeClass = itemShape === "square" ? "rounded-none" : itemShape === "rounded" ? "rounded-xl" : "rounded-full";
-              
+
               // Get individual size or fallback
               const itemSize = itemTheme.image_size === "small" ? 120 : itemTheme.image_size === "large" ? 200 : (itemTheme.image_size === "medium" ? 160 : display.image_size);
-              
+
               // Get individual hover effect
               const hasScale = itemTheme.hover_effect === "lift" || display.show_hover_scale;
               const hasGlow = itemTheme.hover_effect === "glow";
               const hasBorder = itemTheme.hover_effect === "border";
-              
+
               // Get hover border color
               const hoverBorderColor = itemTheme.hover_border_color || display.hover_border_color;
-              
+
               // Get font size
               const itemFontSize = itemTheme.font_size || display.font_size;
               const fontSizeClass = itemFontSize === "large" ? "text-base" : itemFontSize === "base" ? "text-sm" : "text-xs";
-              
+
               // Get font weight
               const fontWeightClass = itemTheme.font_weight === "bold" ? "font-bold" : itemTheme.font_weight === "normal" ? "font-normal" : "font-medium";
-              
+
               return (
                 <Link
                   key={category.id}
@@ -216,10 +215,10 @@ const Categories = () => {
                   className="group cursor-pointer flex-shrink-0 snap-center"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div 
+                  <div
                     className={`mx-auto overflow-hidden border-4 border-card shadow-lg transition-all duration-300 bg-card flex items-center justify-center relative ${itemShapeClass} ${hasScale ? 'group-hover:scale-105' : ''} ${hasGlow ? 'group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)]' : ''}`}
-                    style={{ 
-                      width: `${itemSize}px`, 
+                    style={{
+                      width: `${itemSize}px`,
                       height: `${itemSize}px`,
                     }}
                     onMouseEnter={(e) => {
@@ -240,13 +239,13 @@ const Categories = () => {
                     />
                     {/* Overlay for text_position: overlay */}
                     {itemTheme.text_position === "overlay" && (
-                      <div 
+                      <div
                         className="absolute inset-0 flex items-center justify-center"
-                        style={{ 
+                        style={{
                           backgroundColor: `${itemTheme.overlay_color}${Math.round((itemTheme.overlay_opacity || 0) * 2.55).toString(16).padStart(2, '0')}`
                         }}
                       >
-                        <h3 
+                        <h3
                           className={`${fontWeightClass} tracking-wider text-white transition-colors ${fontSizeClass}`}
                           style={{ textTransform: display.text_transform }}
                         >
@@ -257,7 +256,7 @@ const Categories = () => {
                   </div>
                   {/* Text below image (default) */}
                   {itemTheme.text_position !== "overlay" && (
-                    <h3 
+                    <h3
                       className={`mt-4 ${fontWeightClass} tracking-wider text-muted-foreground group-hover:text-primary transition-colors ${fontSizeClass}`}
                       style={{ textTransform: display.text_transform }}
                     >
@@ -271,9 +270,8 @@ const Categories = () => {
 
           <button
             onClick={handleScrollRight}
-            className={`hidden md:flex absolute right-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
-              canScrollRight ? "opacity-100" : "opacity-30 cursor-not-allowed"
-            }`}
+            className={`hidden md:flex absolute right-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${canScrollRight ? "opacity-100" : "opacity-30 cursor-not-allowed"
+              }`}
             disabled={!canScrollRight}
           >
             <ChevronRight size={36} />

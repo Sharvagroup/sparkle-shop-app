@@ -23,7 +23,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Search, Calendar, Image, Tag, Type, Paintbrush } from "lucide-react";
 import { useOffers, useCreateOffer, useUpdateOffer, useDeleteOffer, Offer, OfferInsert, OfferType } from "@/hooks/useOffers";
@@ -40,15 +46,16 @@ const Offers = () => {
   const deleteOffer = useDeleteOffer();
   const updateSetting = useUpdateSiteSetting();
 
-  const { data: scrollEnabledData } = useSiteSetting<boolean | { enabled: boolean }>("scroll_offer_enabled");
-  const { data: scrollSpeedData } = useSiteSetting<string | { speed: string }>("scroll_offer_speed");
-  // Handle both boolean and object formats for robustness
-  const scrollEnabled = typeof scrollEnabledData === 'boolean' 
-    ? scrollEnabledData 
-    : (scrollEnabledData?.enabled ?? true);
-  const scrollSpeed = typeof scrollSpeedData === 'string'
-    ? scrollSpeedData
-    : (scrollSpeedData?.speed ?? "medium");
+  const { data: scrollEnabledData } = useSiteSetting<{ enabled: boolean } | undefined>("scroll_offer_enabled");
+  const { data: scrollSpeedData } = useSiteSetting<{ seconds: number } | undefined>("scroll_offer_speed");
+  const { data: scrollSeparatorData } = useSiteSetting<{ separator: string } | undefined>("scroll_offer_separator");
+  const { data: scrollDismissData } = useSiteSetting<{ showDismiss: boolean } | undefined>("scroll_offer_dismiss");
+
+  // No fallbacks - require explicit admin configuration
+  const scrollEnabled = scrollEnabledData?.enabled;
+  const scrollSpeed = scrollSpeedData?.seconds ?? 25;
+  const scrollSeparator = scrollSeparatorData?.separator ?? "•";
+  const scrollShowDismiss = scrollDismissData?.showDismiss ?? true;
 
   const [activeTab, setActiveTab] = useState<string>("offer_banner");
   const [search, setSearch] = useState("");
@@ -83,7 +90,7 @@ const Offers = () => {
   const handleSubmit = async (data: OfferInsert) => {
     // Set offer_type based on active tab
     const offerData = { ...data, offer_type: activeTab as OfferType };
-    
+
     if (editingOffer) {
       await updateOffer.mutateAsync({ id: editingOffer.id, ...offerData });
     } else {
@@ -107,18 +114,20 @@ const Offers = () => {
     return true;
   };
 
-  const handleScrollEnabledChange = (enabled: boolean) => {
-    updateSetting.mutate({ key: "scroll_offer_enabled", value: { enabled }, category: "offers" });
+  const handleScrollEnabledChange = (enabled: string) => {
+    updateSetting.mutate({ key: "scroll_offer_enabled", value: { enabled: enabled === "enabled" }, category: "offers" });
   };
 
-  const handleScrollSpeedChange = (value: number[]) => {
-    const speeds = ["slow", "medium", "fast"];
-    updateSetting.mutate({ key: "scroll_offer_speed", value: { speed: speeds[value[0]] }, category: "offers" });
+  const handleScrollSpeedChange = (seconds: number) => {
+    updateSetting.mutate({ key: "scroll_offer_speed", value: { seconds }, category: "offers" });
   };
 
-  const getSpeedIndex = () => {
-    const speeds = ["slow", "medium", "fast"];
-    return speeds.indexOf(scrollSpeed);
+  const handleScrollSeparatorChange = (separator: string) => {
+    updateSetting.mutate({ key: "scroll_offer_separator", value: { separator }, category: "offers" });
+  };
+
+  const handleScrollDismissChange = (showDismiss: boolean) => {
+    updateSetting.mutate({ key: "scroll_offer_dismiss", value: { showDismiss }, category: "offers" });
   };
 
   const renderOfferTable = () => (
@@ -323,37 +332,77 @@ const Offers = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Enable/Disable Toggle */}
+              {/* Enable/Disable Dropdown */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="scroll-enabled">Enable Scroll Bar</Label>
                   <p className="text-sm text-muted-foreground">Show scrolling offers on the top of the page</p>
                 </div>
-                <Switch
-                  id="scroll-enabled"
-                  checked={scrollEnabled}
-                  onCheckedChange={handleScrollEnabledChange}
-                />
+                <Select
+                  value={scrollEnabled === undefined ? "" : scrollEnabled ? "enabled" : "disabled"}
+                  onValueChange={handleScrollEnabledChange}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Not Set" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="enabled">Enabled</SelectItem>
+                    <SelectItem value="disabled">Disabled</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Speed Slider */}
-              <div className="space-y-3">
+              {/* Speed Input (seconds) */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Scroll Speed</Label>
-                  <span className="text-sm text-muted-foreground capitalize">{scrollSpeed}</span>
+                  <Label>Scroll Speed (seconds)</Label>
+                  <span className="text-sm text-muted-foreground">{scrollSpeed}s per cycle</span>
                 </div>
-                <Slider
-                  value={[getSpeedIndex() >= 0 ? getSpeedIndex() : 1]}
-                  onValueChange={handleScrollSpeedChange}
-                  max={2}
-                  step={1}
+                <Input
+                  type="number"
+                  min={5}
+                  max={120}
+                  value={scrollSpeed}
+                  onChange={(e) => handleScrollSpeedChange(parseInt(e.target.value) || 25)}
                   className="w-full"
                 />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Slow</span>
-                  <span>Medium</span>
-                  <span>Fast</span>
+                <p className="text-xs text-muted-foreground">
+                  Duration for one complete scroll cycle (5-120 seconds)
+                </p>
+              </div>
+
+              {/* Separator Dropdown */}
+              <div className="space-y-2">
+                <Label>Text Separator</Label>
+                <Select value={scrollSeparator} onValueChange={handleScrollSeparatorChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="•">• (Bullet)</SelectItem>
+                    <SelectItem value="|">| (Pipe)</SelectItem>
+                    <SelectItem value="—">— (Dash)</SelectItem>
+                    <SelectItem value="★">★ (Star)</SelectItem>
+                    <SelectItem value="⬥">⬥ (Diamond)</SelectItem>
+                    <SelectItem value="✦">✦ (Sparkle)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Character used to separate offer texts
+                </p>
+              </div>
+
+              {/* Dismiss Button Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="scroll-dismiss">Show Dismiss Button</Label>
+                  <p className="text-sm text-muted-foreground">Allow users to close the scroll bar with an X button</p>
                 </div>
+                <Switch
+                  id="scroll-dismiss"
+                  checked={scrollShowDismiss}
+                  onCheckedChange={handleScrollDismissChange}
+                />
               </div>
 
               {/* Preview */}

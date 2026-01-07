@@ -50,33 +50,33 @@ const Offers = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {offers.map((offer) => {
             const theme: OfferTheme = { ...defaultOfferTheme, ...offer.theme };
-            
+
             // Get card style classes
-            const cardStyleClass = theme.card_style === "bordered" 
-              ? "border-2 border-border" 
-              : theme.card_style === "minimal" 
-              ? "border-0" 
-              : "shadow-lg";
-            
+            const cardStyleClass = theme.card_style === "bordered"
+              ? "border-2 border-border"
+              : theme.card_style === "minimal"
+                ? "border-0"
+                : "shadow-lg";
+
             // Get content position classes (use left/center/right from OfferTheme)
-            const contentPositionClass = theme.content_position === "left" 
-              ? "justify-start" 
-              : theme.content_position === "right" 
-              ? "justify-end" 
-              : "justify-center";
-            
+            const contentPositionClass = theme.content_position === "left"
+              ? "justify-start"
+              : theme.content_position === "right"
+                ? "justify-end"
+                : "justify-center";
+
             // Build overlay gradient
             const overlayOpacity = (theme.overlay_opacity || 40) / 100;
             const overlayColor = theme.overlay_color || "#000000";
-            const overlayStyle = theme.edge_fade 
+            const overlayStyle = theme.edge_fade
               ? `linear-gradient(to bottom, transparent, ${overlayColor}${Math.round(overlayOpacity * 255).toString(16).padStart(2, '0')} 70%)`
               : `linear-gradient(to top, ${overlayColor}${Math.round(overlayOpacity * 255).toString(16).padStart(2, '0')}, ${overlayColor}${Math.round(overlayOpacity * 0.3 * 255).toString(16).padStart(2, '0')} 50%, transparent)`;
-            
+
             // Get button shape class (rounded or box)
-            const buttonShapeClass = theme.button_shape === "box" 
-              ? "rounded-none" 
+            const buttonShapeClass = theme.button_shape === "box"
+              ? "rounded-none"
               : "rounded-lg";
-            
+
             return (
               <button
                 key={offer.id}
@@ -87,22 +87,22 @@ const Offers = () => {
                   src={offer.image_url}
                   alt={offer.title}
                   className="w-full h-full transition-transform duration-500 group-hover:scale-110"
-                  style={{ 
+                  style={{
                     objectFit: theme.image_fit || "cover",
                     transform: `scale(${(theme.image_zoom || 100) / 100})`,
                   }}
                 />
                 <div className="absolute inset-0" style={{ background: overlayStyle }} />
                 <div className={`absolute inset-0 flex flex-col ${contentPositionClass} p-4 text-left`}>
-                  <h3 
+                  <h3
                     className="font-display font-bold text-lg md:text-xl leading-tight"
                     style={{ color: theme.text_color || "#ffffff" }}
                   >
                     {offer.title}
                   </h3>
                   {offer.subtitle && (
-                    <p 
-                      className="text-sm mt-1" 
+                    <p
+                      className="text-sm mt-1"
                       style={{ color: `${theme.text_color || "#ffffff"}cc` }}
                     >
                       {offer.subtitle}
