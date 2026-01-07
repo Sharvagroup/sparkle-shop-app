@@ -58,8 +58,10 @@ const CartConfirmationDialog = ({
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddonState[]>([]);
 
   // Filter options to only show enabled ones for this product
+  // Exclude quantity-related options since we have a dedicated quantity input
   const activeOptions = productOptions.filter(
-    (opt) => enabledOptionIds.includes(opt.id) || opt.is_mandatory
+    (opt) => (enabledOptionIds.includes(opt.id) || opt.is_mandatory) && 
+             opt.name.toLowerCase() !== 'quantity'
   );
 
   const hasAddons = productAddons.length > 0;
