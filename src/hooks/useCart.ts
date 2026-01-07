@@ -63,7 +63,7 @@ export const useAddToCart = () => {
     }) => {
       if (!user) throw new Error("Please sign in to add items to cart");
 
-      // Check if item already exists in cart with same options
+      // Check if item already exists in cart
       const { data: existingItem } = await supabase
         .from("cart")
         .select("id, quantity, selected_options")
@@ -71,11 +71,17 @@ export const useAddToCart = () => {
         .eq("product_id", productId)
         .maybeSingle();
 
-      if (existingItem && JSON.stringify(existingItem.selected_options || {}) === JSON.stringify(selectedOptions)) {
-        // Update quantity if options match
+      if (existingItem) {
+        // Update existing item - add quantity and replace options with new selection
+        const sameOptions = JSON.stringify(existingItem.selected_options || {}) === JSON.stringify(selectedOptions);
+        const newQuantity = sameOptions ? existingItem.quantity + quantity : quantity;
+        
         const { data, error } = await supabase
           .from("cart")
-          .update({ quantity: existingItem.quantity + quantity })
+          .update({ 
+            quantity: newQuantity,
+            selected_options: selectedOptions
+          })
           .eq("id", existingItem.id)
           .select()
           .single();
