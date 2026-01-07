@@ -21,10 +21,15 @@ const PromoBanner = () => {
   // Check if scroll bar should be visible (require explicit admin setting)
   if (scrollEnabled !== true || dismissed || scrollTexts.length === 0) return null;
 
-  // Combine texts with configured separator
-  const scrollContent = scrollTexts.join(` ${scrollSeparator} `);
-  // Duplicate for seamless loop
-  const duplicatedContent = `${scrollContent} ${scrollSeparator} ${scrollContent} ${scrollSeparator} ${scrollContent}`;
+  // Create a symmetrical block: Content + Separator
+  // This ensures the end of the block perfectly matches the start of the next block
+  // Use a safety check for separator to avoid undefined
+  const safeSeparator = scrollSeparator || "•";
+  const singleBlock = scrollTexts.join(` ${safeSeparator} `) + ` ${safeSeparator} `;
+
+  // Repeat the block 4 times to ensure we have enough content to fill the screen
+  // and to provide a clean loop point
+  const duplicatedContent = singleBlock.repeat(4);
 
   return (
     <div className="bg-secondary text-secondary-foreground py-2 text-xs md:text-sm font-medium tracking-wide relative overflow-hidden">
@@ -52,7 +57,8 @@ const PromoBanner = () => {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(-33.33%);
+            /* Move exactly one block width (1/4 of total) to create seamless loop */
+            transform: translateX(-25%);
           }
         }
         .animate-scroll {
