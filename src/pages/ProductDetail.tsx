@@ -12,6 +12,8 @@ import {
   Check,
   Truck,
   Loader2,
+  Plus,
+  Minus,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -36,6 +38,14 @@ import { toast } from "@/hooks/use-toast";
 import ReviewForm from "@/components/ui/ReviewForm";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -53,6 +63,34 @@ const ProductDetail = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [buyNowMode, setBuyNowMode] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
+
+  // Filter options enabled for this product
+  const enabledOptionIds = (product?.enabled_options as string[]) || [];
+  const activeOptions = productOptions.filter(
+    (opt) => enabledOptionIds.includes(opt.id) || opt.is_mandatory
+  );
+
+  // Calculate dynamic price based on options
+  const calculatePrice = () => {
+    if (!product) return 0;
+    let unitPrice = product.price;
+    
+    if (product.pricing_by_option_id && product.base_unit_value && product.base_unit_value > 0) {
+      const selectedValue = selectedOptions[product.pricing_by_option_id];
+      if (selectedValue && typeof selectedValue === 'number') {
+        unitPrice = (product.price / product.base_unit_value) * selectedValue;
+      }
+    }
+    
+    return unitPrice * quantity;
+  };
+
+  const calculatedPrice = calculatePrice();
+  const pricingOption = product?.pricing_by_option_id 
+    ? productOptions.find(opt => opt.id === product.pricing_by_option_id)
+    : null;
 
   // Check if product has options or addons that require confirmation dialog
   const hasOptionsOrAddons = 
@@ -415,7 +453,124 @@ const ProductDetail = () => {
 
               <div className="h-px bg-border w-full mb-8"></div>
 
-              {/* Product Options */}
+              {/* Dynamic Options Selector */}
+              {activeOptions.length > 0 && (
+                <div className="space-y-4 mb-8">
+                  {activeOptions.map((option) => (
+                    <div key={option.id} className="space-y-2">
+                      <span className="text-sm font-bold uppercase tracking-wide text-foreground block">
+                        {option.name}
+                        {option.is_mandatory && <span className="text-destructive ml-1">*</span>}
+                        {option.unit && <span className="text-muted-foreground font-normal ml-1">({option.unit})</span>}
+                      </span>
+
+                      {option.type === "number" && (
+                        <Input
+                          type="number"
+                          min={option.min_value ?? undefined}
+                          max={option.max_value ?? undefined}
+                          step={option.step_value ?? 1}
+                          value={selectedOptions[option.id] ?? option.min_value ?? ""}
+                          onChange={(e) =>
+                            setSelectedOptions((prev) => ({ ...prev, [option.id]: Number(e.target.value) }))
+                          }
+                          placeholder={`Enter ${option.name.toLowerCase()}`}
+                          className="max-w-[200px]"
+                        />
+                      )}
+
+                      {option.type === "select" && (
+                        <Select
+                          value={selectedOptions[option.id] || ""}
+                          onValueChange={(value) =>
+                            setSelectedOptions((prev) => ({ ...prev, [option.id]: value }))
+                          }
+                        >
+                          <SelectTrigger className="max-w-[200px]">
+                            <SelectValue placeholder={`Select ${option.name.toLowerCase()}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {option.select_options?.map((opt) => (
+                              <SelectItem key={opt} value={opt}>
+                                {opt}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+
+                      {option.type === "text" && (
+                        <Input
+                          value={selectedOptions[option.id] || ""}
+                          onChange={(e) =>
+                            setSelectedOptions((prev) => ({ ...prev, [option.id]: e.target.value }))
+                          }
+                          placeholder={`Enter ${option.name.toLowerCase()}`}
+                          className="max-w-[300px]"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Quantity Selector */}
+              <div className="mb-6">
+                <span className="text-sm font-bold uppercase tracking-wide text-foreground mb-2 block">
+                  Quantity
+                </span>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                    className="w-20 text-center"
+                    min={1}
+                    max={product.stock_quantity || 999}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity(Math.min(product.stock_quantity || 999, quantity + 1))}
+                    disabled={quantity >= (product.stock_quantity || 999)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Calculated Price Display */}
+              {(activeOptions.length > 0 || quantity > 1) && calculatedPrice > 0 && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-8">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {pricingOption && selectedOptions[product.pricing_by_option_id!] && (
+                        <>
+                          {selectedOptions[product.pricing_by_option_id!]}{pricingOption.unit || ''} × {quantity}
+                        </>
+                      )}
+                      {!pricingOption && quantity > 1 && (
+                        <>Qty: {quantity}</>
+                      )}
+                    </span>
+                    <span className="text-xl font-bold text-primary">
+                      {formatPrice(calculatedPrice)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Product Info Section */}
               <div className="space-y-6 mb-8">
                 {/* Material */}
                 {product.material && (
@@ -695,6 +850,8 @@ const ProductDetail = () => {
           enabledOptionIds={product.enabled_options || []}
           onConfirm={handleConfirmAddToCart}
           isLoading={isAddingToCart}
+          initialQuantity={quantity}
+          initialOptions={selectedOptions}
         />
       )}
     </div>
