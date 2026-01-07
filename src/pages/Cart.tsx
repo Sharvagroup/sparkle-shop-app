@@ -66,12 +66,29 @@ const Cart = () => {
     removeAddon.mutate({ id: addonId, cart_item_id: cartItemId });
   };
 
-  // Calculate subtotal including addons
+  // Calculate dynamic item price based on pricing strategy
+  const calculateItemPrice = (item: typeof cartItems[0]) => {
+    const product = item.product;
+    if (!product) return 0;
+    
+    let unitPrice = product.price;
+    
+    if (product.pricing_by_option_id && product.base_unit_value && product.base_unit_value > 0) {
+      const selectedValue = item.selected_options?.[product.pricing_by_option_id];
+      if (selectedValue && typeof selectedValue === 'number') {
+        unitPrice = (product.price / product.base_unit_value) * selectedValue;
+      }
+    }
+    
+    return unitPrice * item.quantity;
+  };
+
+  // Calculate subtotal including addons with dynamic pricing
   const subtotal = useMemo(() => {
     let total = 0;
     cartItems.forEach((item) => {
-      // Main product price
-      total += (item.product?.price || 0) * item.quantity;
+      // Main product price with dynamic pricing
+      total += calculateItemPrice(item);
       // Add addons for this item
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
@@ -184,7 +201,7 @@ const Cart = () => {
                   {cartItems.map((item) => {
                     const itemAddons = addonsByCartItem[item.id] || [];
                     const formattedOptions = formatOptions(item.selected_options);
-                    const itemTotal = (item.product?.price || 0) * item.quantity;
+                    const itemTotal = calculateItemPrice(item);
                     const addonsTotal = itemAddons.reduce(
                       (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
                       0
