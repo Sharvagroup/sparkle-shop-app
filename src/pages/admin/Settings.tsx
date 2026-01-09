@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles } from "lucide-react";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Search } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
@@ -61,6 +61,21 @@ interface CommerceSettings {
   taxRate: number;
   currencyCode: string;
   currencySymbol: string;
+}
+
+interface SearchSettings {
+  enabled: boolean;
+  placeholder: string;
+  showRecentSearches: boolean;
+  recentSearchLimit: number;
+  showProductSuggestions: boolean;
+  suggestionLimit: number;
+  showCategorySuggestions: boolean;
+  showCollectionSuggestions: boolean;
+  minSearchLength: number;
+  highlightMatches: boolean;
+  searchInDescription: boolean;
+  searchInMaterial: boolean;
 }
 
 const fontOptions = [
@@ -146,6 +161,19 @@ const Settings = () => {
   const [defaultSort, setDefaultSort] = useState("featured");
   const [newArrivalDays, setNewArrivalDays] = useState(30);
 
+  // Search Settings
+  const [searchEnabled, setSearchEnabled] = useState(true);
+  const [searchPlaceholder, setSearchPlaceholder] = useState("Search for jewellery...");
+  const [showRecentSearches, setShowRecentSearches] = useState(true);
+  const [recentSearchLimit, setRecentSearchLimit] = useState(5);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(true);
+  const [suggestionLimit, setSuggestionLimit] = useState(6);
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(true);
+  const [showCollectionSuggestions, setShowCollectionSuggestions] = useState(true);
+  const [minSearchLength, setMinSearchLength] = useState(2);
+  const [highlightMatches, setHighlightMatches] = useState(true);
+  const [searchInDescription, setSearchInDescription] = useState(true);
+  const [searchInMaterial, setSearchInMaterial] = useState(true);
 
   const [uploading, setUploading] = useState<string | null>(null);
 
@@ -223,6 +251,21 @@ const Settings = () => {
         setProductsPerPage((commerceData as any).productsPerPage || 12);
         setDefaultSort((commerceData as any).defaultSort || "featured");
         setNewArrivalDays((commerceData as any).newArrivalDays || 30);
+      }
+      const searchData = settings.search as unknown as SearchSettings | undefined;
+      if (searchData) {
+        setSearchEnabled(searchData.enabled !== false);
+        setSearchPlaceholder(searchData.placeholder || "Search for jewellery...");
+        setShowRecentSearches(searchData.showRecentSearches !== false);
+        setRecentSearchLimit(searchData.recentSearchLimit || 5);
+        setShowProductSuggestions(searchData.showProductSuggestions !== false);
+        setSuggestionLimit(searchData.suggestionLimit || 6);
+        setShowCategorySuggestions(searchData.showCategorySuggestions !== false);
+        setShowCollectionSuggestions(searchData.showCollectionSuggestions !== false);
+        setMinSearchLength(searchData.minSearchLength || 2);
+        setHighlightMatches(searchData.highlightMatches !== false);
+        setSearchInDescription(searchData.searchInDescription !== false);
+        setSearchInMaterial(searchData.searchInMaterial !== false);
       }
 
     }
@@ -367,6 +410,26 @@ const Settings = () => {
     });
   };
 
+  const saveSearch = async () => {
+    await updateSetting.mutateAsync({
+      key: "search",
+      value: {
+        enabled: searchEnabled,
+        placeholder: searchPlaceholder,
+        showRecentSearches,
+        recentSearchLimit,
+        showProductSuggestions,
+        suggestionLimit,
+        showCategorySuggestions,
+        showCollectionSuggestions,
+        minSearchLength,
+        highlightMatches,
+        searchInDescription,
+        searchInMaterial,
+      },
+      category: "search",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -385,7 +448,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -394,6 +457,7 @@ const Settings = () => {
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
           <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
+          <TabsTrigger value="search" className="gap-2"><Search className="h-4 w-4" /> Search</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -1109,6 +1173,180 @@ const Settings = () => {
                 <p className="text-xs text-muted-foreground">
                   {freeShippingThreshold > 0 && `Free shipping on orders over ${currencySymbol}${freeShippingThreshold}`}
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="search">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Search Settings</CardTitle>
+                <CardDescription>Configure the search bar behavior and suggestions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Search Bar Settings */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium">Search Bar</h4>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Enable Search Bar</Label>
+                      <p className="text-xs text-muted-foreground">Show the search bar in the header</p>
+                    </div>
+                    <Switch checked={searchEnabled} onCheckedChange={setSearchEnabled} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Placeholder Text</Label>
+                    <Input value={searchPlaceholder} onChange={(e) => setSearchPlaceholder(e.target.value)} placeholder="Search for jewellery..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Minimum Search Length</Label>
+                    <Select value={minSearchLength.toString()} onValueChange={(v) => setMinSearchLength(parseInt(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 character</SelectItem>
+                        <SelectItem value="2">2 characters</SelectItem>
+                        <SelectItem value="3">3 characters</SelectItem>
+                        <SelectItem value="4">4 characters</SelectItem>
+                        <SelectItem value="5">5 characters</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Characters required before showing suggestions</p>
+                  </div>
+                </div>
+
+                {/* Suggestions Settings */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium">Suggestions</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Show Product Suggestions</Label>
+                      <p className="text-xs text-muted-foreground">Display product matches in the dropdown</p>
+                    </div>
+                    <Switch checked={showProductSuggestions} onCheckedChange={setShowProductSuggestions} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Suggestion Limit</Label>
+                    <Select value={suggestionLimit.toString()} onValueChange={(v) => setSuggestionLimit(parseInt(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 suggestions</SelectItem>
+                        <SelectItem value="4">4 suggestions</SelectItem>
+                        <SelectItem value="5">5 suggestions</SelectItem>
+                        <SelectItem value="6">6 suggestions</SelectItem>
+                        <SelectItem value="8">8 suggestions</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Show Categories</Label>
+                      <p className="text-xs text-muted-foreground">Include category matches in suggestions</p>
+                    </div>
+                    <Switch checked={showCategorySuggestions} onCheckedChange={setShowCategorySuggestions} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Show Collections</Label>
+                      <p className="text-xs text-muted-foreground">Include collection matches in suggestions</p>
+                    </div>
+                    <Switch checked={showCollectionSuggestions} onCheckedChange={setShowCollectionSuggestions} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Highlight Matches</Label>
+                      <p className="text-xs text-muted-foreground">Highlight matching text in suggestions</p>
+                    </div>
+                    <Switch checked={highlightMatches} onCheckedChange={setHighlightMatches} />
+                  </div>
+                </div>
+
+                {/* Search Scope Settings */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium">Search Scope</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Search in Descriptions</Label>
+                      <p className="text-xs text-muted-foreground">Include product descriptions in search</p>
+                    </div>
+                    <Switch checked={searchInDescription} onCheckedChange={setSearchInDescription} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Search in Materials</Label>
+                      <p className="text-xs text-muted-foreground">Include product materials in search</p>
+                    </div>
+                    <Switch checked={searchInMaterial} onCheckedChange={setSearchInMaterial} />
+                  </div>
+                </div>
+
+                {/* Recent Searches Settings */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium">Recent Searches</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Show Recent Searches</Label>
+                      <p className="text-xs text-muted-foreground">Display user's recent searches</p>
+                    </div>
+                    <Switch checked={showRecentSearches} onCheckedChange={setShowRecentSearches} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Recent Search Limit</Label>
+                    <Select value={recentSearchLimit.toString()} onValueChange={(v) => setRecentSearchLimit(parseInt(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 searches</SelectItem>
+                        <SelectItem value="5">5 searches</SelectItem>
+                        <SelectItem value="7">7 searches</SelectItem>
+                        <SelectItem value="10">10 searches</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Maximum recent searches to store</p>
+                  </div>
+                </div>
+
+                <Button onClick={saveSearch} disabled={updateSetting.isPending} className="gap-2">
+                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Search Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>How search will behave</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="p-4 bg-muted rounded-lg space-y-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={searchPlaceholder}
+                      disabled
+                      className="w-full bg-background border border-border rounded-full py-2 px-4 pr-10 text-sm"
+                    />
+                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="text-xs space-y-1 text-muted-foreground">
+                    <p>• Suggestions appear after {minSearchLength} character{minSearchLength > 1 ? "s" : ""}</p>
+                    <p>• Shows up to {suggestionLimit} product suggestions</p>
+                    {showCategorySuggestions && <p>• Category suggestions enabled</p>}
+                    {showCollectionSuggestions && <p>• Collection suggestions enabled</p>}
+                    {showRecentSearches && <p>• Shows {recentSearchLimit} recent searches</p>}
+                    {searchInDescription && <p>• Searches in descriptions</p>}
+                    {searchInMaterial && <p>• Searches in materials</p>}
+                    {highlightMatches && <p>• Match highlighting enabled</p>}
+                  </div>
+                </div>
+                {!searchEnabled && (
+                  <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-xs">
+                    Search bar is currently disabled
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
