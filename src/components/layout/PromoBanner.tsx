@@ -61,7 +61,7 @@ const PromoBanner = () => {
   const scrollContent = scrollTexts.join(` ${separator} `);
 
   return (
-    <div className="bg-secondary text-secondary-foreground py-2 text-xs md:text-sm font-medium tracking-wide relative overflow-hidden">
+    <div className="promo-banner-container bg-secondary text-secondary-foreground py-2 text-xs md:text-sm font-medium tracking-wide relative overflow-hidden">
       <div className="marquee-wrapper" style={{ animationDuration }}>
         <span ref={contentRef} className="marquee-content">{scrollContent}</span>
         <span className="marquee-content" aria-hidden="true">{scrollContent}</span>
@@ -83,10 +83,13 @@ const PromoBanner = () => {
           width: max-content;
         }
         .marquee-content {
-          padding: 0 2rem;
+          padding-right: 100vw;
           white-space: nowrap;
           animation: marquee-slide linear infinite;
           animation-duration: inherit;
+        }
+        .promo-banner-container:hover .marquee-content {
+          animation-play-state: paused;
         }
         @keyframes marquee-slide {
           0% { transform: translateX(0); }
