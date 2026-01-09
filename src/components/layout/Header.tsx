@@ -19,14 +19,14 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types for dynamic navigation
-type NavItemType =
-  | "static"
-  | "category_dropdown"
-  | "collection_dropdown"
-  | "new_in_dropdown"
-  | "best_sellers_dropdown"
-  | "new_arrivals_dropdown"
-  | "celebrity_specials_dropdown"
+type NavItemType = 
+  | "static" 
+  | "category_dropdown" 
+  | "collection_dropdown" 
+  | "new_in_dropdown" 
+  | "best_sellers_dropdown" 
+  | "new_arrivals_dropdown" 
+  | "celebrity_specials_dropdown" 
   | "announcements_dropdown";
 
 interface NavChild {
@@ -84,10 +84,10 @@ const Header = () => {
           let children: { label: string; href: string }[] = [];
 
           // Filter categories/collections that have products
-          const categoriesWithProducts = categories.filter(cat =>
+          const categoriesWithProducts = categories.filter(cat => 
             allProducts.some(p => p.category?.slug === cat.slug)
           );
-          const collectionsWithProducts = collections.filter(col =>
+          const collectionsWithProducts = collections.filter(col => 
             allProducts.some(p => p.collection?.slug === col.slug)
           );
 

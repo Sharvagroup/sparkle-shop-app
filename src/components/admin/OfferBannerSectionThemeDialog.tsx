@@ -216,7 +216,7 @@ export const OfferBannerSectionThemeDialog = ({
                 onCheckedChange={(checked) => setTheme({ ...theme, overlay_enabled: checked })}
               />
             </div>
-
+            
             {theme.overlay_enabled && (
               <>
                 <div className="space-y-2">
@@ -235,7 +235,7 @@ export const OfferBannerSectionThemeDialog = ({
                     />
                   </div>
                 </div>
-
+                
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <Label className="text-sm">Overlay Opacity</Label>
@@ -257,22 +257,23 @@ export const OfferBannerSectionThemeDialog = ({
           <div className="space-y-2">
             <Label>Preview</Label>
             <div className="border rounded-lg overflow-hidden">
-              <div
+              <div 
                 className="relative bg-gradient-to-r from-primary/20 to-secondary/20"
                 style={{ height: theme.section_height === "small" ? "80px" : theme.section_height === "large" ? "120px" : "100px" }}
               >
                 {theme.overlay_enabled && (
-                  <div
+                  <div 
                     className="absolute inset-0"
                     style={{
                       background: `linear-gradient(to ${theme.content_position === "right" ? "left" : "right"}, ${theme.overlay_color}${Math.round(theme.overlay_opacity * 2.55).toString(16).padStart(2, '0')}, transparent)`
                     }}
                   />
                 )}
-                <div
-                  className={`absolute inset-0 flex items-center ${theme.content_position === "center" ? "justify-center text-center" :
-                      theme.content_position === "right" ? "justify-end text-right" : "justify-start"
-                    }`}
+                <div 
+                  className={`absolute inset-0 flex items-center ${
+                    theme.content_position === "center" ? "justify-center text-center" : 
+                    theme.content_position === "right" ? "justify-end text-right" : "justify-start"
+                  }`}
                 >
                   <div className="px-4">
                     <div className="text-xs font-semibold text-foreground">Sample Title</div>

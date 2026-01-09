@@ -227,13 +227,13 @@ export const SectionThemeDialog = ({
           <div className="space-y-2">
             <Label>Preview Grid</Label>
             <div className="border rounded-lg p-4 bg-muted/30">
-              <div
+              <div 
                 className="grid gap-2"
                 style={{ gridTemplateColumns: `repeat(${Math.min(theme.columns, 6)}, 1fr)` }}
               >
                 {Array.from({ length: Math.min(theme.items_to_show, 12) }).map((_, i) => (
-                  <div
-                    key={i}
+                  <div 
+                    key={i} 
                     className="aspect-square bg-primary/20 rounded flex items-center justify-center text-xs text-muted-foreground"
                   >
                     {i + 1}

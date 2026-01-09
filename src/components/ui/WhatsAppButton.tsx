@@ -7,7 +7,7 @@ interface ContactWithMessage extends ContactSettings {
 
 const WhatsAppButton = () => {
   const { data: contact } = useSiteSetting<ContactWithMessage>("contact");
-
+  
   const whatsappNumber = contact?.whatsapp || contact?.phone || "+919876543210";
   const cleanPhone = whatsappNumber.replace(/\D/g, "");
   const defaultMessage = contact?.whatsappMessage || "Hello! I have a question about your jewelry collection.";

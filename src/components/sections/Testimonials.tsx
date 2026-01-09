@@ -30,7 +30,7 @@ const Testimonials = () => {
   const displayReviews = reviews.slice(0, theme.items_to_show);
   const reviewsPerPage = Math.min(theme.columns, 3);
   const totalPages = Math.ceil(displayReviews.length / reviewsPerPage);
-
+  
   const currentReviews = displayReviews.slice(
     currentPage * reviewsPerPage,
     (currentPage + 1) * reviewsPerPage
@@ -39,11 +39,11 @@ const Testimonials = () => {
   // Auto slide effect
   useEffect(() => {
     if (!theme.auto_slide || totalPages <= 1) return;
-
+    
     const interval = setInterval(() => {
       setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
     }, theme.auto_slide_speed * 1000);
-
+    
     return () => clearInterval(interval);
   }, [theme.auto_slide, theme.auto_slide_speed, totalPages]);
 
@@ -143,10 +143,11 @@ const Testimonials = () => {
               <button
                 key={index}
                 onClick={() => goToPage(index)}
-                className={`h-2 rounded-full transition-all ${index === currentPage
+                className={`h-2 rounded-full transition-all ${
+                  index === currentPage
                     ? "w-8 bg-primary"
                     : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
+                }`}
                 aria-label={`Go to page ${index + 1}`}
               />
             ))}
