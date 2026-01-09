@@ -42,6 +42,8 @@ const Offers = () => {
 
   const { data: scrollEnabledData } = useSiteSetting<boolean | { enabled: boolean }>("scroll_offer_enabled");
   const { data: scrollSpeedData } = useSiteSetting<string | { speed: string }>("scroll_offer_speed");
+  const { data: scrollSeparatorData } = useSiteSetting<{ separator: string }>("scroll_offer_separator");
+  const { data: scrollDismissData } = useSiteSetting<{ showDismiss: boolean }>("scroll_offer_dismiss");
   // Handle both boolean and object formats for robustness
   const scrollEnabled = typeof scrollEnabledData === 'boolean' 
     ? scrollEnabledData 
@@ -49,6 +51,8 @@ const Offers = () => {
   const scrollSpeed = typeof scrollSpeedData === 'string'
     ? scrollSpeedData
     : (scrollSpeedData?.speed ?? "medium");
+  const scrollSeparator = scrollSeparatorData?.separator ?? "•";
+  const showDismiss = scrollDismissData?.showDismiss ?? true;
 
   const [activeTab, setActiveTab] = useState<string>("offer_banner");
   const [search, setSearch] = useState("");
@@ -64,11 +68,11 @@ const Offers = () => {
     return matchesSearch && matchesType;
   });
 
-  // Get scroll preview text
+  // Get scroll preview text with current separator
   const scrollPreviewText = offers
     .filter(o => o.is_active)
     .map(o => o.discount_code ? `${o.title} - Use code: ${o.discount_code}` : o.title)
-    .join(" • ");
+    .join(` ${scrollSeparator} `);
 
   const handleCreate = () => {
     setEditingOffer(null);
@@ -114,6 +118,14 @@ const Offers = () => {
   const handleScrollSpeedChange = (value: number[]) => {
     const speeds = ["slow", "medium", "fast"];
     updateSetting.mutate({ key: "scroll_offer_speed", value: { speed: speeds[value[0]] }, category: "offers" });
+  };
+
+  const handleSeparatorChange = (separator: string) => {
+    updateSetting.mutate({ key: "scroll_offer_separator", value: { separator }, category: "offers" });
+  };
+
+  const handleDismissChange = (showDismiss: boolean) => {
+    updateSetting.mutate({ key: "scroll_offer_dismiss", value: { showDismiss }, category: "offers" });
   };
 
   const getSpeedIndex = () => {
@@ -354,6 +366,34 @@ const Offers = () => {
                   <span>Medium</span>
                   <span>Fast</span>
                 </div>
+              </div>
+
+              {/* Separator Setting */}
+              <div className="space-y-2">
+                <Label>Separator Character</Label>
+                <Input
+                  value={scrollSeparator}
+                  onChange={(e) => handleSeparatorChange(e.target.value)}
+                  placeholder="•"
+                  maxLength={3}
+                  className="max-w-32"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Character used to separate multiple offers in the scroll bar
+                </p>
+              </div>
+
+              {/* Dismiss Button Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="scroll-dismiss">Show Dismiss Button</Label>
+                  <p className="text-sm text-muted-foreground">Allow users to dismiss the scroll bar</p>
+                </div>
+                <Switch
+                  id="scroll-dismiss"
+                  checked={showDismiss}
+                  onCheckedChange={handleDismissChange}
+                />
               </div>
 
               {/* Preview */}

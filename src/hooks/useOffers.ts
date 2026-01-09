@@ -86,7 +86,16 @@ export const useOfferBanners = () => {
         .order("display_order", { ascending: true });
 
       if (error) throw error;
-      return data as Offer[];
+      
+      // Filter by date range client-side (Supabase date filtering can be complex)
+      const now = new Date();
+      const activeOffers = (data || []).filter((offer) => {
+        if (offer.start_date && new Date(offer.start_date) > now) return false;
+        if (offer.end_date && new Date(offer.end_date) < now) return false;
+        return true;
+      });
+      
+      return activeOffers as Offer[];
     },
   });
 };
@@ -104,7 +113,16 @@ export const useSpecialOffers = () => {
         .order("display_order", { ascending: true });
 
       if (error) throw error;
-      return data as Offer[];
+      
+      // Filter by date range client-side
+      const now = new Date();
+      const activeOffers = (data || []).filter((offer) => {
+        if (offer.start_date && new Date(offer.start_date) > now) return false;
+        if (offer.end_date && new Date(offer.end_date) < now) return false;
+        return true;
+      });
+      
+      return activeOffers as Offer[];
     },
   });
 };
