@@ -90,10 +90,16 @@ export const SectionThemeDialog = ({
   }, [titles, config.titleKey]);
 
   const handleSave = async () => {
+    // Prepare theme value - exclude columns if showColumns is false
+    const themeValue = { ...theme };
+    if (config.showColumns === false) {
+      delete themeValue.columns;
+    }
+    
     // Save theme settings
     await updateSetting.mutateAsync({
       key: config.settingKey,
-      value: theme as unknown as Record<string, unknown>,
+      value: themeValue as unknown as Record<string, unknown>,
       category: "homepage",
     });
     // Save section title if titleKey is provided
@@ -264,16 +270,14 @@ export const SectionThemeDialog = ({
 export const sectionConfigs: Record<string, SectionConfig> = {
   categories: {
     title: "Categories Section Theme",
-    description: "Configure the categories grid layout",
+    description: "Configure the categories horizontal scroll layout",
     settingKey: "categories_theme",
     titleKey: "categories",
     defaultTitle: "Shop By Category",
-    showColumns: true,
+    showColumns: false,
     minItems: 4,
     maxItems: 12,
-    maxColumns: 6,
     defaultItems: 8,
-    defaultColumns: 4,
   },
   offers: {
     title: "Special Offers Section Theme",

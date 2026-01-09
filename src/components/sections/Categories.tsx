@@ -9,7 +9,6 @@ import { useSiteSetting } from "@/hooks/useSiteSettings";
 interface CategoriesTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
-  columns: number;
 }
 
 interface CategoryDisplayTheme {
@@ -25,7 +24,6 @@ interface CategoryDisplayTheme {
 const defaultSectionTheme: CategoriesTheme = {
   section_padding: "medium",
   items_to_show: 8,
-  columns: 4,
 };
 
 const defaultDisplayTheme: CategoryDisplayTheme = {
@@ -168,14 +166,21 @@ const Categories = () => {
         </h2>
 
         <div className="relative flex items-center justify-center">
+          {/* Left Arrow Button */}
           <button
             onClick={handleScrollLeft}
-            className={`hidden md:flex absolute left-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
-              canScrollLeft ? "opacity-100" : "opacity-30 cursor-not-allowed"
-            }`}
             disabled={!canScrollLeft}
+            className={`hidden md:flex absolute left-0 z-10 items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+              canScrollLeft
+                ? "bg-background/90 backdrop-blur-sm border border-border shadow-lg hover:bg-background hover:shadow-xl hover:scale-110 text-foreground cursor-pointer"
+                : "bg-muted/50 border border-border/50 shadow-sm text-muted-foreground/40 cursor-not-allowed"
+            }`}
+            aria-label="Scroll left"
           >
-            <ChevronLeft size={36} />
+            <ChevronLeft 
+              size={24} 
+              className={`transition-transform duration-300 ${canScrollLeft ? 'hover:translate-x-[-2px]' : ''}`}
+            />
           </button>
 
           <div
@@ -269,14 +274,21 @@ const Categories = () => {
             })}
           </div>
 
+          {/* Right Arrow Button */}
           <button
             onClick={handleScrollRight}
-            className={`hidden md:flex absolute right-0 z-10 text-muted-foreground hover:text-primary transition-opacity ${
-              canScrollRight ? "opacity-100" : "opacity-30 cursor-not-allowed"
-            }`}
             disabled={!canScrollRight}
+            className={`hidden md:flex absolute right-0 z-10 items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+              canScrollRight
+                ? "bg-background/90 backdrop-blur-sm border border-border shadow-lg hover:bg-background hover:shadow-xl hover:scale-110 text-foreground cursor-pointer"
+                : "bg-muted/50 border border-border/50 shadow-sm text-muted-foreground/40 cursor-not-allowed"
+            }`}
+            aria-label="Scroll right"
           >
-            <ChevronRight size={36} />
+            <ChevronRight 
+              size={24} 
+              className={`transition-transform duration-300 ${canScrollRight ? 'hover:translate-x-[2px]' : ''}`}
+            />
           </button>
         </div>
       </div>
