@@ -81,7 +81,7 @@ const Header = () => {
       return navSettings.items
         .filter((item) => item.isActive !== false)
         .map((item) => {
-          let children: { label: string; href: string }[] = [];
+          let children: { label: string; href: string; isExternal?: boolean }[] = [];
 
           // Filter categories/collections that have products
           const categoriesWithProducts = categories.filter(cat => 
@@ -166,6 +166,7 @@ const Header = () => {
                 children = item.children.map((child) => ({
                   label: child.label,
                   href: child.url,
+                  isExternal: child.isExternal === true || child.url.startsWith("http"),
                 }));
               }
           }
@@ -174,7 +175,7 @@ const Header = () => {
             label: item.label,
             href: item.url,
             children: children.length > 0 ? children : undefined,
-            isExternal: item.isExternal,
+            isExternal: item.isExternal === true || item.url.startsWith("http"),
           };
         });
     }
@@ -292,24 +293,49 @@ const Header = () => {
               onMouseEnter={() => setActiveDropdown(item.label)}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <Link
-                to={item.href}
-                className="hover:text-primary transition-colors flex items-center cursor-pointer py-2"
-              >
-                {item.label}
-                {item.children && <ChevronDown size={16} className="ml-1" />}
-              </Link>
+              {item.isExternal ? (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors flex items-center cursor-pointer py-2"
+                >
+                  {item.label}
+                  {item.children && <ChevronDown size={16} className="ml-1" />}
+                </a>
+              ) : (
+                <Link
+                  to={item.href}
+                  className="hover:text-primary transition-colors flex items-center cursor-pointer py-2"
+                >
+                  {item.label}
+                  {item.children && <ChevronDown size={16} className="ml-1" />}
+                </Link>
+              )}
               {item.children && activeDropdown === item.label && (
                 <div className="absolute left-0 top-full w-48 bg-card shadow-xl rounded-sm py-2 z-50 border border-border border-t-2 border-t-primary">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.label}
-                      to={child.href}
-                      className="block px-4 py-3 hover:bg-muted hover:text-primary transition-colors text-xs tracking-wider"
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
+                  {item.children.map((child) => {
+                    const isChildExternal = child.isExternal === true || child.href.startsWith("http");
+                    return isChildExternal ? (
+                      <a
+                        key={child.label}
+                        href={child.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block px-4 py-3 hover:bg-muted hover:text-primary transition-colors text-xs tracking-wider"
+                      >
+                        {child.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={child.label}
+                        to={child.href}
+                        className="block px-4 py-3 hover:bg-muted hover:text-primary transition-colors text-xs tracking-wider"
+                      >
+                        {child.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -322,25 +348,51 @@ const Header = () => {
             <ScrollArea className="h-[calc(100vh-120px)] pb-6">
               {navItems.map((item) => (
                 <div key={item.label} className="py-2">
-                  <Link
-                    to={item.href}
-                    className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+                  {item.isExternal ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.href}
+                      className="block text-sm font-medium uppercase tracking-wider hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                   {item.children && (
                     <div className="pl-4 mt-2 space-y-2">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          to={child.href}
-                          className="block text-xs text-muted-foreground hover:text-primary transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+                      {item.children.map((child) => {
+                        const isChildExternal = (child as any).isExternal === true || child.href.startsWith("http");
+                        return isChildExternal ? (
+                          <a
+                            key={child.label}
+                            href={child.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-xs text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {child.label}
+                          </a>
+                        ) : (
+                          <Link
+                            key={child.label}
+                            to={child.href}
+                            className="block text-xs text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

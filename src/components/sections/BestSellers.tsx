@@ -10,12 +10,14 @@ interface SectionTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
   columns: number;
+  title_to_items_padding?: number;
 }
 
 const defaultTheme: SectionTheme = {
   section_padding: "medium",
   items_to_show: 4,
   columns: 2,
+  title_to_items_padding: 48,
 };
 
 const BestSellers = () => {
@@ -49,10 +51,13 @@ const BestSellers = () => {
     return (
       <section className={`${getPaddingClass()} bg-background`}>
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-4 uppercase tracking-widest text-foreground">
+          <h2 className="text-2xl md:text-3xl font-display text-center font-medium uppercase tracking-widest text-foreground">
             {titles.bestSellers}
           </h2>
-          <div className="w-24 h-0.5 bg-primary mx-auto mb-12" />
+          <div 
+            className="w-24 h-0.5 bg-primary mx-auto"
+            style={{ marginTop: "16px", marginBottom: `${Math.max(0, (theme.title_to_items_padding ?? 48) - 16)}px` }}
+          />
           <div className={`grid ${getGridClass()} gap-8 max-w-6xl mx-auto`}>
             {Array.from({ length: Math.min(theme.items_to_show, 4) }).map((_, i) => (
               <Skeleton key={i} className="h-[400px] rounded-lg" />
@@ -70,10 +75,13 @@ const BestSellers = () => {
   return (
     <section className={`${getPaddingClass()} bg-background`}>
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-4 uppercase tracking-widest text-foreground">
+        <h2 className="text-2xl md:text-3xl font-display text-center font-medium uppercase tracking-widest text-foreground">
           {titles.bestSellers}
         </h2>
-        <div className="w-24 h-0.5 bg-primary mx-auto mb-12" />
+        <div 
+          className="w-24 h-0.5 bg-primary mx-auto"
+          style={{ marginTop: "16px", marginBottom: `${Math.max(0, (theme.title_to_items_padding ?? 48) - 16)}px` }}
+        />
 
         <div className={`grid ${getGridClass()} gap-8 max-w-6xl mx-auto`}>
           {displayProducts.map((product, index) => (

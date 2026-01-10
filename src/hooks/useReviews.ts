@@ -86,6 +86,8 @@ export const useProductReviews = (productId: string) => {
 };
 
 // Get reviews to show on homepage (testimonials)
+// Note: Limit set to 10 to match maxItems in testimonials theme config
+// Component will slice to items_to_show from theme settings
 export const useHomepageReviews = () => {
   return useQuery({
     queryKey: ["reviews", "homepage"],
@@ -100,7 +102,7 @@ export const useHomepageReviews = () => {
         .eq("is_approved", true)
         .eq("show_on_homepage", true)
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(10);
 
       if (error) throw error;
       return data as Review[];

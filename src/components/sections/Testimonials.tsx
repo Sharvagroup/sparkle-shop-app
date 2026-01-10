@@ -10,6 +10,7 @@ interface TestimonialsTheme {
   columns: number;
   auto_slide: boolean;
   auto_slide_speed: number;
+  title_to_items_padding?: number;
 }
 
 const defaultTheme: TestimonialsTheme = {
@@ -18,6 +19,7 @@ const defaultTheme: TestimonialsTheme = {
   columns: 3,
   auto_slide: false,
   auto_slide_speed: 5,
+  title_to_items_padding: 48,
 };
 
 const Testimonials = () => {
@@ -97,7 +99,10 @@ const Testimonials = () => {
   return (
     <section className={`${getPaddingClass()} bg-background`}>
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
+        <h2 
+          className="text-2xl md:text-3xl font-display font-medium uppercase tracking-widest text-foreground"
+          style={{ marginBottom: `${theme.title_to_items_padding ?? 48}px` }}
+        >
           {titles.testimonials}
         </h2>
 
