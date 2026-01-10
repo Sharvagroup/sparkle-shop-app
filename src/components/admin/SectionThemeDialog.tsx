@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -22,9 +23,15 @@ import { useSectionTitles } from "@/hooks/useSectionTitles";
 export interface SectionTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
-  columns: number;
-  auto_slide: boolean;
-  auto_slide_speed: number;
+  columns?: number;
+  auto_slide?: boolean;
+  auto_slide_speed?: number;
+  // Scroll settings for horizontal scroll sections (categories)
+  scroll_snap?: boolean;
+  scroll_smooth?: boolean;
+  visible_items_at_once?: number;
+  // Title to items padding (for categories)
+  title_to_items_padding?: number;
 }
 
 const defaultTheme: SectionTheme = {
@@ -33,6 +40,10 @@ const defaultTheme: SectionTheme = {
   columns: 4,
   auto_slide: false,
   auto_slide_speed: 5,
+  scroll_snap: true,
+  scroll_smooth: true,
+  visible_items_at_once: 4,
+  title_to_items_padding: 48,
 };
 
 interface SectionConfig {
@@ -43,6 +54,7 @@ interface SectionConfig {
   defaultTitle?: string;
   showColumns?: boolean;
   showAutoSlide?: boolean;
+  showScrollSettings?: boolean;
   minItems?: number;
   maxItems?: number;
   maxColumns?: number;
@@ -65,6 +77,7 @@ export const SectionThemeDialog = ({
     ...defaultTheme,
     items_to_show: config.defaultItems || 8,
     columns: config.defaultColumns || 4,
+    visible_items_at_once: config.showScrollSettings ? 4 : undefined,
   });
   const [sectionTitle, setSectionTitle] = useState(config.defaultTitle || "");
   const { data: savedTheme } = useSiteSetting<SectionTheme>(config.settingKey);
@@ -79,6 +92,10 @@ export const SectionThemeDialog = ({
         columns: savedTheme.columns ?? config.defaultColumns ?? 4,
         auto_slide: savedTheme.auto_slide ?? false,
         auto_slide_speed: savedTheme.auto_slide_speed ?? 5,
+        scroll_snap: savedTheme.scroll_snap ?? true,
+        scroll_smooth: savedTheme.scroll_smooth ?? true,
+        visible_items_at_once: savedTheme.visible_items_at_once ?? 4,
+        title_to_items_padding: savedTheme.title_to_items_padding ?? 48,
       });
     }
   }, [savedTheme, config.defaultItems, config.defaultColumns]);
@@ -94,6 +111,13 @@ export const SectionThemeDialog = ({
     const themeValue = { ...theme };
     if (config.showColumns === false) {
       delete themeValue.columns;
+    }
+    // Exclude scroll settings and title padding if not applicable
+    if (!config.showScrollSettings) {
+      delete themeValue.scroll_snap;
+      delete themeValue.scroll_smooth;
+      delete themeValue.visible_items_at_once;
+      delete themeValue.title_to_items_padding;
     }
     
     // Save theme settings
@@ -229,27 +253,153 @@ export const SectionThemeDialog = ({
             </div>
           )}
 
-          {/* Preview Grid */}
-          <div className="space-y-2">
-            <Label>Preview Grid</Label>
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <div 
-                className="grid gap-2"
-                style={{ gridTemplateColumns: `repeat(${Math.min(theme.columns, 6)}, 1fr)` }}
-              >
-                {Array.from({ length: Math.min(theme.items_to_show, 12) }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="aspect-square bg-primary/20 rounded flex items-center justify-center text-xs text-muted-foreground"
-                  >
-                    {i + 1}
-                  </div>
-                ))}
+          {/* Title to Items Padding (for categories) */}
+          {config.showScrollSettings && (
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex justify-between">
+                <Label>Title to Items Padding</Label>
+                <span className="text-sm text-muted-foreground">
+                  {theme.title_to_items_padding ?? 48}px
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                {theme.items_to_show} items in {theme.columns} columns
+              <Slider
+                value={[theme.title_to_items_padding ?? 48]}
+                onValueChange={([value]) => setTheme({ ...theme, title_to_items_padding: value })}
+                min={24}
+                max={96}
+                step={4}
+              />
+              <p className="text-xs text-muted-foreground">
+                Spacing between section title and category items
               </p>
             </div>
+          )}
+
+          {/* Scroll Settings (for horizontal scroll sections like categories) */}
+          {config.showScrollSettings && (
+            <>
+              <div className="space-y-4 border-t pt-4">
+                <Label>Scroll Behavior</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="scroll-snap" className="text-sm font-normal">Scroll Snap</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Enable snap-to-item scrolling for better navigation
+                      </p>
+                    </div>
+                    <Switch
+                      id="scroll-snap"
+                      checked={theme.scroll_snap ?? true}
+                      onCheckedChange={(checked) => setTheme({ ...theme, scroll_snap: checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="scroll-smooth" className="text-sm font-normal">Smooth Scrolling</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Enable smooth scrolling animations
+                      </p>
+                    </div>
+                    <Switch
+                      id="scroll-smooth"
+                      checked={theme.scroll_smooth ?? true}
+                      onCheckedChange={(checked) => setTheme({ ...theme, scroll_smooth: checked })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between">
+                    <Label>Visible Items at Once</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {theme.visible_items_at_once ?? 4} items
+                    </span>
+                  </div>
+                  <Slider
+                    value={[theme.visible_items_at_once ?? 4]}
+                    onValueChange={([value]) => setTheme({ ...theme, visible_items_at_once: value })}
+                    min={2}
+                    max={6}
+                    step={1}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Number of items visible in the viewport before scrolling
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Preview - Horizontal Scroll for categories, Grid for others */}
+          <div className="space-y-2 border-t pt-4">
+            <Label>Preview</Label>
+            {config.showScrollSettings ? (
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="relative max-w-full">
+                  <div 
+                    className="flex gap-3 overflow-x-auto scrollbar-hide max-h-28"
+                    style={{ 
+                      scrollBehavior: theme.scroll_smooth !== false ? 'smooth' : 'auto',
+                      scrollSnapType: theme.scroll_snap !== false ? 'x mandatory' : 'none'
+                    }}
+                  >
+                    {Array.from({ length: Math.min(theme.items_to_show, 12) }).map((_, i) => (
+                      <div 
+                        key={i}
+                        className="flex-shrink-0 w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center text-xs font-medium text-primary border-2 border-primary/40 shadow-sm"
+                        style={{ 
+                          scrollSnapAlign: theme.scroll_snap !== false ? 'start' : 'none',
+                          minWidth: '4rem'
+                        }}
+                      >
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
+                  <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
+                </div>
+                <div className="mt-3 space-y-1">
+                  <p className="text-xs font-medium text-center">
+                    {theme.items_to_show} total items
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-primary/40"></span>
+                      {theme.visible_items_at_once ?? 4} visible at once
+                    </span>
+                    <span>•</span>
+                    <span>Horizontal scroll</span>
+                  </div>
+                  {theme.scroll_snap !== false && (
+                    <p className="text-xs text-muted-foreground text-center italic">
+                      Snap scrolling enabled
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div 
+                  className="grid gap-2"
+                  style={{ gridTemplateColumns: `repeat(${Math.min(theme.columns || 4, 6)}, 1fr)` }}
+                >
+                  {Array.from({ length: Math.min(theme.items_to_show, 12) }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="aspect-square bg-primary/20 rounded flex items-center justify-center text-xs text-muted-foreground"
+                    >
+                      {i + 1}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  {theme.items_to_show} items in {theme.columns || 4} columns
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -275,6 +425,7 @@ export const sectionConfigs: Record<string, SectionConfig> = {
     titleKey: "categories",
     defaultTitle: "Shop By Category",
     showColumns: false,
+    showScrollSettings: true,
     minItems: 4,
     maxItems: 12,
     defaultItems: 8,

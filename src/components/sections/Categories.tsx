@@ -9,41 +9,29 @@ import { useSiteSetting } from "@/hooks/useSiteSettings";
 interface CategoriesTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
-}
-
-interface CategoryDisplayTheme {
-  display_shape: "circle" | "square" | "rounded";
-  image_size: number;
-  font_size: "small" | "medium" | "large";
-  text_transform: "none" | "uppercase" | "capitalize";
-  hover_border_color: string;
-  hover_border_width: number;
-  show_hover_scale: boolean;
+  scroll_snap?: boolean;
+  scroll_smooth?: boolean;
+  visible_items_at_once?: number;
+  title_to_items_padding?: number;
 }
 
 const defaultSectionTheme: CategoriesTheme = {
   section_padding: "medium",
   items_to_show: 8,
+  scroll_snap: true,
+  scroll_smooth: true,
+  visible_items_at_once: 4,
+  title_to_items_padding: 48,
 };
 
-const defaultDisplayTheme: CategoryDisplayTheme = {
-  display_shape: "circle",
-  image_size: 160,
-  font_size: "small",
-  text_transform: "uppercase",
-  hover_border_color: "hsl(var(--primary))",
-  hover_border_width: 4,
-  show_hover_scale: true,
-};
-
-// Default individual item theme
+// Default individual item theme - matches CategoryItemThemeDialog defaults
 const defaultItemTheme: CategoryTheme = {
-  display_shape: undefined,
-  image_size: undefined,
-  font_size: undefined,
+  display_shape: "rounded",
+  image_size: "medium",
+  font_size: "base",
   font_weight: "medium",
   hover_effect: "lift",
-  hover_border_color: undefined,
+  hover_border_color: "#d4af37",
   overlay_opacity: 0,
   overlay_color: "#000000",
   text_position: "below",
@@ -53,29 +41,14 @@ const Categories = () => {
   const { data: categories = [], isLoading } = useCategories();
   const { titles } = useSectionTitles();
   const { data: sectionTheme } = useSiteSetting<CategoriesTheme>("categories_theme");
-  const { data: displayTheme } = useSiteSetting<CategoryDisplayTheme>("category_display_theme");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const theme: CategoriesTheme = { ...defaultSectionTheme, ...sectionTheme };
-  const display: CategoryDisplayTheme = { ...defaultDisplayTheme, ...displayTheme };
 
   // Limit displayed categories
   const displayCategories = categories.slice(0, theme.items_to_show);
-
-  // Fallback images for categories without images
-  const fallbackImages: Record<string, string> = {
-    necklaces: "https://lh3.googleusercontent.com/aida-public/AB6AXuCgnrpEgkI1QzOloLVRoZubnvhpDFVQ4Qud6cJihl-z93q-RdtGcR9E2WPpCeZWyp6ocP_Jzzrwj9Ug9ze57a2HHgowYFj7z2_0aDFYI-6HofUry6hMJxhij37VYXK2M-K-bMyWkulsYMTymA6YbM82g9DyjENIwgwDPK5V9_DzPSU7COuiK4JWsUEfqNdlOhytwBjVnz_ebk1pk1uoGKsVrVFDZbPrSD6HjwL_kbcEaVE_O1Xp-kLWcny2fzviFPPi43o2QS_BT0o",
-    earrings: "https://lh3.googleusercontent.com/aida-public/AB6AXuDNXyBuepQbXzJD9ZalC-4K30IvF65JotjSUWjvsmydP5kMiVZZ1ZGMfoza_QBfanJeh9x-3ytscDax3tFDuXgzQAm0XAfjTyIJej-VBf0Rlct9b6P_7KqzmhVJKMZUah1LSOB53fa-ZbrKY9iRYqRY7i4c6yf5JAJRhHxK4MU4Ibtvu5WGP3eZm4UnO2W7JyNPNnyzh_olTzDQeZp3zDv9m6PIReNrV9yHTkfpJ-CSnX959g3gd4V5rv_MLq-CLAm9pRqlEcKhZjo",
-    bracelets: "https://lh3.googleusercontent.com/aida-public/AB6AXuDp_0B1KgtYRzcSF5ehgix-iOn8E4luEGY231KSM34pFmix6ccIZTWUdeXQe_vhcsDeHyy9XP6XOxvlG-sdzwouDijhfVH9TVmpMESWKAWTQh1rEHSDBiSSTy9eC2oVc6qKq155y4ZYI-t2NReVYBVgPrMBJkvzp-GIsHG0hBVAPl0cK5CtmYzkB_sqh2DdlMzpSm00uV1X7R9ytyUr_lD8P3RZTEjtmegGHeo7akylVmnqnDsfp2k8jVm7mDUIX6kNKwqDLO2kTT8",
-    rings: "https://lh3.googleusercontent.com/aida-public/AB6AXuAQSW865YqCIhCuqGB_9c5AcP645zVYLdC7wL4ukgs1xFQPJEdLFFeNi1tm_N-sNf-DJaeJUOQCFrW9wYZWhkqc1SRAoR8tJTZZm1-QXkrXYyjZ6qtHWUDzzag014baCYNQPbmZY_nKyFx_yh_GWkXeI7JBd0QnpnsdbVbLiuwIDh5NMm3ZwZWXzzNivl0Pxo3hJ61QQvD-UCRy_YE1uG7eE-r8S25RdOcRqE-zWm1nESevsXsjHBabxYPoQ6iNk1Dqj6Wqu9JSIRc",
-  };
-
-  const getCategoryImage = (category: { image_url: string | null; slug: string }) => {
-    if (category.image_url) return category.image_url;
-    return fallbackImages[category.slug] || fallbackImages.necklaces;
-  };
 
   const getPaddingClass = () => {
     switch (theme.section_padding) {
@@ -85,21 +58,6 @@ const Categories = () => {
     }
   };
 
-  const getShapeClass = () => {
-    switch (display.display_shape) {
-      case "square": return "rounded-none";
-      case "rounded": return "rounded-xl";
-      default: return "rounded-full";
-    }
-  };
-
-  const getFontSizeClass = () => {
-    switch (display.font_size) {
-      case "medium": return "text-sm";
-      case "large": return "text-base";
-      default: return "text-xs";
-    }
-  };
 
   const updateScrollButtons = () => {
     if (scrollContainerRef.current) {
@@ -124,13 +82,19 @@ const Categories = () => {
 
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ 
+        left: -200, 
+        behavior: theme.scroll_smooth !== false ? "smooth" : "auto" 
+      });
     }
   };
 
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ 
+        left: 200, 
+        behavior: theme.scroll_smooth !== false ? "smooth" : "auto" 
+      });
     }
   };
 
@@ -138,13 +102,16 @@ const Categories = () => {
     return (
       <section className={`${getPaddingClass()} bg-surface`}>
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
+          <h2 
+            className="text-2xl md:text-3xl font-display font-medium uppercase tracking-widest text-foreground"
+            style={{ marginBottom: `${theme.title_to_items_padding ?? 48}px` }}
+          >
             {titles.categories}
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 w-full max-w-5xl mx-auto px-4">
+          <div className="flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide px-4 max-w-5xl mx-auto">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col items-center">
-                <Skeleton className={`w-32 h-32 md:w-40 md:h-40 ${getShapeClass()}`} />
+              <div key={i} className="flex flex-col items-center flex-shrink-0">
+                <Skeleton className="w-32 h-32 md:w-40 md:h-40 rounded-full" />
                 <Skeleton className="h-4 w-20 mt-4" />
               </div>
             ))}
@@ -161,7 +128,10 @@ const Categories = () => {
   return (
     <section className={`${getPaddingClass()} bg-surface`}>
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-2xl md:text-3xl font-display font-medium mb-12 uppercase tracking-widest text-foreground">
+        <h2 
+          className="text-2xl md:text-3xl font-display font-medium uppercase tracking-widest text-foreground"
+          style={{ marginBottom: `${theme.title_to_items_padding ?? 48}px` }}
+        >
           {titles.categories}
         </h2>
 
@@ -185,30 +155,37 @@ const Categories = () => {
 
           <div
             ref={scrollContainerRef}
-            className="flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide scroll-smooth px-4 max-w-5xl snap-x snap-mandatory"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className={`flex gap-8 md:gap-12 overflow-x-auto scrollbar-hide px-4 max-w-5xl ${
+              theme.scroll_smooth !== false ? "scroll-smooth" : ""
+            } ${theme.scroll_snap !== false ? "snap-x snap-mandatory" : ""}`}
+            style={{ 
+              scrollbarWidth: "none", 
+              msOverflowStyle: "none",
+              scrollBehavior: theme.scroll_smooth !== false ? "smooth" : "auto",
+              scrollSnapType: theme.scroll_snap !== false ? "x mandatory" : "none"
+            }}
           >
             {displayCategories.map((category, index) => {
-              // Merge individual item theme with display theme
-              const itemTheme: CategoryTheme = { ...defaultItemTheme, ...category.theme };
+              // Use individual item theme only - merge with defaults
+              const itemTheme: CategoryTheme = { ...defaultItemTheme, ...(category.theme || {}) };
               
-              // Get individual shape or fallback to global display
-              const itemShape = itemTheme.display_shape || display.display_shape;
+              // Get shape from item theme
+              const itemShape = itemTheme.display_shape!;
               const itemShapeClass = itemShape === "square" ? "rounded-none" : itemShape === "rounded" ? "rounded-xl" : "rounded-full";
               
-              // Get individual size or fallback
-              const itemSize = itemTheme.image_size === "small" ? 120 : itemTheme.image_size === "large" ? 200 : (itemTheme.image_size === "medium" ? 160 : display.image_size);
+              // Get size from item theme (map to pixel values)
+              const itemSize = itemTheme.image_size === "small" ? 120 : itemTheme.image_size === "large" ? 200 : 160;
               
-              // Get individual hover effect
-              const hasScale = itemTheme.hover_effect === "lift" || display.show_hover_scale;
+              // Get hover effect from item theme
+              const hasScale = itemTheme.hover_effect === "lift";
               const hasGlow = itemTheme.hover_effect === "glow";
               const hasBorder = itemTheme.hover_effect === "border";
               
-              // Get hover border color
-              const hoverBorderColor = itemTheme.hover_border_color || display.hover_border_color;
+              // Get hover border color from item theme
+              const hoverBorderColor = itemTheme.hover_border_color!;
               
-              // Get font size
-              const itemFontSize = itemTheme.font_size || display.font_size;
+              // Get font size from item theme
+              const itemFontSize = itemTheme.font_size!;
               const fontSizeClass = itemFontSize === "large" ? "text-base" : itemFontSize === "base" ? "text-sm" : "text-xs";
               
               // Get font weight
@@ -218,8 +195,11 @@ const Categories = () => {
                 <Link
                   key={category.id}
                   to={`/products?category=${category.slug}`}
-                  className="group cursor-pointer flex-shrink-0 snap-center"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className={`group cursor-pointer flex-shrink-0 ${theme.scroll_snap !== false ? "snap-center" : ""}`}
+                  style={{ 
+                    animationDelay: `${index * 100}ms`,
+                    scrollSnapAlign: theme.scroll_snap !== false ? "start" : "none"
+                  }}
                 >
                   <div 
                     className={`mx-auto overflow-hidden border-4 border-card shadow-lg transition-all duration-300 bg-card flex items-center justify-center relative ${itemShapeClass} ${hasScale ? 'group-hover:scale-105' : ''} ${hasGlow ? 'group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)]' : ''}`}
@@ -228,21 +208,25 @@ const Categories = () => {
                       height: `${itemSize}px`,
                     }}
                     onMouseEnter={(e) => {
-                      if (hasBorder || display.hover_border_width > 0) {
+                      if (hasBorder && hoverBorderColor) {
                         e.currentTarget.style.borderColor = hoverBorderColor.startsWith("hsl") ? "hsl(var(--primary))" : hoverBorderColor;
-                        e.currentTarget.style.borderWidth = `${display.hover_border_width}px`;
                       }
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'hsl(var(--card))';
-                      e.currentTarget.style.borderWidth = '4px';
                     }}
                   >
-                    <img
-                      src={getCategoryImage(category)}
-                      alt={category.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {category.image_url ? (
+                      <img
+                        src={category.image_url}
+                        alt={category.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                        <span className="text-xs text-muted-foreground uppercase">{category.name.charAt(0)}</span>
+                      </div>
+                    )}
                     {/* Overlay for text_position: overlay */}
                     {itemTheme.text_position === "overlay" && (
                       <div 
@@ -253,7 +237,6 @@ const Categories = () => {
                       >
                         <h3 
                           className={`${fontWeightClass} tracking-wider text-white transition-colors ${fontSizeClass}`}
-                          style={{ textTransform: display.text_transform }}
                         >
                           {category.name}
                         </h3>
@@ -264,7 +247,6 @@ const Categories = () => {
                   {itemTheme.text_position !== "overlay" && (
                     <h3 
                       className={`mt-4 ${fontWeightClass} tracking-wider text-muted-foreground group-hover:text-primary transition-colors ${fontSizeClass}`}
-                      style={{ textTransform: display.text_transform }}
                     >
                       {category.name}
                     </h3>
