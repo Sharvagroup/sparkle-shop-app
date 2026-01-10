@@ -73,6 +73,7 @@ const AdminProducts = () => {
   const [filterCategory, setFilterCategory] = useState<string>('_all');
   const [filterCollection, setFilterCollection] = useState<string>('_all');
   const [filterStatus, setFilterStatus] = useState<string>('_all');
+  const [filterTag, setFilterTag] = useState<string>('_all');
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
@@ -88,7 +89,13 @@ const AdminProducts = () => {
       (filterStatus === 'active' && product.is_active) ||
       (filterStatus === 'inactive' && !product.is_active);
 
-    return matchesSearch && matchesCategory && matchesCollection && matchesStatus;
+    const matchesTag =
+      filterTag === '_all' ||
+      (filterTag === 'new_arrival' && product.is_new_arrival) ||
+      (filterTag === 'best_seller' && product.is_best_seller) ||
+      (filterTag === 'celebrity_special' && product.is_celebrity_special);
+
+    return matchesSearch && matchesCategory && matchesCollection && matchesStatus && matchesTag;
   });
   const handleCreate = async (data: any) => {
     try {
@@ -234,6 +241,18 @@ const AdminProducts = () => {
             <SelectItem value="_all">All Status</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTag} onValueChange={setFilterTag}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Tags" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">All Tags</SelectItem>
+            <SelectItem value="new_arrival">New Arrivals</SelectItem>
+            <SelectItem value="best_seller">Best Sellers</SelectItem>
+            <SelectItem value="celebrity_special">Celebrity Specials</SelectItem>
           </SelectContent>
         </Select>
       </div>

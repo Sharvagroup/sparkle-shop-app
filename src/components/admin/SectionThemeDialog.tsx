@@ -112,12 +112,11 @@ export const SectionThemeDialog = ({
     if (config.showColumns === false) {
       delete themeValue.columns;
     }
-    // Exclude scroll settings and title padding if not applicable
+    // Exclude scroll settings if not applicable (but keep title_to_items_padding for all sections)
     if (!config.showScrollSettings) {
       delete themeValue.scroll_snap;
       delete themeValue.scroll_smooth;
       delete themeValue.visible_items_at_once;
-      delete themeValue.title_to_items_padding;
     }
     
     // Save theme settings
@@ -253,27 +252,25 @@ export const SectionThemeDialog = ({
             </div>
           )}
 
-          {/* Title to Items Padding (for categories) */}
-          {config.showScrollSettings && (
-            <div className="space-y-3 border-t pt-4">
-              <div className="flex justify-between">
-                <Label>Title to Items Padding</Label>
-                <span className="text-sm text-muted-foreground">
-                  {theme.title_to_items_padding ?? 48}px
-                </span>
-              </div>
-              <Slider
-                value={[theme.title_to_items_padding ?? 48]}
-                onValueChange={([value]) => setTheme({ ...theme, title_to_items_padding: value })}
-                min={24}
-                max={96}
-                step={4}
-              />
-              <p className="text-xs text-muted-foreground">
-                Spacing between section title and category items
-              </p>
+          {/* Title to Items Padding (for all sections) */}
+          <div className="space-y-3 border-t pt-4">
+            <div className="flex justify-between">
+              <Label>Title to Items Padding</Label>
+              <span className="text-sm text-muted-foreground">
+                {theme.title_to_items_padding ?? 48}px
+              </span>
             </div>
-          )}
+            <Slider
+              value={[theme.title_to_items_padding ?? 48]}
+              onValueChange={([value]) => setTheme({ ...theme, title_to_items_padding: value })}
+              min={24}
+              max={96}
+              step={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              Spacing between section title and items below
+            </p>
+          </div>
 
           {/* Scroll Settings (for horizontal scroll sections like categories) */}
           {config.showScrollSettings && (

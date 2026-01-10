@@ -10,12 +10,14 @@ interface SectionTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
   columns: number;
+  title_to_items_padding?: number;
 }
 
 const defaultTheme: SectionTheme = {
   section_padding: "medium",
   items_to_show: 4,
   columns: 2,
+  title_to_items_padding: 48,
 };
 
 const NewArrivals = () => {
@@ -49,7 +51,10 @@ const NewArrivals = () => {
     return (
       <section className={`${getPaddingClass()} bg-background`}>
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
+          <h2 
+            className="text-2xl md:text-3xl font-display text-center font-medium uppercase tracking-widest text-foreground"
+            style={{ marginBottom: `${theme.title_to_items_padding ?? 48}px` }}
+          >
             {titles.newArrivals}
           </h2>
           <div className={`grid ${getGridClass()} gap-8 max-w-6xl mx-auto`}>
@@ -69,7 +74,10 @@ const NewArrivals = () => {
   return (
     <section className={`${getPaddingClass()} bg-background`}>
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
+        <h2 
+          className="text-2xl md:text-3xl font-display text-center font-medium uppercase tracking-widest text-foreground"
+          style={{ marginBottom: `${theme.title_to_items_padding ?? 48}px` }}
+        >
           {titles.newArrivals}
         </h2>
 
