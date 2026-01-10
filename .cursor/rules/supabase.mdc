@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+
+SUPABASE MUST BE TREATED AS THE SINGLE SOURCE OF TRUTH.
+
+1. AUTHENTICATION & AUTHORIZATION
+   - All authentication MUST use Supabase Auth.
+   - Do NOT implement custom auth systems.
+   - Respect existing:
+     • User roles
+     • Admin logic
+     • RLS policies
+   - Never bypass RLS using service-role keys in frontend code.
+
+2. DATABASE ACCESS
+   - All CRUD operations MUST go through Supabase APIs.
+   - Do NOT create:
+     • Local mock databases
+     • JSON-based temporary storage
+     • Duplicate API layers that mirror Supabase tables
+   - Prefer existing tables and columns over new ones.
+
+3. STORAGE (Images, Videos, Media)
+   - Supabase Storage is the only allowed storage layer.
+   - Reuse existing buckets if they exist.
+   - Do NOT upload media directly to Netlify or external services unless explicitly approved.
+
+4. DATA FLOW RULE
+   - UI state is allowed to exist temporarily (React state, context, etc.)
+   - Persistent state MUST live in Supabase.
+   - Never treat frontend state as authoritative data.
+
+5. ROLE & PERMISSION SAFETY
+   - Role checks MUST be compatible with Supabase RLS.
+   - Frontend role checks are for UI control only, not security.
+   - Final enforcement MUST always rely on RLS policies.
+
+6. NO SHADOW LOGIC
+   - Do NOT recreate:
+     • Pricing logic
+     • Order status logic
+     • Cart persistence logic
+   - If logic exists in DB (triggers, functions, policies), reuse it.
+
+7. CHANGE CONTROL
+   - Any proposal to:
+     • Add tables
+     • Modify RLS
+     • Create DB functions
+   - MUST be justified with a schema gap explanation and approved before execution.
+
+
+---

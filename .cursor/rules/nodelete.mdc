@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+1) after every change check the code to sync with remaining codes including ux / ui
+
+2) dont delete any project related existng feature untill confirmed on the flow

@@ -1,0 +1,104 @@
+# Website Flow & Architecture
+
+This document outlines the complete flow of the Sparkle Shop application, starting from the Admin Panel configuration and cascading down to the Customer Experience. Use this as a guide to understand how the system connects.
+
+## 1. High-Level Architecture
+
+The application is built on a **headless-style logic** where the Admin Panel configures the database (Supabase), and the Customer Storefront dynamically renders content based on that configuration.
+
+```mermaid
+graph TD
+    A[Admin Panel] -->|Configures| B(Supabase Database)
+    B -->|Fetches Data| C[Customer Storefront]
+    C -->|Places Order| B
+    B -->|Syncs| A
+```
+
+---
+
+## 2. Admin Panel Flow (The Control Center)
+
+The Admin Panel (`/admin`) is the source of truth for all dynamic content.
+
+### Authenticated Access
+*   **Login**: `/admin/login` - Secure entry point for staff.
+*   **Dashboard**: `/admin/dashboard` - Overview of sales, orders, and recent activity.
+
+### Core Configuration Modules
+These modules directly impact what users see on the storefront:
+
+1.  **Site Settings** (`/admin/settings`)
+    *   **Branding**: Logo, Site Name, Favicon.
+    *   **Contact/Social**: Phone, Email, Social Media Links.
+    *   **Theme**: Colors, Fonts (affects global styling).
+    *   **Commerce**: Shipping rates, Tax, Currency, Free Shipping thresholds.
+    *   **Legal**: Privacy Policy, Terms of Service content.
+
+2.  **Product Management**
+    *   **Products** (`/admin/products`): Add/Edit products, set prices, stock, and images.
+    *   **Categories** (`/admin/categories`): Organize products (e.g., Necklaces, Rings).
+    *   **Collections** (`/admin/collections`): Special groups (e.g., Summer Sale).
+    *   **Product Options** (`/admin/product-options`): manage variants (Size, Material).
+
+3.  **Layout & Content Management**
+    *   **Homepage** (`/admin/homepage`): Drag-and-drop builder to reorder sections (Hero, New Arrivals, Testimonials).
+    *   **Navigation** (`/admin/navigation`): Customize the Header Menu (Links, Dropdowns).
+    *   **Footer Links** (`/admin/footer-links`): Manage footer columns and links.
+    *   **Banners** (`/admin/banners`): Upload hero slides and promo banners.
+    *   **About Page** (`/admin/about-page`): Edit the "About Us" content.
+
+4.  **Order Processing**
+    *   **Orders** (`/admin/orders`): View customer orders, update status (Processing, Shipped), and print invoices.
+
+---
+
+## 3. Customer Journey (The Storefront)
+
+The storefront adapts its layout and content based on the Admin configurations above.
+
+### A. Discovery (Homepage)
+**URL**: `/`
+*   **Header**: Renders navigation links defined in Admin -> Navigation. Logo from Admin -> Settings.
+*   **Hero Section**: Displays active banners from Admin -> Banners.
+*   **Dynamic Sections**: Renders sections (Offers, Categories, Best Sellers) in the exact order set in Admin -> Homepage.
+*   **Footer**: Renders columns from Admin -> Footer Links.
+
+### B. Browsing (Product Listing)
+**URL**: `/products`
+*   **Filters**: Sidebar filters are enabled/disabled via Admin -> Settings -> Filters.
+*   **Products**: Fetches active products from DB. Sorts/paginates based on Commerce settings.
+
+### C. Evaluation (Product Detail)
+**URL**: `/product/:id`
+*   **Details**: Shows name, price, description, and images managed in Admin -> Products.
+*   **Variants**: Users select options (Size/Material) defined in Admin -> Product Options.
+*   **Reviews**: Displays approved reviews (managed in Admin -> Reviews).
+
+### D. Purchase (Checkout Flow)
+1.  **Cart** (`/cart`)
+    *   Displays items.
+    *   Applies **Orders & Discounts** (created in Admin -> Offers/Discount Codes).
+    *   Currency symbol pulled from Commerce Settings.
+2.  **Checkout** (`/checkout`)
+    *   **Shipping**: Calculates cost based on Flat Rate/Free Threshold from Admin -> Commerce.
+    *   **Tax**: Calculates tax based on Tax Rate from Admin -> Commerce.
+    *   **Payment**: Users select a method (COD, UPI, Card).
+3.  **Confirmation**
+    *   Order is saved to Supabase.
+    *   Email notification sent (if configured).
+    *   Admin Dashboard updates with new order.
+
+---
+
+## 4. Key Data Connections
+
+| Feature | Admin Page | Frontend Component | Database Table |
+| :--- | :--- | :--- | :--- |
+| **Site Logo** | Settings | [Header.tsx](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/components/layout/Header.tsx) / [Footer.tsx](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/components/layout/Footer.tsx) | `site_settings` |
+| **Menu Links** | Navigation | [Header.tsx](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/components/layout/Header.tsx) | `navigation_items` |
+| **Hero Slides** | Banners | `Hero.tsx` | `banners` |
+| **Products** | Products | `ProductList.tsx` | `products` |
+| **Shipping Cost** | Settings (Commerce) | [Checkout.tsx](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/pages/Checkout.tsx) | `site_settings` |
+| **Footer Links** | Footer Links | [Footer.tsx](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/components/layout/Footer.tsx) | `footer_links` |
+
+This flow ensures that [Admin](file:///d:/webdevelopment/SharvaGroup/sparkle-shop-app/src/components/admin/AdminSidebar.tsx#50-105) is the brain, and `Storefront` is the face of the application.

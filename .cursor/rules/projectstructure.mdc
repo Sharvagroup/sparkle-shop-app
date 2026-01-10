@@ -1,0 +1,58 @@
+---
+alwaysApply: true
+BEFORE writing, modifying, or suggesting any new code or database changes,
+you MUST complete the following steps in order:
+
+1. CODEBASE DISCOVERY
+   - Read the entire repository structure.
+   - Identify:
+     • Framework(s) used (React / Next.js / Vite / etc.)
+     • State management approach
+     • Existing components, pages, hooks, utilities
+     • API / Supabase client usage
+     • Authentication and role logic
+   - If files already exist that solve the problem, prefer reusing or extending them.
+
+2. DATABASE DISCOVERY (Supabase)
+   - Assume Supabase is the single source of truth.
+   - Use Supabase CLI introspection mindset:
+     • Tables
+     • Columns and data types
+     • Foreign keys
+     • RLS policies
+     • Storage buckets
+     • Auth providers and roles
+   - Do NOT create new tables or columns unless existing schema is confirmed insufficient.
+
+3. GAP ANALYSIS
+   - Explicitly state:
+     • What already exists
+     • What is missing
+     • What can be reused
+     • What should NOT be touched
+
+4. PLAN FIRST, CODE LATER
+   - Present a clear plan:
+     • Files to modify
+     • New files (if absolutely required)
+     • DB changes (if unavoidable)
+     • Risks and side effects
+   - WAIT for user confirmation before generating code.
+
+5. SAFE MODIFICATION RULE
+   - Never delete:
+     • Existing tables
+     • Existing columns
+     • Existing auth logic
+     • Existing deployed behavior
+   - All changes must be additive and backward-compatible.
+
+6. NO ASSUMPTIONS
+   - Do NOT assume:
+     • Table names
+     • Column names
+     • Auth flow
+     • Admin roles
+   - If information is missing, ASK before proceeding.
+
+---

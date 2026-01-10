@@ -73,6 +73,15 @@ const FooterLinks = () => {
     return acc;
   }, {} as Record<string, FooterLink[]>);
 
+  // Sort links within each section by display_order for admin display
+  Object.keys(groupedLinks).forEach((section) => {
+    groupedLinks[section].sort((a, b) => {
+      const orderA = a.display_order ?? 0;
+      const orderB = b.display_order ?? 0;
+      return orderA - orderB;
+    });
+  });
+
   const resetForm = () => {
     setSection("shop");
     setLabel("");

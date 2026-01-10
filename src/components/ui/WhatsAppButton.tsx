@@ -8,9 +8,12 @@ interface ContactWithMessage extends ContactSettings {
 const WhatsAppButton = () => {
   const { data: contact } = useSiteSetting<ContactWithMessage>("contact");
   
-  const whatsappNumber = contact?.whatsapp || contact?.phone || "+919876543210";
+  // Hide WhatsApp button if no phone/whatsapp number is configured
+  const whatsappNumber = contact?.whatsapp || contact?.phone;
+  if (!whatsappNumber) return null;
+  
   const cleanPhone = whatsappNumber.replace(/\D/g, "");
-  const defaultMessage = contact?.whatsappMessage || "Hello! I have a question about your jewelry collection.";
+  const defaultMessage = contact?.whatsappMessage || "Hello! I have a question.";
   const message = encodeURIComponent(defaultMessage);
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
 
