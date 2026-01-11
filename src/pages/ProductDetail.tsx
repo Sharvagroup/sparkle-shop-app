@@ -721,6 +721,38 @@ const ProductDetail = () => {
           </div>
         </section>
 
+        {/* Customers Also Viewed - Suggestion Products */}
+        {(() => {
+          const suggestionProducts = productAddons
+            .filter((a) => a.addon_type === "suggestion")
+            .map((a) => a.addon_product)
+            .filter(Boolean);
+          
+          if (suggestionProducts.length === 0) return null;
+          
+          return (
+            <section className="container mx-auto px-4 md:px-8 py-16 border-t border-border">
+              <h2 className="text-2xl md:text-3xl font-display text-center font-medium mb-12 uppercase tracking-widest text-foreground">
+                Customers Also Viewed
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                {suggestionProducts.map((p: any) => (
+                  <ProductCard
+                    key={p.id}
+                    id={p.slug}
+                    name={p.name}
+                    description=""
+                    price={p.price}
+                    image={p.images?.[0] || "/placeholder.svg"}
+                    rating={0}
+                    reviewCount={0}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })()}
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="container mx-auto px-4 md:px-8 py-16 border-t border-border">

@@ -597,7 +597,10 @@ export type Database = {
         Row: {
           addon_product_id: string
           addon_type: string | null
+          bundle_discount_amount: number | null
+          bundle_discount_percent: number | null
           created_at: string | null
+          custom_options: Json | null
           display_order: number | null
           id: string
           is_active: boolean | null
@@ -607,7 +610,10 @@ export type Database = {
         Insert: {
           addon_product_id: string
           addon_type?: string | null
+          bundle_discount_amount?: number | null
+          bundle_discount_percent?: number | null
           created_at?: string | null
+          custom_options?: Json | null
           display_order?: number | null
           id?: string
           is_active?: boolean | null
@@ -617,7 +623,10 @@ export type Database = {
         Update: {
           addon_product_id?: string
           addon_type?: string | null
+          bundle_discount_amount?: number | null
+          bundle_discount_percent?: number | null
           created_at?: string | null
+          custom_options?: Json | null
           display_order?: number | null
           id?: string
           is_active?: boolean | null

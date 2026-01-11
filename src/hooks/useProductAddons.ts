@@ -8,6 +8,9 @@ export interface ProductAddon {
   addon_product_id: string;
   addon_type: "addon" | "suggestion" | "bundle";
   price_override: number | null;
+  custom_options: Record<string, any>; // Admin-defined option values for addon
+  bundle_discount_percent: number | null; // Discount % for bundle
+  bundle_discount_amount: number | null; // Fixed discount for bundle
   display_order: number;
   is_active: boolean;
   created_at: string;
@@ -18,6 +21,9 @@ export interface ProductAddon {
     price: number;
     images: string[] | null;
     slug: string;
+    enabled_options: string[] | null;
+    pricing_by_option_id: string | null;
+    base_unit_value: number | null;
   };
 }
 
@@ -26,6 +32,9 @@ export interface ProductAddonInput {
   addon_product_id: string;
   addon_type?: "addon" | "suggestion" | "bundle";
   price_override?: number | null;
+  custom_options?: Record<string, any>;
+  bundle_discount_percent?: number | null;
+  bundle_discount_amount?: number | null;
   display_order?: number;
   is_active?: boolean;
 }
@@ -39,7 +48,7 @@ export const useProductAddons = (productId: string) => {
         .from("product_addons")
         .select(`
           *,
-          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug)
+          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .eq("product_id", productId)
         .eq("is_active", true)
@@ -61,7 +70,7 @@ export const useAdminProductAddons = (productId: string) => {
         .from("product_addons")
         .select(`
           *,
-          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug)
+          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .eq("product_id", productId)
         .order("display_order", { ascending: true });

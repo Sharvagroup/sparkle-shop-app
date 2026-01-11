@@ -110,6 +110,9 @@ const AdminProducts = () => {
             addon_product_id: addon.addon_product_id,
             addon_type: addon.addon_type,
             price_override: addon.price_override,
+            custom_options: addon.custom_options || {},
+            bundle_discount_percent: addon.bundle_discount_percent,
+            bundle_discount_amount: addon.bundle_discount_amount,
             display_order: addon.display_order,
           });
         }
@@ -138,6 +141,9 @@ const AdminProducts = () => {
             addon_product_id: addon.addon_product_id,
             addon_type: addon.addon_type,
             price_override: addon.price_override,
+            custom_options: addon.custom_options || {},
+            bundle_discount_percent: addon.bundle_discount_percent,
+            bundle_discount_amount: addon.bundle_discount_amount,
             display_order: addon.display_order,
           });
         }
