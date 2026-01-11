@@ -123,6 +123,8 @@ const Settings = () => {
   // SEO
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
+  const [twitterHandle, setTwitterHandle] = useState("");
   const [ogImage, setOgImage] = useState("");
 
   // Theme
@@ -217,6 +219,8 @@ const Settings = () => {
       if (seo) {
         setMetaTitle(seo.metaTitle || "");
         setMetaDescription(seo.metaDescription || "");
+        setMetaKeywords((seo as any).metaKeywords || "");
+        setTwitterHandle((seo as any).twitterHandle || "");
         setOgImage(seo.ogImage || "");
       }
       if (theme) {
@@ -372,7 +376,7 @@ const Settings = () => {
   const saveSeo = async () => {
     await updateSetting.mutateAsync({
       key: "seo",
-      value: { metaTitle, metaDescription, ogImage },
+      value: { metaTitle, metaDescription, metaKeywords, twitterHandle, ogImage },
       category: "seo",
     });
   };
@@ -1020,6 +1024,16 @@ const Settings = () => {
                   <Label>Meta Description</Label>
                   <Textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={3} placeholder="Describe your store for search engines..." />
                   <p className="text-xs text-muted-foreground">{metaDescription.length}/160 characters recommended</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Meta Keywords</Label>
+                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="jewelry, gold, diamond, bridal, necklace, earrings" />
+                  <p className="text-xs text-muted-foreground">Comma-separated keywords for search engines</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Twitter Handle</Label>
+                  <Input value={twitterHandle} onChange={(e) => setTwitterHandle(e.target.value)} placeholder="@YourStoreName" />
+                  <p className="text-xs text-muted-foreground">Used for twitter:site meta tag (include @)</p>
                 </div>
                 <div className="space-y-2">
                   <Label>OG Image</Label>
