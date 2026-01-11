@@ -112,6 +112,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
           addon_product_id: a.addon_product_id,
           addon_type: a.addon_type as 'addon' | 'suggestion' | 'bundle',
           price_override: a.price_override,
+          custom_options: a.custom_options || {},
+          bundle_discount_percent: a.bundle_discount_percent,
+          bundle_discount_amount: a.bundle_discount_amount,
           display_order: a.display_order,
         }))
       );
@@ -856,6 +859,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
         {/* Add-ons & Suggestions */}
         <ProductAddonsSelector
           products={allProducts}
+          productOptions={productOptions}
           currentProductId={product?.id}
           selectedAddons={selectedAddons}
           onChange={setSelectedAddons}

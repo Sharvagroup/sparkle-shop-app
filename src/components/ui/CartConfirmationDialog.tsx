@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Plus, Minus, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Minus, ShoppingCart, ChevronLeft, ChevronRight, Gift, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,13 @@ const CartConfirmationDialog = ({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddonState[]>([]);
 
+  // Filter addons by type
+  const addonTypeAddons = productAddons.filter((a) => a.addon_type === "addon");
+  const bundleAddons = productAddons.filter((a) => a.addon_type === "bundle");
+  
+  // Only show step 2 if there are addons or bundles (suggestions are shown on product page)
+  const hasAddonsOrBundles = addonTypeAddons.length > 0 || bundleAddons.length > 0;
+
   // Filter options to only show enabled ones for this product
   // Exclude quantity-related options since we have a dedicated quantity input
   const activeOptions = productOptions.filter(
@@ -64,8 +72,7 @@ const CartConfirmationDialog = ({
              opt.name.toLowerCase() !== 'quantity'
   );
 
-  const hasAddons = productAddons.length > 0;
-  const totalSteps = hasAddons ? 2 : 1;
+  const totalSteps = hasAddonsOrBundles ? 2 : 1;
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -73,21 +80,32 @@ const CartConfirmationDialog = ({
       setCurrentStep(1);
       setQuantity(1);
       setSelectedOptions({});
-      setSelectedAddons([]);
+      // Auto-select bundles by default
+      setSelectedAddons(
+        bundleAddons.map((b) => ({
+          productId: b.addon_product_id,
+          quantity: 1,
+          options: b.custom_options || {},
+        }))
+      );
     }
-  }, [open]);
+  }, [open, bundleAddons.length]);
 
   const handleOptionChange = (optionId: string, value: any) => {
     setSelectedOptions((prev) => ({ ...prev, [optionId]: value }));
   };
 
-  const toggleAddon = (addonProductId: string) => {
+  const toggleAddon = (addonProductId: string, addon: ProductAddon) => {
     setSelectedAddons((prev) => {
       const exists = prev.find((a) => a.productId === addonProductId);
       if (exists) {
         return prev.filter((a) => a.productId !== addonProductId);
       }
-      return [...prev, { productId: addonProductId, quantity: 1, options: {} }];
+      return [...prev, { 
+        productId: addonProductId, 
+        quantity: 1, 
+        options: addon.custom_options || {} 
+      }];
     });
   };
 
@@ -123,16 +141,75 @@ const CartConfirmationDialog = ({
     return unitPrice * quantity;
   };
 
+  // Calculate addon price considering custom options and price override
+  const calculateAddonPrice = (addon: ProductAddon) => {
+    // If price override is set, use it
+    if (addon.price_override !== null) {
+      return addon.price_override;
+    }
+    
+    const addonProduct = addon.addon_product;
+    if (!addonProduct) return 0;
+    
+    // Check for proportional pricing with custom options
+    if (addonProduct.pricing_by_option_id && addonProduct.base_unit_value && addonProduct.base_unit_value > 0) {
+      const customValue = addon.custom_options?.[addonProduct.pricing_by_option_id];
+      if (customValue && typeof customValue === 'number') {
+        return (addonProduct.price / addonProduct.base_unit_value) * customValue;
+      }
+    }
+    
+    return addonProduct.price;
+  };
+
+  // Calculate bundle price with discount
+  const calculateBundlePrice = (addon: ProductAddon) => {
+    const basePrice = addon.addon_product?.price || 0;
+    if (addon.bundle_discount_percent) {
+      return basePrice * (1 - addon.bundle_discount_percent / 100);
+    }
+    if (addon.bundle_discount_amount) {
+      return Math.max(0, basePrice - addon.bundle_discount_amount);
+    }
+    return basePrice;
+  };
+
+  // Get addon display info
+  const getAddonDisplayInfo = (addon: ProductAddon) => {
+    const pricingOption = addon.addon_product?.pricing_by_option_id
+      ? productOptions.find((opt) => opt.id === addon.addon_product?.pricing_by_option_id)
+      : null;
+    
+    const customValue = pricingOption && addon.custom_options?.[pricingOption.id];
+    
+    if (customValue) {
+      return `${customValue}${pricingOption?.unit || ''}`;
+    }
+    return null;
+  };
+
   // Calculate total
   const productTotal = calculateProductPrice();
-  const addonsTotal = selectedAddons.reduce((sum, addon) => {
-    const addonProduct = productAddons.find(
-      (a) => a.addon_product_id === addon.productId
-    );
-    const price =
-      addonProduct?.price_override ?? addonProduct?.addon_product?.price ?? 0;
-    return sum + price * addon.quantity;
+  const addonsTotal = selectedAddons.reduce((sum, selectedAddon) => {
+    const addonData = productAddons.find((a) => a.addon_product_id === selectedAddon.productId);
+    if (!addonData) return sum;
+    
+    const price = addonData.addon_type === "bundle" 
+      ? calculateBundlePrice(addonData) 
+      : calculateAddonPrice(addonData);
+    return sum + price * selectedAddon.quantity;
   }, 0);
+  
+  // Calculate bundle savings
+  const bundleSavings = selectedAddons.reduce((sum, selectedAddon) => {
+    const addonData = productAddons.find((a) => a.addon_product_id === selectedAddon.productId);
+    if (!addonData || addonData.addon_type !== "bundle") return sum;
+    
+    const originalPrice = addonData.addon_product?.price || 0;
+    const discountedPrice = calculateBundlePrice(addonData);
+    return sum + (originalPrice - discountedPrice) * selectedAddon.quantity;
+  }, 0);
+  
   const grandTotal = productTotal + addonsTotal;
 
   // Get pricing option details for display
@@ -167,7 +244,7 @@ const CartConfirmationDialog = ({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {currentStep === 1 ? "Product Details" : "Add-ons (Optional)"}
+            {currentStep === 1 ? "Product Details" : "Add-ons & Bundles"}
           </DialogTitle>
           {/* Step indicator */}
           {totalSteps > 1 && (
@@ -346,7 +423,7 @@ const CartConfirmationDialog = ({
             </>
           )}
 
-          {/* Step 2: Add-ons */}
+          {/* Step 2: Add-ons & Bundles */}
           {currentStep === 2 && (
             <>
               {/* Back button and product reminder */}
@@ -366,89 +443,199 @@ const CartConfirmationDialog = ({
                 </div>
               </div>
 
-              {/* Add-ons */}
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Enhance your order with these suggestions:
-                </p>
-                <div className="space-y-2">
-                  {productAddons.map((addon) => {
-                    const isSelected = selectedAddons.some(
-                      (a) => a.productId === addon.addon_product_id
-                    );
-                    const selectedAddon = selectedAddons.find(
-                      (a) => a.productId === addon.addon_product_id
-                    );
-                    const price =
-                      addon.price_override ?? addon.addon_product?.price ?? 0;
+              {/* Bundle Deals Section */}
+              {bundleAddons.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-green-600" />
+                    <p className="text-sm font-medium text-green-700">
+                      Bundle Deals - Save when you buy together!
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {bundleAddons.map((addon) => {
+                      const isSelected = selectedAddons.some(
+                        (a) => a.productId === addon.addon_product_id
+                      );
+                      const selectedAddon = selectedAddons.find(
+                        (a) => a.productId === addon.addon_product_id
+                      );
+                      const originalPrice = addon.addon_product?.price || 0;
+                      const bundlePrice = calculateBundlePrice(addon);
+                      const savings = originalPrice - bundlePrice;
 
-                    return (
-                      <div
-                        key={addon.id}
-                        className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
-                          isSelected ? "border-primary bg-primary/5" : "bg-muted/30"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleAddon(addon.addon_product_id)}
-                        />
-                        <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                          <img
-                            src={addon.addon_product?.images?.[0] || "/placeholder.svg"}
-                            alt={addon.addon_product?.name}
-                            className="w-full h-full object-cover"
+                      return (
+                        <div
+                          key={addon.id}
+                          className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                            isSelected ? "border-green-500 bg-green-50 dark:bg-green-950/30" : "bg-muted/30"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleAddon(addon.addon_product_id, addon)}
                           />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {addon.addon_product?.name}
-                          </p>
-                          <p className="text-sm text-primary font-medium">
-                            +{formatPrice(price)}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() =>
-                                updateAddonQuantity(
-                                  addon.addon_product_id,
-                                  (selectedAddon?.quantity || 1) - 1
-                                )
-                              }
-                              disabled={(selectedAddon?.quantity || 1) <= 1}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-6 text-center text-sm">
-                              {selectedAddon?.quantity || 1}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() =>
-                                updateAddonQuantity(
-                                  addon.addon_product_id,
-                                  (selectedAddon?.quantity || 1) + 1
-                                )
-                              }
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
+                          <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                            <img
+                              src={addon.addon_product?.images?.[0] || "/placeholder.svg"}
+                              alt={addon.addon_product?.name}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {addon.addon_product?.name}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs line-through text-muted-foreground">
+                                {formatPrice(originalPrice)}
+                              </span>
+                              <span className="text-sm font-bold text-green-600">
+                                {formatPrice(bundlePrice)}
+                              </span>
+                              {savings > 0 && (
+                                <Badge className="bg-green-100 text-green-800 text-[10px]">
+                                  Save {formatPrice(savings)}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  updateAddonQuantity(
+                                    addon.addon_product_id,
+                                    (selectedAddon?.quantity || 1) - 1
+                                  )
+                                }
+                                disabled={(selectedAddon?.quantity || 1) <= 1}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                              <span className="w-6 text-center text-sm">
+                                {selectedAddon?.quantity || 1}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  updateAddonQuantity(
+                                    addon.addon_product_id,
+                                    (selectedAddon?.quantity || 1) + 1
+                                  )
+                                }
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Add-ons Section */}
+              {addonTypeAddons.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm font-medium">
+                      Optional Add-ons
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {addonTypeAddons.map((addon) => {
+                      const isSelected = selectedAddons.some(
+                        (a) => a.productId === addon.addon_product_id
+                      );
+                      const selectedAddon = selectedAddons.find(
+                        (a) => a.productId === addon.addon_product_id
+                      );
+                      const price = calculateAddonPrice(addon);
+                      const customInfo = getAddonDisplayInfo(addon);
+
+                      return (
+                        <div
+                          key={addon.id}
+                          className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                            isSelected ? "border-primary bg-primary/5" : "bg-muted/30"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleAddon(addon.addon_product_id, addon)}
+                          />
+                          <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                            <img
+                              src={addon.addon_product?.images?.[0] || "/placeholder.svg"}
+                              alt={addon.addon_product?.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {addon.addon_product?.name}
+                              {customInfo && (
+                                <span className="text-muted-foreground font-normal ml-1">
+                                  ({customInfo})
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-sm text-primary font-medium">
+                              +{formatPrice(price)}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  updateAddonQuantity(
+                                    addon.addon_product_id,
+                                    (selectedAddon?.quantity || 1) - 1
+                                  )
+                                }
+                                disabled={(selectedAddon?.quantity || 1) <= 1}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                              <span className="w-6 text-center text-sm">
+                                {selectedAddon?.quantity || 1}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() =>
+                                  updateAddonQuantity(
+                                    addon.addon_product_id,
+                                    (selectedAddon?.quantity || 1) + 1
+                                  )
+                                }
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Order Summary */}
               <div className="border-t pt-4 space-y-2">
@@ -462,19 +649,30 @@ const CartConfirmationDialog = ({
                   const addonProduct = productAddons.find(
                     (a) => a.addon_product_id === addon.productId
                   );
-                  const price =
-                    addonProduct?.price_override ??
-                    addonProduct?.addon_product?.price ??
-                    0;
+                  if (!addonProduct) return null;
+                  
+                  const price = addonProduct.addon_type === "bundle"
+                    ? calculateBundlePrice(addonProduct)
+                    : calculateAddonPrice(addonProduct);
+                  const customInfo = getAddonDisplayInfo(addonProduct);
+                  
                   return (
                     <div key={addon.productId} className="flex justify-between text-sm text-muted-foreground">
                       <span>
-                        + {addonProduct?.addon_product?.name} × {addon.quantity}
+                        + {addonProduct.addon_product?.name}
+                        {customInfo && ` (${customInfo})`}
+                        {" × "}{addon.quantity}
                       </span>
                       <span>{formatPrice(price * addon.quantity)}</span>
                     </div>
                   );
                 })}
+                {bundleSavings > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 font-medium">
+                    <span>Bundle Savings</span>
+                    <span>-{formatPrice(bundleSavings)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold text-lg pt-2 border-t">
                   <span>Total</span>
                   <span className="text-primary">{formatPrice(grandTotal)}</span>
