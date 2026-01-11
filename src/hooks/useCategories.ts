@@ -38,10 +38,28 @@ export interface CategoryInput {
   theme?: CategoryTheme | null;
 }
 
-// Fetch all active categories (for frontend)
+// Fetch all active categories for main display (for frontend - excludes addon-only categories)
 export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .eq('show_in_main_listing', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      return data as Category[];
+    },
+  });
+};
+
+// Fetch all active categories including addon-only (for product forms and filters)
+export const useAllActiveCategories = () => {
+  return useQuery({
+    queryKey: ['all-active-categories'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')

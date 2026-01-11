@@ -3,7 +3,6 @@ import { useActiveFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteSetting, ContactSettings, BrandingSettings } from "@/hooks/useSiteSettings";
 
 interface LegalSettings {
-  copyrightText?: string;
   privacyPolicyUrl?: string;
   termsOfServiceUrl?: string;
 }
@@ -93,7 +92,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
-          <p>{legal?.copyrightText || `© ${new Date().getFullYear()} ${siteName?.split(" ")[0] || 'Store'}. All rights reserved.`}</p>
+          <p>© {new Date().getFullYear()} {siteName.split(" ")[0]}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
             {renderLegalLink(legal?.privacyPolicyUrl, "Privacy Policy", "/privacy-policy")}
