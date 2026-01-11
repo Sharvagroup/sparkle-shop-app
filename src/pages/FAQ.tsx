@@ -4,79 +4,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Link } from "react-router-dom";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEO from "@/components/SEO";
-
-interface FAQQuestion {
-  id: string;
-  question: string;
-  answer: string;
-}
-
-interface FAQCategory {
-  id: string;
-  name: string;
-  questions: FAQQuestion[];
-}
-
-interface FAQSettings {
-  pageTitle: string;
-  pageSubtitle: string;
-  categories: FAQCategory[];
-  ctaTitle: string;
-  ctaText: string;
-  ctaButtonText: string;
-  ctaButtonLink: string;
-}
-
-const defaultFAQSettings: FAQSettings = {
-  pageTitle: "Frequently Asked Questions",
-  pageSubtitle: "Find answers to common questions about our products and services",
-  categories: [
-    {
-      id: "orders",
-      name: "Orders & Shipping",
-      questions: [
-        { id: "1", question: "How long does shipping take?", answer: "Standard shipping takes 5-7 business days. Express shipping is available for 2-3 business days delivery. Free shipping is available on orders above ₹2,000." },
-        { id: "2", question: "Do you ship internationally?", answer: "Yes, we ship to select international destinations. International shipping typically takes 10-15 business days. Additional customs duties may apply." },
-        { id: "3", question: "How can I track my order?", answer: "Once your order is shipped, you'll receive a tracking link via email and SMS. You can also track your order from the 'My Orders' section in your account." }
-      ]
-    },
-    {
-      id: "returns",
-      name: "Returns & Exchanges",
-      questions: [
-        { id: "1", question: "What is your return policy?", answer: "We offer a 15-day return policy for unused items in their original packaging. Items must be returned with all tags intact and in the original condition." },
-        { id: "2", question: "How do I initiate a return?", answer: "To initiate a return, go to 'My Orders', select the order, and click 'Request Return'. Our team will guide you through the process." },
-        { id: "3", question: "Are exchanges free?", answer: "Yes, your first exchange is free. For subsequent exchanges, standard shipping charges will apply." }
-      ]
-    },
-    {
-      id: "care",
-      name: "Product Care",
-      questions: [
-        { id: "1", question: "How do I care for my jewelry?", answer: "Store jewelry in a cool, dry place away from direct sunlight. Avoid contact with perfumes, lotions, and water. Clean gently with a soft cloth." },
-        { id: "2", question: "Are your products hypoallergenic?", answer: "Most of our jewelry is hypoallergenic and nickel-free. Product descriptions specify the materials used. Contact us for specific allergy concerns." }
-      ]
-    },
-    {
-      id: "payment",
-      name: "Payment & Security",
-      questions: [
-        { id: "1", question: "What payment methods do you accept?", answer: "We accept all major credit/debit cards, UPI, net banking, and popular wallets. Cash on delivery is available for select locations." },
-        { id: "2", question: "Is my payment information secure?", answer: "Absolutely. We use industry-standard SSL encryption and never store your complete payment details. All transactions are processed through secure payment gateways." }
-      ]
-    }
-  ],
-  ctaTitle: "Still have questions?",
-  ctaText: "Can't find what you're looking for? Our support team is here to help.",
-  ctaButtonText: "Contact Us",
-  ctaButtonLink: "/contact"
-};
+import { defaultFAQSettings, type FAQSettings } from "@/lib/pageDefaults";
 
 const FAQ = () => {
   const { data: faqData, isLoading } = useSiteSetting<FAQSettings>("faq");
@@ -134,12 +69,23 @@ const FAQ = () => {
                 <p className="text-muted-foreground mb-4">
                   {settings.ctaText}
                 </p>
-                <a 
-                  href={settings.ctaButtonLink} 
-                  className="inline-flex items-center justify-center px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  {settings.ctaButtonText}
-                </a>
+                {settings.ctaButtonLink.startsWith("http") ? (
+                  <a 
+                    href={settings.ctaButtonLink} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    {settings.ctaButtonText}
+                  </a>
+                ) : (
+                  <Link 
+                    to={settings.ctaButtonLink} 
+                    className="inline-flex items-center justify-center px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    {settings.ctaButtonText}
+                  </Link>
+                )}
               </div>
             </>
           )}

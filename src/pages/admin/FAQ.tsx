@@ -9,49 +9,18 @@ import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
-interface FAQQuestion {
-  id: string;
-  question: string;
-  answer: string;
-}
-
-interface FAQCategory {
-  id: string;
-  name: string;
-  questions: FAQQuestion[];
-}
-
-interface FAQSettings {
-  pageTitle: string;
-  pageSubtitle: string;
-  categories: FAQCategory[];
-  ctaTitle: string;
-  ctaText: string;
-  ctaButtonText: string;
-  ctaButtonLink: string;
-}
-
-const defaultSettings: FAQSettings = {
-  pageTitle: "Frequently Asked Questions",
-  pageSubtitle: "Find answers to common questions about our products and services",
-  categories: [],
-  ctaTitle: "Still have questions?",
-  ctaText: "Can't find what you're looking for? Our support team is here to help.",
-  ctaButtonText: "Contact Us",
-  ctaButtonLink: "/contact"
-};
+import { defaultFAQSettings, type FAQSettings } from "@/lib/pageDefaults";
 
 const FAQAdmin = () => {
   const { data: savedSettings, isLoading } = useSiteSetting<FAQSettings>("faq");
   const updateSetting = useUpdateSiteSetting();
-  const [settings, setSettings] = useState<FAQSettings>(defaultSettings);
+  const [settings, setSettings] = useState<FAQSettings>(defaultFAQSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (savedSettings) {
-      setSettings({ ...defaultSettings, ...savedSettings });
+      setSettings({ ...defaultFAQSettings, ...savedSettings });
       setOpenCategories(savedSettings.categories?.map(c => c.id) || []);
     }
   }, [savedSettings]);

@@ -7,35 +7,7 @@ import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEO from "@/components/SEO";
-
-interface Artisan {
-  id: string;
-  name: string;
-  role: string;
-  quote: string;
-  image: string;
-}
-
-interface Value {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-}
-
-interface AboutSettings {
-  heroImage: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  missionTitle: string;
-  missionText: string;
-  missionImage: string;
-  artisans: Artisan[];
-  values: Value[];
-  ctaTitle: string;
-  ctaText: string;
-  ctaButtonText: string;
-}
+import { defaultAboutSettings, type AboutSettings } from "@/lib/pageDefaults";
 
 import type { LucideIcon } from "lucide-react";
 
@@ -43,42 +15,9 @@ const iconMap: Record<string, LucideIcon> = {
   Hammer, BookOpen, Diamond, Heart, Star, Award, Shield, Gem
 };
 
-const defaultSettings: AboutSettings = {
-  heroImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop",
-  heroTitle: "Our Story",
-  heroSubtitle: "Crafting timeless elegance rooted in Indian heritage",
-  missionTitle: "Redefining traditional luxury for the modern soul.",
-  missionText: "We believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art. Founded with a vision to preserve the intricate techniques of ancient goldsmithing, we blend these time-honored traditions with contemporary aesthetics. Each piece in our collection narrates a story of dedication, passion, and the pursuit of perfection.",
-  missionImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=400&fit=crop",
-  artisans: [
-    {
-      id: "1",
-      name: "Aanya Kapoor",
-      role: "Founder & Creative Director",
-      quote: "I wanted to create pieces that don't just adorn the body, but also touch the soul.",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face"
-    },
-    {
-      id: "2",
-      name: "Rajesh Verma",
-      role: "Head Goldsmith",
-      quote: "Thirty years of shaping gold has taught me that patience is the true secret to beauty.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
-    }
-  ],
-  values: [
-    { id: "1", icon: "Hammer", title: "Our Craftsmanship", description: "Every curve and contour is meticulously shaped by master artisans who have inherited their skills through generations, ensuring unmatched quality and detail." },
-    { id: "2", icon: "BookOpen", title: "Our Heritage", description: "Rooted in the royal traditions of India, our designs pay homage to the grandeur of the past while embracing the minimalist elegance of today." },
-    { id: "3", icon: "Diamond", title: "Our Values", description: "We are committed to ethical sourcing and sustainability, ensuring that the beauty of our jewelry is matched only by the integrity of its creation." }
-  ],
-  ctaTitle: "Experience the Legacy",
-  ctaText: "Explore our curated collections and find the piece that speaks to your unique story.",
-  ctaButtonText: "Shop Our Collections"
-};
-
 const About = () => {
   const { data: aboutData, isLoading } = useSiteSetting<AboutSettings>("about");
-  const settings = aboutData ? { ...defaultSettings, ...aboutData } : defaultSettings;
+  const settings = aboutData ? { ...defaultAboutSettings, ...aboutData } : defaultAboutSettings;
 
   if (isLoading) {
     return (

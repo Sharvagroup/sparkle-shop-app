@@ -9,39 +9,18 @@ import { useSiteSetting, useUpdateSiteSetting } from "@/hooks/useSiteSettings";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
-interface SizeCategory {
-  id: string;
-  name: string;
-  instructions: string;
-  columns: string[];
-  rows: Record<string, string>[];
-}
-
-interface SizeGuideSettings {
-  pageTitle: string;
-  pageSubtitle: string;
-  categories: SizeCategory[];
-  footerText: string;
-}
-
-const defaultSettings: SizeGuideSettings = {
-  pageTitle: "Size Guide",
-  pageSubtitle: "Find your perfect fit with our comprehensive sizing charts",
-  categories: [],
-  footerText: "Need help finding your size? Contact our team for personalized assistance."
-};
+import { defaultSizeGuideSettings, type SizeGuideSettings, type SizeCategory } from "@/lib/pageDefaults";
 
 const SizeGuideAdmin = () => {
   const { data: savedSettings, isLoading } = useSiteSetting<SizeGuideSettings>("size_guide");
   const updateSetting = useUpdateSiteSetting();
-  const [settings, setSettings] = useState<SizeGuideSettings>(defaultSettings);
+  const [settings, setSettings] = useState<SizeGuideSettings>(defaultSizeGuideSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (savedSettings) {
-      setSettings({ ...defaultSettings, ...savedSettings });
+      setSettings({ ...defaultSizeGuideSettings, ...savedSettings });
       setOpenCategories(savedSettings.categories?.map(c => c.id) || []);
     }
   }, [savedSettings]);
