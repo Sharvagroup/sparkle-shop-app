@@ -115,6 +115,25 @@ const Checkout = () => {
     return unitPrice * item.quantity;
   };
 
+  // Calculate addon price using full product pricing logic
+  const calculateAddonPrice = (addon: typeof allAddons[0]) => {
+    const addonProduct = addon.addon_product;
+    if (!addonProduct) return 0;
+    
+    // Use the same pricing logic as main products
+    let unitPrice = addonProduct.price;
+    
+    // If addon has selected options and uses proportional pricing
+    if (addonProduct.pricing_by_option_id && addonProduct.base_unit_value && addonProduct.base_unit_value > 0) {
+      const selectedValue = addon.selected_options?.[addonProduct.pricing_by_option_id];
+      if (selectedValue && typeof selectedValue === 'number') {
+        unitPrice = (addonProduct.price / addonProduct.base_unit_value) * selectedValue;
+      }
+    }
+    
+    return unitPrice * (addon.quantity || 1);
+  };
+
   // Calculate subtotal including addons with dynamic pricing
   const subtotal = useMemo(() => {
     let total = 0;
@@ -122,11 +141,11 @@ const Checkout = () => {
       total += calculateItemPrice(item);
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
-        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
+        total += calculateAddonPrice(addon);
       });
     });
     return total;
-  }, [cartItems, addonsByCartItem]);
+  }, [cartItems, addonsByCartItem, allAddons]);
 
   // Dynamic shipping calculation from Commerce Settings
   // Dynamic shipping calculation from Commerce Settings
@@ -165,7 +184,7 @@ const Checkout = () => {
       const itemAddons = addonsByCartItem[item.id] || [];
       const itemTotal = calculateItemPrice(item);
       const addonsTotal = itemAddons.reduce(
-        (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
+        (sum, addon) => sum + calculateAddonPrice(addon),
         0
       );
       

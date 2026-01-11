@@ -138,19 +138,20 @@ const Categories = () => {
               <TableHead>Parent</TableHead>
               <TableHead className="w-20">Order</TableHead>
               <TableHead className="w-20">Status</TableHead>
+              <TableHead className="w-32">Show in Main</TableHead>
               <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   <p className="text-muted-foreground">No categories found</p>
                   <Button variant="link" onClick={handleAdd} className="mt-2">
                     Add your first category
@@ -190,6 +191,17 @@ const Categories = () => {
                       }`}
                     >
                       {category.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        category.show_in_main_listing !== false
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                          : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200'
+                      }`}
+                    >
+                      {category.show_in_main_listing !== false ? 'Yes' : 'No (Addon Only)'}
                     </span>
                   </TableCell>
                   <TableCell>

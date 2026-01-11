@@ -21,6 +21,7 @@ export interface Category {
   parent_id: string | null;
   display_order: number;
   is_active: boolean;
+  show_in_main_listing: boolean;
   theme: CategoryTheme | null;
   created_at: string;
   updated_at: string;
@@ -33,6 +34,7 @@ export interface CategoryInput {
   parent_id?: string | null;
   display_order?: number;
   is_active?: boolean;
+  show_in_main_listing?: boolean;
   theme?: CategoryTheme | null;
 }
 

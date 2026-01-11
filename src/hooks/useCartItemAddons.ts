@@ -16,6 +16,9 @@ export interface CartItemAddon {
     name: string;
     price: number;
     images: string[] | null;
+    enabled_options: string[] | null;
+    pricing_by_option_id: string | null;
+    base_unit_value: number | null;
   };
 }
 
@@ -35,7 +38,7 @@ export const useCartItemAddons = (cartItemId: string) => {
         .from("cart_item_addons")
         .select(`
           *,
-          addon_product:products(id, name, price, images)
+          addon_product:products(id, name, price, images, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .eq("cart_item_id", cartItemId);
 
@@ -71,7 +74,7 @@ export const useAllCartAddons = () => {
         .from("cart_item_addons")
         .select(`
           *,
-          addon_product:products(id, name, price, images)
+          addon_product:products(id, name, price, images, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .in("cart_item_id", cartItemIds);
 

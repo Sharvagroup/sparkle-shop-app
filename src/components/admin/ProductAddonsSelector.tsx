@@ -178,6 +178,9 @@ const ProductAddonsSelector = ({
               {availableProducts.map((product) => (
                 <SelectItem key={product.id} value={product.id}>
                   {product.name} - {formatPrice(product.price)}
+                  {product.category?.show_in_main_listing === false && (
+                    <span className="text-xs text-muted-foreground ml-1">(Addon Only)</span>
+                  )}
                 </SelectItem>
               ))}
             </SelectContent>
