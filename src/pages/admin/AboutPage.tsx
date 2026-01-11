@@ -9,7 +9,7 @@ import { useSiteSetting, useUpdateSiteSetting, uploadSiteAsset } from "@/hooks/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { validateSiteImage, validateImageSize, ALLOWED_SITE_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
 
 // ========== Our Story Types ==========
@@ -211,7 +211,7 @@ const AboutPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formatCheck = validateWebPImage(file);
+    const formatCheck = validateSiteImage(file);
     if (!formatCheck.valid) {
       toast.error(formatCheck.error);
       return;
@@ -239,7 +239,7 @@ const AboutPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formatCheck = validateWebPImage(file);
+    const formatCheck = validateSiteImage(file);
     if (!formatCheck.valid) {
       toast.error(formatCheck.error);
       return;
@@ -480,7 +480,7 @@ const AboutPage = () => {
                       {aboutSettings.heroImage && <img src={aboutSettings.heroImage} alt="Hero" className="w-full h-full object-cover" />}
                     </div>
                     <div>
-                      <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "heroImage")} className="hidden" id="hero-upload" />
+                      <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "heroImage")} className="hidden" id="hero-upload" />
                       <Button variant="outline" size="sm" onClick={() => document.getElementById("hero-upload")?.click()} disabled={uploading === "heroImage"}>
                         {uploading === "heroImage" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                       </Button>
@@ -508,7 +508,7 @@ const AboutPage = () => {
                       {aboutSettings.missionImage && <img src={aboutSettings.missionImage} alt="Mission" className="w-full h-full object-cover" />}
                     </div>
                     <div>
-                      <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "missionImage")} className="hidden" id="mission-upload" />
+                      <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "missionImage")} className="hidden" id="mission-upload" />
                       <Button variant="outline" size="sm" onClick={() => document.getElementById("mission-upload")?.click()} disabled={uploading === "missionImage"}>
                         {uploading === "missionImage" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                       </Button>
@@ -588,7 +588,7 @@ const AboutPage = () => {
                               <Input value={artisan.role} onChange={(e) => updateArtisan(artisan.id, "role", e.target.value)} />
                             </div>
                           </div>
-                          <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleArtisanImageUpload(e, artisan.id)} className="hidden" id={`artisan-${artisan.id}`} />
+                          <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleArtisanImageUpload(e, artisan.id)} className="hidden" id={`artisan-${artisan.id}`} />
                           <Button variant="outline" size="sm" onClick={() => document.getElementById(`artisan-${artisan.id}`)?.click()} disabled={uploading === `artisan-${artisan.id}`}>
                             {uploading === `artisan-${artisan.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload Photo
                           </Button>
