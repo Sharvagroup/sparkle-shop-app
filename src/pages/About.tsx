@@ -48,7 +48,7 @@ const defaultSettings: AboutSettings = {
   heroTitle: "Our Story",
   heroSubtitle: "Crafting timeless elegance rooted in Indian heritage",
   missionTitle: "Redefining traditional luxury for the modern soul.",
-  missionText: "At Sharva, we believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art. Founded with a vision to preserve the intricate techniques of ancient Indian goldsmithing, Sharva blends these time-honored traditions with contemporary aesthetics. Each piece in our collection narrates a story of dedication, passion, and the pursuit of perfection.",
+  missionText: "We believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art. Founded with a vision to preserve the intricate techniques of ancient goldsmithing, we blend these time-honored traditions with contemporary aesthetics. Each piece in our collection narrates a story of dedication, passion, and the pursuit of perfection.",
   missionImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=400&fit=crop",
   artisans: [
     {
@@ -99,7 +99,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO title={`${settings.heroTitle} | Sharva`} description={settings.missionText.slice(0, 160)} />
+      <SEO title={settings.heroTitle} description={settings.missionText.slice(0, 160)} />
       <PromoBanner />
       <Header />
       
@@ -174,7 +174,7 @@ const About = () => {
             <div className="container mx-auto max-w-4xl">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-display text-foreground mb-4">
-                  The Artisans Behind Sharva
+                  Meet Our Artisans
                 </h2>
                 <div className="w-12 h-0.5 bg-border mx-auto" />
               </div>

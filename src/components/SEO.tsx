@@ -18,7 +18,7 @@ interface SEOProps {
 export const SEO = ({ title, description, image, keywords }: SEOProps) => {
   const { data: seo } = useSiteSetting<SeoSettings>("seo");
 
-  const finalTitle = title || seo?.metaTitle || 'Sharva - Heritage Jewelry';
+  const finalTitle = title || seo?.metaTitle || '';
   const finalDesc = description || seo?.metaDescription || '';
   const finalImage = image || seo?.ogImage || '';
   const finalKeywords = keywords || seo?.keywords || '';

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useSiteSetting, BrandingSettings } from '@/hooks/useSiteSettings';
 import { z } from 'zod';
 
 const passwordSchema = z.object({
@@ -26,6 +27,7 @@ const ResetPassword = () => {
   const { updatePassword, session } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: branding } = useSiteSetting<BrandingSettings>("branding");
 
   useEffect(() => {
     // If no session, redirect to auth
@@ -81,7 +83,11 @@ const ResetPassword = () => {
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif tracking-widest text-primary">SHARVA</h1>
+          {branding?.siteName ? (
+            <h1 className="text-3xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
+          ) : (
+            <div className="h-8 w-28 bg-muted animate-pulse rounded mx-auto" />
+          )}
         </div>
 
         <h2 className="text-2xl font-semibold mb-2">Set new password</h2>

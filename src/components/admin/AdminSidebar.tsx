@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useSiteSetting } from '@/hooks/useSiteSettings';
 import {
   LayoutDashboard,
   Package,
@@ -51,17 +52,24 @@ const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { data: branding } = useSiteSetting<{ siteName?: string; logoUrl?: string }>("branding");
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/admin/login');
   };
 
+  const siteName = branding?.siteName;
+
   return (
     <aside className="w-64 bg-card border-r min-h-screen flex flex-col">
       <div className="p-6 border-b">
         <Link to="/admin/dashboard">
-          <h1 className="text-xl font-serif tracking-widest text-primary">SHARVA</h1>
+          {siteName ? (
+            <h1 className="text-xl font-serif tracking-widest text-primary">{siteName}</h1>
+          ) : (
+            <div className="h-7 w-24 bg-muted animate-pulse rounded" />
+          )}
           <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
         </Link>
       </div>

@@ -87,7 +87,7 @@ const defaultAboutSettings: AboutSettings = {
   heroTitle: "Our Story",
   heroSubtitle: "Crafting timeless elegance rooted in Indian heritage",
   missionTitle: "Redefining traditional luxury for the modern soul.",
-  missionText: "At Sharva, we believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art.",
+  missionText: "We believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art.",
   missionImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=400&fit=crop",
   artisans: [
     { id: "1", name: "Aanya Kapoor", role: "Founder & Creative Director", quote: "I wanted to create pieces that don't just adorn the body, but also touch the soul.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face" },

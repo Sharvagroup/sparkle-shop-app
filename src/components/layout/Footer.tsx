@@ -20,12 +20,12 @@ const Footer = () => {
     return acc;
   }, {} as Record<string, FooterLink[]>);
 
-  const siteName = branding?.siteName || "Sharva Jewellery Collection";
-  const tagline = branding?.tagline || "Minimalist jewelry crafted for the modern individual";
+  const siteName = branding?.siteName;
+  const tagline = branding?.tagline;
   const logoUrl = branding?.logoUrl;
-  const email = contact?.email || "hello@sharvajewellery.com";
-  const phone = contact?.phone || "+1 (212) 555-0123";
-  const address = contact?.address || "123 Madison Avenue\nNew York, NY 10016";
+  const email = contact?.email;
+  const phone = contact?.phone;
+  const address = contact?.address;
 
   const renderLinkItem = (link: FooterLink) => {
     if (link.is_external) {

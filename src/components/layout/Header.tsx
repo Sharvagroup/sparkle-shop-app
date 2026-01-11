@@ -71,7 +71,7 @@ const Header = () => {
   const celebritySpecials = useMemo(() => allProducts.filter(p => p.is_celebrity_special), [allProducts]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const siteName = branding?.siteName || "SHARVA";
+  const siteName = branding?.siteName;
   const logoUrl = branding?.logoUrl;
 
   // Build nav items dynamically from CMS or fallback to hardcoded

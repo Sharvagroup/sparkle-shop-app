@@ -508,7 +508,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title="Shop All Products | Sharva" description="Explore our complete collection of handcrafted heritage jewelry." />
+      <SEO title="Shop All Products" description="Explore our complete collection of handcrafted heritage jewelry." />
       <PromoBanner />
       <Header />
 

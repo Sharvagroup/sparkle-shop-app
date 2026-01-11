@@ -160,11 +160,17 @@ const Auth = () => {
         )}
         <div className="text-center relative z-10">
           <Link to="/" className="inline-block mb-8">
-            <h1 className="text-4xl font-serif tracking-widest text-primary">SHARVA</h1>
+            {branding?.siteName ? (
+              <h1 className="text-4xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
+            ) : (
+              <div className="h-10 w-32 bg-muted/50 animate-pulse rounded mx-auto" />
+            )}
           </Link>
-          <p className="text-muted-foreground text-lg max-w-md font-medium">
-            Discover exquisite handcrafted jewelry that tells your unique story
-          </p>
+          {branding?.tagline && (
+            <p className="text-muted-foreground text-lg max-w-md font-medium">
+              {branding.tagline}
+            </p>
+          )}
         </div>
       </div>
 
@@ -177,7 +183,11 @@ const Auth = () => {
           </Link>
 
           <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl font-serif tracking-widest text-primary">SHARVA</h1>
+            {branding?.siteName ? (
+              <h1 className="text-3xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
+            ) : (
+              <div className="h-8 w-28 bg-muted animate-pulse rounded mx-auto" />
+            )}
           </div>
 
           {mode === 'signin' && (
@@ -251,7 +261,7 @@ const Auth = () => {
           {mode === 'signup' && (
             <>
               <h2 className="text-2xl font-semibold mb-2">Create an account</h2>
-              <p className="text-muted-foreground mb-8">Join SHARVA today</p>
+              <p className="text-muted-foreground mb-8">Join us today</p>
 
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div>

@@ -84,7 +84,7 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO title={`${settings.pageTitle} | Sharva`} description={settings.pageSubtitle} />
+      <SEO title={settings.pageTitle} description={settings.pageSubtitle} />
       <PromoBanner />
       <Header />
       
