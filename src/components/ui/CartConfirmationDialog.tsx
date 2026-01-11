@@ -136,17 +136,12 @@ const CartConfirmationDialog = ({
     return unitPrice * quantity;
   };
 
-  // Calculate addon price considering custom options and price override
+  // Calculate addon price using original product pricing with custom options
   const calculateAddonPrice = (addon: ProductAddon) => {
-    // If price override is set, use it
-    if (addon.price_override !== null) {
-      return addon.price_override;
-    }
-    
     const addonProduct = addon.addon_product;
     if (!addonProduct) return 0;
     
-    // Check for proportional pricing with custom options
+    // Check for proportional pricing with custom options (e.g., weight-based)
     if (addonProduct.pricing_by_option_id && addonProduct.base_unit_value && addonProduct.base_unit_value > 0) {
       const customValue = addon.custom_options?.[addonProduct.pricing_by_option_id];
       if (customValue && typeof customValue === 'number') {

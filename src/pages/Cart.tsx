@@ -378,12 +378,15 @@ const Cart = () => {
                                   <p className="text-sm font-medium truncate">
                                     + {addon.addon_product?.name}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    Qty: {addon.quantity || 1}
-                                  </p>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span>Qty: {addon.quantity || 1}</span>
+                                    {addon.selected_options && Object.keys(addon.selected_options).length > 0 && (
+                                      <span className="ml-2">• {formatOptions(addon.selected_options)}</span>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="text-sm font-medium">
-                                  {formatPrice((addon.addon_product?.price || 0) * (addon.quantity || 1))}
+                                  {formatPrice(calculateAddonPrice(addon))}
                                 </div>
                                 <button
                                   onClick={() => handleRemoveAddon(addon.id, item.id)}

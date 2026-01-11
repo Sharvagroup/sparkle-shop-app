@@ -205,8 +205,9 @@ const Checkout = () => {
             name: addon.addon_product?.name || "",
             image: addon.addon_product?.images?.[0] || "",
             quantity: addon.quantity || 1,
-            price: addon.addon_product?.price || 0,
-            total: (addon.addon_product?.price || 0) * (addon.quantity || 1),
+            price: calculateAddonPrice(addon) / (addon.quantity || 1), // Unit price
+            total: calculateAddonPrice(addon),
+            selected_options: addon.selected_options || {},
           })),
         },
       };

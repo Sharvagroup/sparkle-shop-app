@@ -741,11 +741,12 @@ const ProductDetail = () => {
                     key={p.id}
                     id={p.slug}
                     name={p.name}
-                    description=""
+                    description={p.description || ""}
                     price={p.price}
-                    image={p.images?.[0] || "/placeholder.svg"}
-                    rating={0}
-                    reviewCount={0}
+                    originalPrice={p.original_price || undefined}
+                    image={p.images?.[0] || ""}
+                    rating={p.rating || 0}
+                    reviewCount={p.review_count || 0}
                   />
                 ))}
               </div>
