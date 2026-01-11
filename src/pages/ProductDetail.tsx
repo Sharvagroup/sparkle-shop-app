@@ -30,6 +30,7 @@ import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddCartItemAddon } from "@/hooks/useCartItemAddons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductReviews } from "@/hooks/useReviews";
+import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -50,6 +51,8 @@ const ProductDetail = () => {
   const addToCart = useAddToCart();
   const addCartItemAddon = useAddCartItemAddon();
   const checkCollision = useCheckCartCollision();
+  const { data: isInWishlist = false } = useIsInWishlist(product?.id || "");
+  const toggleWishlist = useToggleWishlist();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -417,8 +420,26 @@ const ProductDetail = () => {
                 <h1 className="font-display text-3xl md:text-5xl text-foreground mb-2 leading-tight">
                   {product.name}
                 </h1>
-                <button className="hidden md:block text-muted-foreground hover:text-sale transition-colors">
-                  <Heart size={28} />
+                <button 
+                  onClick={async () => {
+                    if (!user) {
+                      toast({ title: "Please sign in to add items to wishlist", variant: "destructive" });
+                      navigate("/auth");
+                      return;
+                    }
+                    if (product) {
+                      await toggleWishlist.toggle(product.id, isInWishlist);
+                    }
+                  }}
+                  disabled={toggleWishlist.isPending}
+                  className={`hidden md:block transition-colors ${
+                    isInWishlist 
+                      ? "text-sale" 
+                      : "text-muted-foreground hover:text-sale"
+                  }`}
+                  aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart size={28} className={isInWishlist ? "fill-current" : ""} />
                 </button>
               </div>
 
@@ -628,8 +649,26 @@ const ProductDetail = () => {
         {/* Mobile Fixed Bottom Bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-50 md:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
           <div className="flex gap-3">
-            <button className="w-12 flex items-center justify-center border border-border rounded-sm text-muted-foreground hover:text-sale transition-colors">
-              <Heart size={20} />
+            <button 
+              onClick={async () => {
+                if (!user) {
+                  toast({ title: "Please sign in to add items to wishlist", variant: "destructive" });
+                  navigate("/auth");
+                  return;
+                }
+                if (product) {
+                  await toggleWishlist.toggle(product.id, isInWishlist);
+                }
+              }}
+              disabled={toggleWishlist.isPending}
+              className={`w-12 flex items-center justify-center border border-border rounded-sm transition-colors ${
+                isInWishlist 
+                  ? "text-sale border-sale" 
+                  : "text-muted-foreground hover:text-sale"
+              }`}
+              aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart size={20} className={isInWishlist ? "fill-current" : ""} />
             </button>
             <Button
               variant="outline"

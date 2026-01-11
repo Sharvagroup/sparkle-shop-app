@@ -75,13 +75,15 @@ const Wishlist = () => {
             </h1>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {wishlistItems.map((item) => (
+              {wishlistItems
+                .filter(item => item.product) // Additional safety check
+                .map((item) => (
                 <Card key={item.id} className="overflow-hidden group">
                   <div className="relative">
                     <Link to={`/product/${item.product?.slug}`}>
                       <img 
                         src={item.product?.images?.[0] || "/placeholder.svg"} 
-                        alt={item.product?.name}
+                        alt={item.product?.name || "Product"}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
@@ -94,6 +96,7 @@ const Wishlist = () => {
                       onClick={() => removeFromWishlist.mutate(item.product_id)}
                       className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
                       disabled={removeFromWishlist.isPending}
+                      aria-label="Remove from wishlist"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -106,7 +109,7 @@ const Wishlist = () => {
                     </Link>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold text-primary">
-                        ₹{item.product?.price.toLocaleString("en-IN")}
+                        ₹{item.product?.price?.toLocaleString("en-IN") || "0"}
                       </span>
                       {item.product?.original_price && (
                         <span className="text-sm text-muted-foreground line-through">
@@ -115,13 +118,16 @@ const Wishlist = () => {
                       )}
                     </div>
                     <Button 
-                      onClick={() => handleAddToCart(item.product_id)}
-                      disabled={addToCart.isPending}
+                      onClick={() => {
+                        if (item.product?.slug) {
+                          window.location.href = `/product/${item.product.slug}`;
+                        }
+                      }}
                       className="w-full mt-4 gap-2"
                       size="sm"
                     >
                       <ShoppingBag className="h-4 w-4" />
-                      Add to Cart
+                      View Product
                     </Button>
                   </CardContent>
                 </Card>
