@@ -7,7 +7,35 @@ import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEO from "@/components/SEO";
-import { defaultAboutSettings, type AboutSettings } from "@/lib/pageDefaults";
+
+interface Artisan {
+  id: string;
+  name: string;
+  role: string;
+  quote: string;
+  image: string;
+}
+
+interface Value {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface AboutSettings {
+  heroImage: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  missionTitle: string;
+  missionText: string;
+  missionImage: string;
+  artisans: Artisan[];
+  values: Value[];
+  ctaTitle: string;
+  ctaText: string;
+  ctaButtonText: string;
+}
 
 import type { LucideIcon } from "lucide-react";
 
@@ -15,9 +43,23 @@ const iconMap: Record<string, LucideIcon> = {
   Hammer, BookOpen, Diamond, Heart, Star, Award, Shield, Gem
 };
 
+const defaultSettings: AboutSettings = {
+  heroImage: "",
+  heroTitle: "Our Story",
+  heroSubtitle: "",
+  missionTitle: "",
+  missionText: "",
+  missionImage: "",
+  artisans: [],
+  values: [],
+  ctaTitle: "",
+  ctaText: "",
+  ctaButtonText: "Shop Our Collections"
+};
+
 const About = () => {
   const { data: aboutData, isLoading } = useSiteSetting<AboutSettings>("about");
-  const settings = aboutData ? { ...defaultAboutSettings, ...aboutData } : defaultAboutSettings;
+  const settings = aboutData ? { ...defaultSettings, ...aboutData } : defaultSettings;
 
   if (isLoading) {
     return (
@@ -84,7 +126,7 @@ const About = () => {
         </section>
 
         {/* Values Section */}
-        {settings.values.length > 0 && (
+        {settings.values && settings.values.length > 0 && (
           <section className="py-20 bg-muted border-y border-border">
             <div className="container mx-auto px-6 max-w-6xl">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 text-center">
@@ -108,7 +150,7 @@ const About = () => {
         )}
 
         {/* Artisans Section */}
-        {settings.artisans.length > 0 && (
+        {settings.artisans && settings.artisans.length > 0 && (
           <section className="py-24 px-6 bg-background">
             <div className="container mx-auto max-w-4xl">
               <div className="text-center mb-16">
@@ -121,11 +163,17 @@ const About = () => {
                 {settings.artisans.map((artisan, index) => (
                   <div key={artisan.id} className="flex flex-col items-center text-center">
                     <div className={`w-40 h-40 rounded-full overflow-hidden mb-6 border-2 ${index === 0 ? 'border-primary' : 'border-border'} p-1`}>
-                      <img 
-                        alt={`${artisan.name} Portrait`} 
-                        className="w-full h-full object-cover rounded-full"
-                        src={artisan.image || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"}
-                      />
+                      {artisan.image ? (
+                        <img 
+                          alt={`${artisan.name} Portrait`} 
+                          className="w-full h-full object-cover rounded-full"
+                          src={artisan.image}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                          No image
+                        </div>
+                      )}
                     </div>
                     <h4 className="text-xl font-display font-medium text-foreground">{artisan.name}</h4>
                     <p className={`${index === 0 ? 'text-primary' : 'text-muted-foreground'} text-xs uppercase tracking-widest mb-4 font-bold`}>
@@ -140,24 +188,32 @@ const About = () => {
         )}
 
         {/* CTA Section */}
-        <section className="py-20 bg-muted text-center">
-          <div className="container mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-display mb-8 text-foreground">
-              {settings.ctaTitle}
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-10 font-light">
-              {settings.ctaText}
-            </p>
-            <Link to="/">
-              <Button 
-                size="lg"
-                className="bg-primary hover:bg-primary-dark text-primary-foreground font-bold py-4 px-10 rounded-sm uppercase tracking-widest transition-colors shadow-lg text-xs md:text-sm"
-              >
-                {settings.ctaButtonText}
-              </Button>
-            </Link>
-          </div>
-        </section>
+        {(settings.ctaTitle || settings.ctaText || settings.ctaButtonText) && (
+          <section className="py-20 bg-muted text-center">
+            <div className="container mx-auto px-6">
+              {settings.ctaTitle && (
+                <h2 className="text-3xl md:text-4xl font-display mb-8 text-foreground">
+                  {settings.ctaTitle}
+                </h2>
+              )}
+              {settings.ctaText && (
+                <p className="text-muted-foreground max-w-xl mx-auto mb-10 font-light">
+                  {settings.ctaText}
+                </p>
+              )}
+              {settings.ctaButtonText && (
+                <Link to="/">
+                  <Button 
+                    size="lg"
+                    className="bg-primary hover:bg-primary-dark text-primary-foreground font-bold py-4 px-10 rounded-sm uppercase tracking-widest transition-colors shadow-lg text-xs md:text-sm"
+                  >
+                    {settings.ctaButtonText}
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
       </main>
       
       <Footer />

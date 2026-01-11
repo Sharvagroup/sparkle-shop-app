@@ -1,17 +1,48 @@
+import { Link } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Link } from "react-router-dom";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEO from "@/components/SEO";
-import { defaultFAQSettings, type FAQSettings } from "@/lib/pageDefaults";
+
+interface FAQQuestion {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface FAQCategory {
+  id: string;
+  name: string;
+  questions: FAQQuestion[];
+}
+
+interface FAQSettings {
+  pageTitle: string;
+  pageSubtitle: string;
+  categories: FAQCategory[];
+  ctaTitle: string;
+  ctaText: string;
+  ctaButtonText: string;
+  ctaButtonLink: string;
+}
+
+const defaultFAQSettings: FAQSettings = {
+  pageTitle: "Frequently Asked Questions",
+  pageSubtitle: "Find answers to common questions about our products and services",
+  categories: [],
+  ctaTitle: "Still have questions?",
+  ctaText: "Can't find what you're looking for? Our support team is here to help.",
+  ctaButtonText: "Contact Us",
+  ctaButtonLink: "/contact"
+};
 
 const FAQ = () => {
   const { data: faqData, isLoading } = useSiteSetting<FAQSettings>("faq");
@@ -43,7 +74,8 @@ const FAQ = () => {
               </div>
               
               <div className="space-y-8">
-                {settings.categories.map((section) => (
+                {settings.categories && settings.categories.length > 0 ? (
+                  settings.categories.map((section) => (
                   <div key={section.id}>
                     <h2 className="text-xl font-display font-medium text-foreground mb-4 border-b border-border pb-2">
                       {section.name}
@@ -61,7 +93,13 @@ const FAQ = () => {
                       ))}
                     </Accordion>
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No FAQ categories have been set up yet.</p>
+                    <p className="text-sm mt-2">Please configure FAQs in the admin panel.</p>
+                  </div>
+                )}
               </div>
               
               <div className="mt-12 text-center p-8 bg-muted rounded-lg">
@@ -69,7 +107,7 @@ const FAQ = () => {
                 <p className="text-muted-foreground mb-4">
                   {settings.ctaText}
                 </p>
-                {settings.ctaButtonLink.startsWith("http") ? (
+                {settings.ctaButtonLink?.startsWith("http") ? (
                   <a 
                     href={settings.ctaButtonLink} 
                     target="_blank"
@@ -80,7 +118,7 @@ const FAQ = () => {
                   </a>
                 ) : (
                   <Link 
-                    to={settings.ctaButtonLink} 
+                    to={settings.ctaButtonLink || "/contact"} 
                     className="inline-flex items-center justify-center px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                   >
                     {settings.ctaButtonText}

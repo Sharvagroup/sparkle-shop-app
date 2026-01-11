@@ -12,7 +12,106 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { validateSiteImage, validateImageSize, ALLOWED_SITE_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
 
-import { defaultAboutSettings, defaultFAQSettings, defaultSizeGuideSettings, type AboutSettings, type FAQSettings, type SizeGuideSettings } from "@/lib/pageDefaults";
+// ========== Our Story Types ==========
+interface Artisan {
+  id: string;
+  name: string;
+  role: string;
+  quote: string;
+  image: string;
+}
+
+interface Value {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface AboutSettings {
+  heroImage: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  missionTitle: string;
+  missionText: string;
+  missionImage: string;
+  artisans: Artisan[];
+  values: Value[];
+  ctaTitle: string;
+  ctaText: string;
+  ctaButtonText: string;
+}
+
+// ========== Size Guide Types ==========
+interface SizeCategory {
+  id: string;
+  name: string;
+  instructions: string;
+  columns: string[];
+  rows: Record<string, string>[];
+}
+
+interface SizeGuideSettings {
+  pageTitle: string;
+  pageSubtitle: string;
+  categories: SizeCategory[];
+  footerText: string;
+}
+
+// ========== FAQ Types ==========
+interface FAQQuestion {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface FAQCategory {
+  id: string;
+  name: string;
+  questions: FAQQuestion[];
+}
+
+interface FAQSettings {
+  pageTitle: string;
+  pageSubtitle: string;
+  categories: FAQCategory[];
+  ctaTitle: string;
+  ctaText: string;
+  ctaButtonText: string;
+  ctaButtonLink: string;
+}
+
+// ========== Defaults ==========
+const defaultAboutSettings: AboutSettings = {
+  heroImage: "",
+  heroTitle: "Our Story",
+  heroSubtitle: "",
+  missionTitle: "",
+  missionText: "",
+  missionImage: "",
+  artisans: [],
+  values: [],
+  ctaTitle: "",
+  ctaText: "",
+  ctaButtonText: "Shop Our Collections"
+};
+
+const defaultSizeGuideSettings: SizeGuideSettings = {
+  pageTitle: "Size Guide",
+  pageSubtitle: "Find your perfect fit with our comprehensive sizing charts",
+  categories: [],
+  footerText: "Need help finding your size? Contact our team for personalized assistance."
+};
+
+const defaultFAQSettings: FAQSettings = {
+  pageTitle: "Frequently Asked Questions",
+  pageSubtitle: "Find answers to common questions about our products and services",
+  categories: [],
+  ctaTitle: "Still have questions?",
+  ctaText: "Can't find what you're looking for? Our support team is here to help.",
+  ctaButtonText: "Contact Us",
+  ctaButtonLink: "/contact"
+};
 
 const iconOptions = ["Hammer", "BookOpen", "Diamond", "Heart", "Star", "Award", "Shield", "Gem"];
 
@@ -255,12 +354,16 @@ const AboutPage = () => {
 
   // ========== Save ==========
   const saveAllSettings = async () => {
-    if (activeTab === "story") {
-      await updateSetting.mutateAsync({ key: "about", value: aboutSettings as unknown as Record<string, unknown>, category: "content" });
-    } else if (activeTab === "size-guide") {
-      await updateSetting.mutateAsync({ key: "size_guide", value: sizeGuideSettings as unknown as Record<string, unknown>, category: "content" });
-    } else if (activeTab === "faq") {
-      await updateSetting.mutateAsync({ key: "faq", value: faqSettings as unknown as Record<string, unknown>, category: "content" });
+    try {
+      // Save all three settings regardless of active tab
+      await Promise.all([
+        updateSetting.mutateAsync({ key: "about", value: aboutSettings as unknown as Record<string, unknown>, category: "content" }),
+        updateSetting.mutateAsync({ key: "size_guide", value: sizeGuideSettings as unknown as Record<string, unknown>, category: "content" }),
+        updateSetting.mutateAsync({ key: "faq", value: faqSettings as unknown as Record<string, unknown>, category: "content" }),
+      ]);
+      toast.success("All settings saved successfully");
+    } catch (error) {
+      toast.error("Failed to save some settings");
     }
   };
 

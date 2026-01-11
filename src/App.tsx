@@ -40,8 +40,6 @@ import AboutPage from "./pages/admin/AboutPage";
 import DiscountCodes from "./pages/admin/DiscountCodes";
 import ProductOptions from "./pages/admin/ProductOptions";
 import NavigationManager from "./pages/admin/NavigationManager";
-import FAQAdmin from "./pages/admin/FAQ";
-import SizeGuideAdmin from "./pages/admin/SizeGuide";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 
@@ -93,8 +91,6 @@ const App = () => (
                   <Route path="discount-codes" element={<DiscountCodes />} />
                   <Route path="product-options" element={<ProductOptions />} />
                   <Route path="navigation" element={<NavigationManager />} />
-                  <Route path="faq" element={<FAQAdmin />} />
-                  <Route path="size-guide" element={<SizeGuideAdmin />} />
                 </Route>
 
                 <Route path="/access-denied" element={<AccessDenied />} />

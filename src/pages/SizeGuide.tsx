@@ -8,14 +8,34 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEO from "@/components/SEO";
-import { defaultSizeGuideSettings, type SizeGuideSettings } from "@/lib/pageDefaults";
+
+interface SizeCategory {
+  id: string;
+  name: string;
+  instructions: string;
+  columns: string[];
+  rows: Record<string, string>[];
+}
+
+interface SizeGuideSettings {
+  pageTitle: string;
+  pageSubtitle: string;
+  categories: SizeCategory[];
+  footerText: string;
+}
+
+const defaultSizeGuideSettings: SizeGuideSettings = {
+  pageTitle: "Size Guide",
+  pageSubtitle: "Find your perfect fit with our comprehensive sizing charts",
+  categories: [],
+  footerText: "Need help finding your size? Contact our team for personalized assistance."
+};
 
 const SizeGuide = () => {
   const { data: sizeGuideData, isLoading } = useSiteSetting<SizeGuideSettings>("size_guide");
@@ -46,16 +66,17 @@ const SizeGuide = () => {
                 </p>
               </div>
               
-              <Tabs defaultValue={settings.categories[0]?.id || "rings"} className="space-y-8">
-                <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${settings.categories.length}, 1fr)` }}>
-                  {settings.categories.map((category) => (
-                    <TabsTrigger key={category.id} value={category.id}>
-                      {category.name}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+              {settings.categories && settings.categories.length > 0 ? (
+                <Tabs defaultValue={settings.categories[0]?.id} className="space-y-8">
+                  <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${settings.categories.length}, 1fr)` }}>
+                    {settings.categories.map((category) => (
+                      <TabsTrigger key={category.id} value={category.id}>
+                        {category.name}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
 
-                {settings.categories.map((category) => (
+                  {settings.categories.map((category) => (
                   <TabsContent key={category.id} value={category.id}>
                     <Card>
                       <CardHeader>
@@ -93,15 +114,21 @@ const SizeGuide = () => {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                ))}
-              </Tabs>
+                  ))}
+                </Tabs>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No size guide categories have been set up yet.</p>
+                  <p className="text-sm mt-2">Please configure size guides in the admin panel.</p>
+                </div>
+              )}
 
               <div className="mt-8 text-center p-6 bg-muted rounded-lg">
                 <p className="text-muted-foreground">
                   {settings.footerText.includes("Contact") ? (
                     <>
                       {settings.footerText.split("Contact")[0]}
-                      <Link to="/contact" className="text-primary hover:underline">Contact our team</Link>
+                      <a href="/contact" className="text-primary hover:underline">Contact our team</a>
                       {settings.footerText.split("Contact")[1]?.replace("our team", "") || " for personalized assistance."}
                     </>
                   ) : (
