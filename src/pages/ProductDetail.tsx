@@ -31,6 +31,7 @@ import { useAddCartItemAddon } from "@/hooks/useCartItemAddons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProductReviews } from "@/hooks/useReviews";
 import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -53,6 +54,18 @@ const ProductDetail = () => {
   const checkCollision = useCheckCartCollision();
   const { data: isInWishlist = false } = useIsInWishlist(product?.id || "");
   const toggleWishlist = useToggleWishlist();
+  
+  interface ProductPageSettings {
+    shippingText?: string;
+    trustBadges?: {
+      qualityAssured?: string;
+      securePackaging?: string;
+      fastShipping?: string;
+    };
+    defaultCareInstructions?: string[];
+    placeholderImage?: string;
+  }
+  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -292,7 +305,7 @@ const ProductDetail = () => {
 
   const productImages = product.images?.length
     ? product.images
-    : ["/placeholder.svg"];
+    : [productPageSettings?.placeholderImage || "/placeholder.svg"];
 
   const discount =
     product.original_price && product.original_price > product.price
@@ -495,9 +508,11 @@ const ProductDetail = () => {
                     );
                   })()
                 )}
-                <span className="block text-xs text-muted-foreground mt-2">
-                  Inclusive of all taxes. Free insured shipping.
-                </span>
+                {productPageSettings?.shippingText && (
+                  <span className="block text-xs text-muted-foreground mt-2">
+                    {productPageSettings.shippingText}
+                  </span>
+                )}
               </div>
 
               <div className="h-px bg-border w-full mb-8"></div>
@@ -606,14 +621,31 @@ const ProductDetail = () => {
                             <Droplet size={18} className="text-primary flex-shrink-0" />
                             {product.care_instructions}
                           </li>
-                          <li className="flex items-start gap-3">
-                            <Package size={18} className="text-primary flex-shrink-0" />
-                            Store in the provided jewelry box.
-                          </li>
-                          <li className="flex items-start gap-3">
-                            <Sparkles size={18} className="text-primary flex-shrink-0" />
-                            Clean with a soft, dry cloth only.
-                          </li>
+                          {productPageSettings?.defaultCareInstructions && productPageSettings.defaultCareInstructions.length > 0 ? (
+                            productPageSettings.defaultCareInstructions.map((instruction, index) => (
+                              <li key={index} className="flex items-start gap-3">
+                                {index === 0 ? (
+                                  <Droplet size={18} className="text-primary flex-shrink-0" />
+                                ) : index === 1 ? (
+                                  <Package size={18} className="text-primary flex-shrink-0" />
+                                ) : (
+                                  <Sparkles size={18} className="text-primary flex-shrink-0" />
+                                )}
+                                {instruction}
+                              </li>
+                            ))
+                          ) : (
+                            <>
+                              <li className="flex items-start gap-3">
+                                <Package size={18} className="text-primary flex-shrink-0" />
+                                Store in the provided jewelry box.
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <Sparkles size={18} className="text-primary flex-shrink-0" />
+                                Clean with a soft, dry cloth only.
+                              </li>
+                            </>
+                          )}
                         </ul>
                       </AccordionContent>
                     </AccordionItem>
@@ -626,19 +658,19 @@ const ProductDetail = () => {
                 <div className="flex flex-col items-center text-center gap-2">
                   <Check size={24} className="text-primary" />
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Quality Assured
+                    {productPageSettings?.trustBadges?.qualityAssured || "Quality Assured"}
                   </span>
                 </div>
                 <div className="flex flex-col items-center text-center gap-2">
                   <Package size={24} className="text-primary" />
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Secure Packaging
+                    {productPageSettings?.trustBadges?.securePackaging || "Secure Packaging"}
                   </span>
                 </div>
                 <div className="flex flex-col items-center text-center gap-2">
                   <Truck size={24} className="text-primary" />
                   <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Fast Shipping
+                    {productPageSettings?.trustBadges?.fastShipping || "Fast Shipping"}
                   </span>
                 </div>
               </div>
@@ -808,7 +840,7 @@ const ProductDetail = () => {
                   description={p.description || ""}
                   price={p.price}
                   originalPrice={p.original_price || undefined}
-                  image={p.images?.[0] || "/placeholder.svg"}
+                    image={p.images?.[0] || productPageSettings?.placeholderImage || "/placeholder.svg"}
                   rating={p.rating}
                   reviewCount={p.review_count}
                   badge={p.badge || undefined}

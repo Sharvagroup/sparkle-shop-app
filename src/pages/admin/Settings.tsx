@@ -78,6 +78,17 @@ interface SearchSettings {
   searchInMaterial: boolean;
 }
 
+interface ProductPageSettings {
+  shippingText: string;
+  trustBadges: {
+    qualityAssured: string;
+    securePackaging: string;
+    fastShipping: string;
+  };
+  defaultCareInstructions: string[];
+  placeholderImage: string;
+}
+
 const fontOptions = [
   { value: "Playfair Display", label: "Playfair Display (Elegant Serif)" },
   { value: "Lato", label: "Lato (Clean Sans-Serif)" },
@@ -177,6 +188,17 @@ const Settings = () => {
   const [searchInDescription, setSearchInDescription] = useState(true);
   const [searchInMaterial, setSearchInMaterial] = useState(true);
 
+  // Product Page Settings
+  const [shippingText, setShippingText] = useState("Inclusive of all taxes. Free insured shipping.");
+  const [trustBadgeQuality, setTrustBadgeQuality] = useState("Quality Assured");
+  const [trustBadgePackaging, setTrustBadgePackaging] = useState("Secure Packaging");
+  const [trustBadgeShipping, setTrustBadgeShipping] = useState("Fast Shipping");
+  const [defaultCareInstructions, setDefaultCareInstructions] = useState<string[]>([
+    "Store in the provided jewelry box.",
+    "Clean with a soft, dry cloth only."
+  ]);
+  const [placeholderImage, setPlaceholderImage] = useState("/placeholder.svg");
+
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -270,6 +292,18 @@ const Settings = () => {
         setHighlightMatches(searchData.highlightMatches !== false);
         setSearchInDescription(searchData.searchInDescription !== false);
         setSearchInMaterial(searchData.searchInMaterial !== false);
+      }
+      const productPageData = settings.product_page as unknown as ProductPageSettings | undefined;
+      if (productPageData) {
+        setShippingText(productPageData.shippingText || "Inclusive of all taxes. Free insured shipping.");
+        setTrustBadgeQuality(productPageData.trustBadges?.qualityAssured || "Quality Assured");
+        setTrustBadgePackaging(productPageData.trustBadges?.securePackaging || "Secure Packaging");
+        setTrustBadgeShipping(productPageData.trustBadges?.fastShipping || "Fast Shipping");
+        setDefaultCareInstructions(productPageData.defaultCareInstructions || [
+          "Store in the provided jewelry box.",
+          "Clean with a soft, dry cloth only."
+        ]);
+        setPlaceholderImage(productPageData.placeholderImage || "/placeholder.svg");
       }
 
     }
@@ -435,6 +469,23 @@ const Settings = () => {
     });
   };
 
+  const saveProductPage = async () => {
+    await updateSetting.mutateAsync({
+      key: "product_page",
+      value: {
+        shippingText,
+        trustBadges: {
+          qualityAssured: trustBadgeQuality,
+          securePackaging: trustBadgePackaging,
+          fastShipping: trustBadgeShipping,
+        },
+        defaultCareInstructions,
+        placeholderImage,
+      },
+      category: "content",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -452,7 +503,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -462,6 +513,7 @@ const Settings = () => {
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
           <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
           <TabsTrigger value="search" className="gap-2"><Search className="h-4 w-4" /> Search</TabsTrigger>
+          <TabsTrigger value="product-page" className="gap-2"><Package className="h-4 w-4" /> Product Page</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -1361,6 +1413,131 @@ const Settings = () => {
                     Search bar is currently disabled
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="product-page">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Product Page Settings</CardTitle>
+                <CardDescription>Configure text and content displayed on product detail pages</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Shipping Text</Label>
+                  <Textarea
+                    value={shippingText}
+                    onChange={(e) => setShippingText(e.target.value)}
+                    placeholder="Inclusive of all taxes. Free insured shipping."
+                    rows={2}
+                  />
+                  <p className="text-xs text-muted-foreground">This text appears below the price on product pages</p>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Trust Badges</Label>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label>Quality Assured Badge Text</Label>
+                      <Input
+                        value={trustBadgeQuality}
+                        onChange={(e) => setTrustBadgeQuality(e.target.value)}
+                        placeholder="Quality Assured"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Secure Packaging Badge Text</Label>
+                      <Input
+                        value={trustBadgePackaging}
+                        onChange={(e) => setTrustBadgePackaging(e.target.value)}
+                        placeholder="Secure Packaging"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Fast Shipping Badge Text</Label>
+                      <Input
+                        value={trustBadgeShipping}
+                        onChange={(e) => setTrustBadgeShipping(e.target.value)}
+                        placeholder="Fast Shipping"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Default Care Instructions</Label>
+                  <p className="text-xs text-muted-foreground">These instructions appear when a product doesn't have custom care instructions</p>
+                  <div className="space-y-2">
+                    {defaultCareInstructions.map((instruction, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Textarea
+                          value={instruction}
+                          onChange={(e) => {
+                            const newInstructions = [...defaultCareInstructions];
+                            newInstructions[index] = e.target.value;
+                            setDefaultCareInstructions(newInstructions);
+                          }}
+                          rows={1}
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setDefaultCareInstructions(defaultCareInstructions.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDefaultCareInstructions([...defaultCareInstructions, ""]);
+                      }}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Care Instruction
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Placeholder Image Path</Label>
+                  <Input
+                    value={placeholderImage}
+                    onChange={(e) => setPlaceholderImage(e.target.value)}
+                    placeholder="/placeholder.svg"
+                  />
+                  <p className="text-xs text-muted-foreground">Path to the placeholder image used when products have no images</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={saveProductPage} className="w-full" disabled={updateSetting.isPending}>
+                  {updateSetting.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Product Page Settings
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </div>
