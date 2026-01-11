@@ -21,6 +21,7 @@ import {
 import { Product } from "@/hooks/useProducts";
 import { ProductOption } from "@/hooks/useProductOptions";
 import { ProductAddon } from "@/hooks/useProductAddons";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 interface SelectedAddonState {
   productId: string;
@@ -57,6 +58,7 @@ const CartConfirmationDialog = ({
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, any>>({});
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddonState[]>([]);
+  const { formatPrice, currencySymbol } = usePriceFormatter();
 
   // Filter addons by type
   const addonTypeAddons = productAddons.filter((a) => a.addon_type === "addon");
@@ -118,13 +120,6 @@ const CartConfirmationDialog = ({
     );
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   // Calculate product price based on pricing strategy
   const calculateProductPrice = () => {
@@ -289,7 +284,7 @@ const CartConfirmationDialog = ({
                   </p>
                   {pricingOption && product.base_unit_value && product.base_unit_value > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      ₹{(product.price / product.base_unit_value).toFixed(2)} per {pricingOption.unit || 'unit'}
+                      {currencySymbol}{(product.price / product.base_unit_value).toFixed(2)} per {pricingOption.unit || 'unit'}
                     </p>
                   )}
                 </div>

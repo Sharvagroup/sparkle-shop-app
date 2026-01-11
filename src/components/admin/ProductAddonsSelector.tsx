@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Product } from "@/hooks/useProducts";
 import { ProductOption } from "@/hooks/useProductOptions";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 export interface SelectedAddon {
   addon_product_id: string;
@@ -64,6 +65,7 @@ const ProductAddonsSelector = ({
 }: ProductAddonsSelectorProps) => {
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [expandedAddons, setExpandedAddons] = useState<Set<string>>(new Set());
+  const { formatPrice, currencySymbol } = usePriceFormatter();
 
   // Filter out current product and already selected products
   const availableProducts = products.filter(
@@ -121,14 +123,6 @@ const ProductAddonsSelector = ({
   };
 
   const getProductById = (id: string) => products.find((p) => p.id === id);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   // Get enabled options for a product
   const getProductOptions = (product: Product) => {
@@ -414,7 +408,7 @@ const ProductAddonsSelector = ({
 
                             {/* Price Override */}
                             <div className="space-y-1 pt-2 border-t">
-                              <Label className="text-xs">Custom Price (₹)</Label>
+                              <Label className="text-xs">Custom Price ({currencySymbol})</Label>
                               <div className="flex items-center gap-3">
                                 <Input
                                   type="number"
@@ -463,7 +457,7 @@ const ProductAddonsSelector = ({
                               </div>
                               
                               <div className="space-y-1">
-                                <Label className="text-xs">OR Fixed Discount (₹)</Label>
+                                <Label className="text-xs">OR Fixed Discount ({currencySymbol})</Label>
                                 <Input
                                   type="number"
                                   min={0}

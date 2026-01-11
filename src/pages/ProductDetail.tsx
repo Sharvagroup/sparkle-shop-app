@@ -37,6 +37,7 @@ import ReviewForm from "@/components/ui/ReviewForm";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
 import CartCollisionDialog from "@/components/ui/CartCollisionDialog";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -50,6 +51,7 @@ const ProductDetail = () => {
   const addToCart = useAddToCart();
   const addCartItemAddon = useAddCartItemAddon();
   const checkCollision = useCheckCartCollision();
+  const { formatPrice, currencySymbol } = usePriceFormatter();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -238,13 +240,6 @@ const ProductDetail = () => {
     return stars;
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
 
   if (isLoading) {
     return (
@@ -468,7 +463,7 @@ const ProductDetail = () => {
                         <span>Price for {product.base_unit_value}{pricingOption.unit || ''}</span>
                         <span className="mx-2">•</span>
                         <span className="font-medium text-foreground">
-                          ₹{perUnit.toFixed(2)} per {pricingOption.unit || 'unit'}
+                          {currencySymbol}{perUnit.toFixed(2)} per {pricingOption.unit || 'unit'}
                         </span>
                       </div>
                     );
