@@ -108,10 +108,10 @@ const Categories = () => {
           <h1 className="text-2xl font-semibold">Categories</h1>
           <p className="text-muted-foreground">Organize your product catalog</p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
-        </Button>
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
       </div>
 
       {/* Info Box */}
