@@ -215,19 +215,11 @@ const ProductCard = ({
             </div>
           </button>
         )}
-        {image ? (
-          <img
-            src={image}
-            alt={name}
-            className={getImageClass()}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-            <span className="text-2xl text-muted-foreground font-bold uppercase">
-              {name.charAt(0)}
-            </span>
-          </div>
-        )}
+        <img
+          src={image}
+          alt={name}
+          className={getImageClass()}
+        />
       </div>
       
       <div className="p-6">

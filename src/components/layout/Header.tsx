@@ -71,7 +71,7 @@ const Header = () => {
   const celebritySpecials = useMemo(() => allProducts.filter(p => p.is_celebrity_special), [allProducts]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const siteName = branding?.siteName;
+  const siteName = branding?.siteName || "SHARVA";
   const logoUrl = branding?.logoUrl;
 
   // Build nav items dynamically from CMS or fallback to hardcoded
@@ -199,14 +199,10 @@ const Header = () => {
           <div className="w-full md:w-auto flex justify-between items-center">
             <Link to="/" className="flex items-center gap-2">
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "Logo"} className="h-10 w-auto" />
-              ) : siteName ? (
-                <span className="text-3xl font-display font-bold text-primary tracking-wide">
-                  {siteName}
-                </span>
+                <img src={logoUrl} alt={siteName} className="h-10 w-auto" />
               ) : (
                 <span className="text-3xl font-display font-bold text-primary tracking-wide">
-                  ●
+                  {siteName}
                 </span>
               )}
             </Link>
