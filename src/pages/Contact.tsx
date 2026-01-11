@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { z } from "zod";
 import { useSiteSetting, ContactSettings, SocialSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -113,6 +114,7 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Contact Us" description="Get in touch with us. We're here to assist you with every query." />
       <PromoBanner />
       <Header />
 
