@@ -39,7 +39,7 @@ export const useWishlist = () => {
       if (error) throw error;
       
       // Filter out items where product is null (deleted) or inactive
-      return (data as WishlistItem[]).filter(
+      return ((data || []) as (WishlistItem & { product: WishlistItem['product'] & { is_active?: boolean } })[]).filter(
         item => item.product && item.product.is_active !== false
       );
     },

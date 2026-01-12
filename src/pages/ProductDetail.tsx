@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProductReviews } from "@/hooks/useReviews";
 import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 import ProductCard from "@/components/ui/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -254,13 +255,7 @@ const ProductDetail = () => {
     return stars;
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const { formatPrice } = usePriceFormatter();
 
   if (isLoading) {
     return (
