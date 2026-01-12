@@ -208,6 +208,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           parent_id: string | null
+          show_in_main_listing: boolean | null
           slug: string
           theme: Json | null
           updated_at: string
@@ -220,6 +221,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           parent_id?: string | null
+          show_in_main_listing?: boolean | null
           slug: string
           theme?: Json | null
           updated_at?: string
@@ -232,6 +234,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           parent_id?: string | null
+          show_in_main_listing?: boolean | null
           slug?: string
           theme?: Json | null
           updated_at?: string
