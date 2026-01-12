@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { LinkUrlAutocomplete } from "@/components/admin/LinkUrlAutocomplete";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 
 // Types for navigation items
 interface NavChild {
