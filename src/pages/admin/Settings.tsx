@@ -954,7 +954,7 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Meta Title</Label>
-                  <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Your Store - Premium Jewelry Collection" />
+                  <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Your Store Name - Tagline" />
                   <p className="text-xs text-muted-foreground">{metaTitle.length}/60 characters recommended</p>
                 </div>
                 <div className="space-y-2">
@@ -964,7 +964,7 @@ const Settings = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Meta Keywords</Label>
-                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="jewelry, gold, diamond, bridal, necklace, earrings" />
+                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3" />
                   <p className="text-xs text-muted-foreground">Comma-separated keywords for search engines</p>
                 </div>
                 <div className="space-y-2">

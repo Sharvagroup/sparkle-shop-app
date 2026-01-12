@@ -202,7 +202,7 @@ export function BannerForm({ open, onOpenChange, banner }: BannerFormProps) {
               id="subtitle"
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
-              placeholder="e.g., Up to 50% off on all jewelry"
+              placeholder="e.g., Up to 50% off on all products"
               rows={2}
             />
           </div>
