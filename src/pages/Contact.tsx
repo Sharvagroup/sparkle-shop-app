@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import SEO from "@/components/SEO";
 import { z } from "zod";
 import { useSiteSetting, ContactSettings, SocialSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,9 +50,9 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     const result = contactSchema.safeParse(formData);
-
+    
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.errors.forEach((error) => {
@@ -69,7 +68,7 @@ const Contact = () => {
       title: "Message Sent!",
       description: "Thank you for contacting us. We'll get back to you within 24 hours.",
     });
-
+    
     setFormData({ name: "", email: "", subject: "", message: "" });
     setErrors({});
   };
@@ -78,20 +77,20 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Phone Number",
-      primary: contact?.phone || "Phone not configured",
+      primary: contact?.phone || "+91 1234567890",
       secondary: "Mon-Fri 9am to 6pm",
     },
     {
       icon: Mail,
       title: "Email Address",
-      primary: contact?.email || "Email not configured",
+      primary: contact?.email || "support@store.com",
       secondary: "We reply within 24 hours",
     },
     {
       icon: MapPin,
       title: "Store Address",
-      primary: contact?.address?.split(',')[0] || "Address not configured",
-      secondary: contact?.address?.split(',').slice(1).join(',') || "",
+      primary: contact?.address?.split(',')[0] || "Store Address",
+      secondary: contact?.address?.split(',').slice(1).join(',') || "City, Country",
     },
   ];
 
@@ -114,15 +113,14 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO title="Contact Us" description="Get in touch with us. We're here to assist you with every query." />
       <PromoBanner />
       <Header />
-
+      
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="relative h-[300px] md:h-[400px] w-full flex items-center justify-center bg-foreground overflow-hidden">
-          <img
-            alt="Contact Us"
+          <img 
+            alt="Contact Us" 
             className="absolute inset-0 w-full h-full object-cover opacity-80"
             src={contactPageSettings?.heroImage || "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop"}
           />
@@ -149,8 +147,8 @@ const Contact = () => {
                 <form onSubmit={handleSubmit} className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label
-                        htmlFor="name"
+                      <label 
+                        htmlFor="name" 
                         className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-bold"
                       >
                         Name
@@ -167,8 +165,8 @@ const Contact = () => {
                       {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
                     </div>
                     <div>
-                      <label
-                        htmlFor="email"
+                      <label 
+                        htmlFor="email" 
                         className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-bold"
                       >
                         Email
@@ -186,8 +184,8 @@ const Contact = () => {
                     </div>
                   </div>
                   <div>
-                    <label
-                      htmlFor="subject"
+                    <label 
+                      htmlFor="subject" 
                       className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-bold"
                     >
                       Subject
@@ -204,8 +202,8 @@ const Contact = () => {
                     {errors.subject && <p className="text-destructive text-xs mt-1">{errors.subject}</p>}
                   </div>
                   <div>
-                    <label
-                      htmlFor="message"
+                    <label 
+                      htmlFor="message" 
                       className="block text-xs uppercase tracking-wider text-muted-foreground mb-2 font-bold"
                     >
                       Message
@@ -222,7 +220,7 @@ const Contact = () => {
                     {errors.message && <p className="text-destructive text-xs mt-1">{errors.message}</p>}
                   </div>
                   <div className="pt-4">
-                    <Button
+                    <Button 
                       type="submit"
                       className="bg-primary hover:bg-primary-dark text-primary-foreground px-10 py-4 text-xs font-bold uppercase tracking-widest transition-colors shadow-md rounded-sm"
                     >
@@ -275,8 +273,8 @@ const Contact = () => {
                   </h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     {businessHours.map((item) => (
-                      <li
-                        key={item.day}
+                      <li 
+                        key={item.day} 
                         className={`flex justify-between ${item.closed ? 'text-muted-foreground/50' : ''}`}
                       >
                         <span>{item.day}</span>
@@ -288,12 +286,12 @@ const Contact = () => {
 
                 {/* Map */}
                 <div className="w-full h-56 bg-muted rounded-sm overflow-hidden grayscale filter hover:grayscale-0 transition-all duration-500">
-                  <iframe
+                  <iframe 
                     src={contactPageSettings?.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425878428698!3d40.74076364379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c16587d%3A0x44b6c6563456747b!2s123%20Madison%20Ave%2C%20New%20York%2C%20NY%2010016%2C%20USA!5e0!3m2!1sen!2s!4v1647424683072!5m2!1sen!2s"}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }} 
+                    allowFullScreen 
                     loading="lazy"
                     title="Store Location"
                   />
@@ -307,9 +305,9 @@ const Contact = () => {
                     </span>
                     <div className="flex gap-4">
                       {socialLinks.map((link) => (
-                        <a
+                        <a 
                           key={link.label}
-                          href={link.url}
+                          href={link.url} 
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors bg-background"
@@ -326,7 +324,7 @@ const Contact = () => {
           </div>
         </section>
       </main>
-
+      
       <Footer />
     </div>
   );

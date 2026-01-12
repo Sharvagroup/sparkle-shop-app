@@ -263,10 +263,10 @@ const Categories = () => {
                     }}
                   >
                     {category.image_url ? (
-                    <img
+                      <img
                         src={category.image_url}
-                      alt={category.name}
-                      className="w-full h-full object-cover"
+                        alt={category.name}
+                        className="w-full h-full object-cover"
                         loading={index < 4 ? "eager" : "lazy"}
                       />
                     ) : (

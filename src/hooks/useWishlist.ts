@@ -31,17 +31,13 @@ export const useWishlist = () => {
         .from("wishlists")
         .select(`
           *,
-          product:products(id, name, slug, price, original_price, images, badge, is_active)
+          product:products(id, name, slug, price, original_price, images, badge)
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      // Filter out items where product is null (deleted) or inactive
-      return (data as WishlistItem[]).filter(
-        item => item.product && item.product.is_active !== false
-      );
+      return data as WishlistItem[];
     },
     enabled: !!user,
   });

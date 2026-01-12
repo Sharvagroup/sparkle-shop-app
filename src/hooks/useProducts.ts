@@ -44,7 +44,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   // Joined relations
-  category?: { id: string; name: string; slug: string; show_in_main_listing?: boolean } | null;
+  category?: { id: string; name: string; slug: string } | null;
   collection?: { id: string; name: string; slug: string } | null;
 }
 
@@ -105,29 +105,15 @@ export const useProducts = (filters?: ProductFilters) => {
       const thresholdDate = new Date();
       thresholdDate.setDate(thresholdDate.getDate() - newArrivalDays);
 
-      // First, get categories that should be excluded (show_in_main_listing = false)
-      const { data: excludedCategories } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('show_in_main_listing', false)
-        .eq('is_active', true);
-
-      const excludedCategoryIds = excludedCategories?.map(c => c.id) || [];
-
       let query = supabase
         .from('products')
         .select(`
           *,
-          category:categories(id, name, slug, show_in_main_listing),
+          category:categories(id, name, slug),
           collection:collections(id, name, slug)
         `)
         .eq('is_active', true)
         .order('display_order', { ascending: true });
-
-      // Exclude products from categories where show_in_main_listing = false
-      if (excludedCategoryIds.length > 0) {
-        query = query.not('category_id', 'in', `(${excludedCategoryIds.join(',')})`);
-      }
 
       if (filters?.categoryId) {
         query = query.eq('category_id', filters.categoryId);
@@ -161,15 +147,8 @@ export const useProducts = (filters?: ProductFilters) => {
 
       if (error) throw error;
 
-      // Filter out any products that might have null category but should be excluded
-      // Also filter out products from categories where show_in_main_listing = false
-      const filteredData = (data as Product[]).filter(product => {
-        if (!product.category) return true; // Products without category are shown
-        return product.category.show_in_main_listing !== false;
-      });
-
       // Inject dynamic "New" badge if no badge is manually set
-      return filteredData.map(product => {
+      return (data as Product[]).map(product => {
         const created = new Date(product.created_at);
         if (!product.badge && created >= thresholdDate) {
           return { ...product, badge: 'new' as const };
@@ -189,7 +168,7 @@ export const useAdminProducts = () => {
         .from('products')
         .select(`
           *,
-          category:categories(id, name, slug, show_in_main_listing),
+          category:categories(id, name, slug),
           collection:collections(id, name, slug)
         `)
         .order('display_order', { ascending: true });
@@ -209,7 +188,7 @@ export const useProduct = (slug: string) => {
         .from('products')
         .select(`
           *,
-          category:categories(id, name, slug, show_in_main_listing),
+          category:categories(id, name, slug),
           collection:collections(id, name, slug)
         `)
         .eq('slug', slug)

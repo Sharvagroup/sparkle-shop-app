@@ -45,8 +45,6 @@ export interface HomepageSettings {
 export interface SeoSettings {
   metaTitle: string;
   metaDescription: string;
-  metaKeywords?: string;
-  twitterHandle?: string;
   ogImage: string;
 }
 
