@@ -38,6 +38,18 @@ import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
 import CartCollisionDialog from "@/components/ui/CartCollisionDialog";
 import { usePriceFormatter } from "@/hooks/usePriceFormatter";
+import { useSiteSetting } from "@/hooks/useSiteSettings";
+
+interface ProductPageSettings {
+  shippingText: string;
+  trustBadges: {
+    qualityAssured: string;
+    securePackaging: string;
+    fastShipping: string;
+  };
+  defaultCareInstructions: string[];
+  placeholderImage: string;
+}
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -52,6 +64,7 @@ const ProductDetail = () => {
   const addCartItemAddon = useAddCartItemAddon();
   const checkCollision = useCheckCartCollision();
   const { formatPrice, currencySymbol } = usePriceFormatter();
+  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -269,12 +282,12 @@ const ProductDetail = () => {
         <Header />
         <main className="flex-grow container mx-auto px-4 py-24 text-center">
           <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-display mb-2">Product Not Found</h1>
+          <h1 className="text-2xl font-display mb-2">loading</h1>
           <p className="text-muted-foreground mb-6">
-            The product you're looking for doesn't exist or has been removed.
+            loading
           </p>
           <Button asChild>
-            <Link to="/products">Browse Products</Link>
+            <Link to="/products">loading</Link>
           </Button>
         </main>
         <Footer />
@@ -284,7 +297,7 @@ const ProductDetail = () => {
 
   const productImages = product.images?.length
     ? product.images
-    : ["/placeholder.svg"];
+    : [productPageSettings?.placeholderImage || "loading"];
 
   const discount =
     product.original_price && product.original_price > product.price
@@ -469,9 +482,11 @@ const ProductDetail = () => {
                     );
                   })()
                 )}
-                <span className="block text-xs text-muted-foreground mt-2">
-                  Inclusive of all taxes. Free insured shipping.
-                </span>
+                {productPageSettings?.shippingText && (
+                  <span className="block text-xs text-muted-foreground mt-2">
+                    {productPageSettings.shippingText}
+                  </span>
+                )}
               </div>
 
               <div className="h-px bg-border w-full mb-8"></div>
@@ -580,14 +595,18 @@ const ProductDetail = () => {
                             <Droplet size={18} className="text-primary flex-shrink-0" />
                             {product.care_instructions}
                           </li>
-                          <li className="flex items-start gap-3">
-                            <Package size={18} className="text-primary flex-shrink-0" />
-                            Store in the provided jewelry box.
-                          </li>
-                          <li className="flex items-start gap-3">
-                            <Sparkles size={18} className="text-primary flex-shrink-0" />
-                            Clean with a soft, dry cloth only.
-                          </li>
+                          {productPageSettings?.defaultCareInstructions?.map((instruction, index) => (
+                            <li key={index} className="flex items-start gap-3">
+                              {index === 0 ? (
+                                <Package size={18} className="text-primary flex-shrink-0" />
+                              ) : index === 1 ? (
+                                <Sparkles size={18} className="text-primary flex-shrink-0" />
+                              ) : (
+                                <Droplet size={18} className="text-primary flex-shrink-0" />
+                              )}
+                              {instruction}
+                            </li>
+                          ))}
                         </ul>
                       </AccordionContent>
                     </AccordionItem>
@@ -596,26 +615,34 @@ const ProductDetail = () => {
               </div>
 
               {/* Trust Badges */}
-              <div className="grid grid-cols-3 gap-4 py-6 mt-6 bg-muted rounded-sm">
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Check size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Quality Assured
-                  </span>
+              {productPageSettings?.trustBadges && (
+                <div className="grid grid-cols-3 gap-4 py-6 mt-6 bg-muted rounded-sm">
+                  {productPageSettings.trustBadges.qualityAssured && (
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <Check size={24} className="text-primary" />
+                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        {productPageSettings.trustBadges.qualityAssured}
+                      </span>
+                    </div>
+                  )}
+                  {productPageSettings.trustBadges.securePackaging && (
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <Package size={24} className="text-primary" />
+                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        {productPageSettings.trustBadges.securePackaging}
+                      </span>
+                    </div>
+                  )}
+                  {productPageSettings.trustBadges.fastShipping && (
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <Truck size={24} className="text-primary" />
+                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        {productPageSettings.trustBadges.fastShipping}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Package size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Secure Packaging
-                  </span>
-                </div>
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Truck size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Fast Shipping
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
@@ -701,7 +728,7 @@ const ProductDetail = () => {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  Be the first to review this product!
+                  loading
                 </p>
               )}
             </div>
@@ -738,7 +765,7 @@ const ProductDetail = () => {
                     name={p.name}
                     description=""
                     price={p.price}
-                    image={p.images?.[0] || "/placeholder.svg"}
+                    image={p.images?.[0] || productPageSettings?.placeholderImage || "loading"}
                     rating={0}
                     reviewCount={0}
                   />
