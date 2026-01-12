@@ -93,6 +93,7 @@ const Settings = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappEnabled, setWhatsappEnabled] = useState(true);
 
   // Social
   const [facebook, setFacebook] = useState("");
@@ -176,6 +177,7 @@ const Settings = () => {
         setPhone(contact.phone || "");
         setAddress(contact.address || "");
         setWhatsapp(contact.whatsapp || "");
+        setWhatsappEnabled(contact.whatsappEnabled !== false);
       }
       if (social) {
         setFacebook(social.facebook || "");
@@ -286,7 +288,7 @@ const Settings = () => {
   const saveContact = async () => {
     await updateSetting.mutateAsync({
       key: "contact",
-      value: { email, phone, address, whatsapp },
+      value: { email, phone, address, whatsapp, whatsappEnabled },
       category: "contact",
     });
     // Also save business hours
@@ -562,6 +564,13 @@ const Settings = () => {
                   <Label>WhatsApp Number</Label>
                   <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+91..." />
                   <p className="text-xs text-muted-foreground">Used for WhatsApp chat button. Include country code.</p>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div>
+                    <Label>Enable WhatsApp Button</Label>
+                    <p className="text-xs text-muted-foreground">Show WhatsApp chat button on the website</p>
+                  </div>
+                  <Switch checked={whatsappEnabled} onCheckedChange={setWhatsappEnabled} />
                 </div>
 
                 {/* Business Hours */}

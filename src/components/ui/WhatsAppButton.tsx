@@ -8,6 +8,11 @@ interface ContactWithMessage extends ContactSettings {
 const WhatsAppButton = () => {
   const { data: contact } = useSiteSetting<ContactWithMessage>("contact");
   
+  // Don't render if WhatsApp is disabled or no phone number is configured
+  if (contact?.whatsappEnabled === false) {
+    return null;
+  }
+  
   const whatsappNumber = contact?.whatsapp || contact?.phone || "";
   const cleanPhone = whatsappNumber.replace(/\D/g, "");
   const defaultMessage = contact?.whatsappMessage || "";

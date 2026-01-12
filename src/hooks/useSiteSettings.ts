@@ -18,6 +18,8 @@ export interface ContactSettings {
   phone: string;
   address: string;
   whatsapp: string;
+  whatsappEnabled?: boolean;
+  whatsappMessage?: string;
 }
 
 export interface SocialSettings {
