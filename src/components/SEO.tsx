@@ -18,15 +18,15 @@ interface SEOProps {
 export const SEO = ({ title, description, image, keywords }: SEOProps) => {
   const { data: seo } = useSiteSetting<SeoSettings>("seo");
 
-  // Use only provided title or database settings - no hardcoded fallbacks
-  const finalTitle = title || seo?.metaTitle || '';
+  // Use only provided title or database settings - show "loading" if empty
+  const finalTitle = title || seo?.metaTitle || 'loading';
   const finalDesc = description || seo?.metaDescription || '';
   const finalImage = image || seo?.ogImage || '';
   const finalKeywords = keywords || seo?.keywords || '';
 
   return (
     <Helmet>
-      {finalTitle && <title>{finalTitle}</title>}
+      <title>{finalTitle}</title>
       {finalDesc && <meta name="description" content={finalDesc} />}
       {finalKeywords && <meta name="keywords" content={finalKeywords} />}
       {finalTitle && <meta property="og:title" content={finalTitle} />}

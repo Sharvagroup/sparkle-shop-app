@@ -59,11 +59,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="pr-0 md:pr-8">
             {logoUrl ? (
-              <img src={logoUrl} alt={siteName} className="h-12 w-auto mb-6" />
+              <img src={logoUrl} alt={siteName || "loading"} className="h-12 w-auto mb-6" />
             ) : (
-              <h3 className="text-2xl font-display font-medium mb-6 text-foreground">{siteName}</h3>
+              <h3 className="text-2xl font-display font-medium mb-6 text-foreground">{siteName || "loading"}</h3>
             )}
-            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{tagline}</p>
+            {tagline && <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{tagline}</p>}
             <div className="mb-6">
               <h4 className="font-bold text-sm text-foreground mb-2">Visit Us</h4>
               <p className="text-muted-foreground text-sm whitespace-pre-line">{address}</p>
@@ -92,7 +92,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} {siteName?.split(" ")[0] || " initialising  "}. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {siteName?.split(" ")[0] || "loading"}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
             {renderLegalLink(legal?.privacyPolicyUrl, "Privacy Policy", "/privacy-policy")}
