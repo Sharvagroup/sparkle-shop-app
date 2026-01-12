@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useSiteSetting } from '@/hooks/useSiteSettings';
+import { useSiteSetting, BrandingSettings } from '@/hooks/useSiteSettings';
 
 interface SeoSettings {
   metaTitle: string;
@@ -17,8 +17,27 @@ interface SEOProps {
 
 export const SEO = ({ title, description, image, keywords }: SEOProps) => {
   const { data: seo } = useSiteSetting<SeoSettings>("seo");
+  const { data: branding } = useSiteSetting<BrandingSettings>("branding");
 
-  const finalTitle = title || seo?.metaTitle || '';
+  // Build default title from site name
+  const defaultTitle = branding?.siteName 
+    ? `${branding.siteName}${branding.siteName.includes(' - ') ? '' : ' - Exquisite Jewellery'}`
+    : 'SHARVA - Exquisite Jewellery';
+
+  // Use provided title, or SEO metaTitle, or default title
+  // If metaTitle exists but is incomplete (ends with " -"), append default suffix
+  let finalTitle = title || seo?.metaTitle || defaultTitle;
+  
+  // Fix incomplete titles that end with " -" or " - "
+  if (!title && seo?.metaTitle && (seo.metaTitle.trim().endsWith(' -') || seo.metaTitle.trim().endsWith(' - '))) {
+    finalTitle = `${seo.metaTitle.trim()} Exquisite Jewellery`;
+  }
+  
+  // Ensure title is never empty
+  if (!finalTitle || finalTitle.trim() === '') {
+    finalTitle = defaultTitle;
+  }
+
   const finalDesc = description || seo?.metaDescription || '';
   const finalImage = image || seo?.ogImage || '';
   const finalKeywords = keywords || seo?.keywords || '';
