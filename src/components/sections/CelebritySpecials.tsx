@@ -6,6 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSectionTitles } from "@/hooks/useSectionTitles";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 
+interface ProductPageSettings {
+  placeholderImage: string;
+}
+
 interface SectionTheme {
   section_padding: "small" | "medium" | "large";
   items_to_show: number;
@@ -24,6 +28,7 @@ const CelebritySpecials = () => {
   const { data: products = [], isLoading } = useProducts({ isCelebritySpecial: true });
   const { titles } = useSectionTitles();
   const { data: savedTheme } = useSiteSetting<SectionTheme>("celebrity_specials_theme");
+  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   const theme: SectionTheme = { ...defaultTheme, ...savedTheme };
   const displayProducts = products.slice(0, theme.items_to_show);
@@ -86,11 +91,12 @@ const CelebritySpecials = () => {
             <ProductCard
               key={product.id}
               id={product.slug}
+              productId={product.id}
               name={product.name}
               description={product.description || ""}
               price={product.price}
               originalPrice={product.original_price || undefined}
-              image={product.images?.[0] || "/placeholder.svg"}
+              image={product.images?.[0] || productPageSettings?.placeholderImage || "loading"}
               rating={product.rating}
               reviewCount={product.review_count}
               badge={product.badge || undefined}
