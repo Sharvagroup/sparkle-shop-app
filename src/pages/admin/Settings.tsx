@@ -503,7 +503,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-10">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -512,8 +512,6 @@ const Settings = () => {
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
           <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
-          <TabsTrigger value="search" className="gap-2"><Search className="h-4 w-4" /> Search</TabsTrigger>
-          <TabsTrigger value="product-page" className="gap-2"><Package className="h-4 w-4" /> Product Page</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">

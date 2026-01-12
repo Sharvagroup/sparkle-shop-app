@@ -21,7 +21,7 @@ export interface Category {
   parent_id: string | null;
   display_order: number;
   is_active: boolean;
-  show_in_main_listing: boolean;
+  show_in_main_listing?: boolean | null;
   theme: CategoryTheme | null;
   created_at: string;
   updated_at: string;
@@ -38,7 +38,7 @@ export interface CategoryInput {
   theme?: CategoryTheme | null;
 }
 
-// Fetch all active categories for main display (for frontend - excludes addon-only categories)
+// Fetch all active categories for main display (for frontend)
 export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
@@ -47,16 +47,15 @@ export const useCategories = () => {
         .from('categories')
         .select('*')
         .eq('is_active', true)
-        .eq('show_in_main_listing', true)
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data as Category[];
+      return (data || []) as Category[];
     },
   });
 };
 
-// Fetch all active categories including addon-only (for product forms and filters)
+// Fetch all active categories (for product forms and filters)
 export const useAllActiveCategories = () => {
   return useQuery({
     queryKey: ['all-active-categories'],
@@ -68,7 +67,7 @@ export const useAllActiveCategories = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data as Category[];
+      return (data || []) as Category[];
     },
   });
 };
@@ -84,7 +83,7 @@ export const useAdminCategories = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data as Category[];
+      return (data || []) as Category[];
     },
   });
 };
