@@ -33,6 +33,10 @@ interface CommerceSettings {
   newArrivalDays?: number;
 }
 
+interface ProductPageSettings {
+  placeholderImage: string;
+}
+
 // Sort options - always available
 const SORT_OPTIONS = [
   { id: "featured", label: "Featured" },
@@ -53,6 +57,7 @@ const Products = () => {
 
   const { data: allProducts = [], isLoading } = useProducts();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
+  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   // Dynamic store settings from CMS
   const ITEMS_PER_PAGE = commerceSettings?.productsPerPage || 12;
@@ -623,11 +628,12 @@ const Products = () => {
                     <ProductCard
                       key={product.id}
                       id={product.slug}
+                      productId={product.id}
                       name={product.name}
                       description={product.description || ""}
                       price={product.price}
                       originalPrice={product.original_price || undefined}
-                      image={product.images?.[0] || "/placeholder.svg"}
+                      image={product.images?.[0] || productPageSettings?.placeholderImage || "loading"}
                       rating={product.rating}
                       reviewCount={product.review_count}
                       badge={product.badge as "new" | "sale" | "trending" | undefined}

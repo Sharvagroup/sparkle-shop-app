@@ -39,6 +39,7 @@ import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
 import CartCollisionDialog from "@/components/ui/CartCollisionDialog";
 import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 
 interface ProductPageSettings {
   shippingText: string;
@@ -65,6 +66,8 @@ const ProductDetail = () => {
   const checkCollision = useCheckCartCollision();
   const { formatPrice, currencySymbol } = usePriceFormatter();
   const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
+  const { data: isInWishlist = false } = useIsInWishlist(product?.id || "");
+  const { toggle, isPending: isWishlistPending } = useToggleWishlist();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -425,8 +428,24 @@ const ProductDetail = () => {
                 <h1 className="font-display text-3xl md:text-5xl text-foreground mb-2 leading-tight">
                   {product.name}
                 </h1>
-                <button className="hidden md:block text-muted-foreground hover:text-sale transition-colors">
-                  <Heart size={28} />
+                <button 
+                  onClick={async () => {
+                    if (!user) {
+                      navigate("/auth");
+                      return;
+                    }
+                    if (product) {
+                      await toggle(product.id, isInWishlist);
+                    }
+                  }}
+                  disabled={isWishlistPending || !product}
+                  className={`hidden md:block transition-colors ${
+                    isInWishlist 
+                      ? "text-sale hover:text-sale/80" 
+                      : "text-muted-foreground hover:text-sale"
+                  }`}
+                >
+                  <Heart size={28} className={isInWishlist ? "fill-current" : ""} />
                 </button>
               </div>
 
@@ -650,8 +669,24 @@ const ProductDetail = () => {
         {/* Mobile Fixed Bottom Bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-50 md:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
           <div className="flex gap-3">
-            <button className="w-12 flex items-center justify-center border border-border rounded-sm text-muted-foreground hover:text-sale transition-colors">
-              <Heart size={20} />
+            <button 
+              onClick={async () => {
+                if (!user) {
+                  navigate("/auth");
+                  return;
+                }
+                if (product) {
+                  await toggle(product.id, isInWishlist);
+                }
+              }}
+              disabled={isWishlistPending || !product}
+              className={`w-12 flex items-center justify-center border border-border rounded-sm transition-colors ${
+                isInWishlist 
+                  ? "text-sale hover:text-sale/80 border-sale" 
+                  : "text-muted-foreground hover:text-sale"
+              }`}
+            >
+              <Heart size={20} className={isInWishlist ? "fill-current" : ""} />
             </button>
             <Button
               variant="outline"
@@ -762,6 +797,7 @@ const ProductDetail = () => {
                   <ProductCard
                     key={p.id}
                     id={p.slug}
+                    productId={p.id}
                     name={p.name}
                     description=""
                     price={p.price}
@@ -786,11 +822,12 @@ const ProductDetail = () => {
                 <ProductCard
                   key={p.id}
                   id={p.slug}
+                  productId={p.id}
                   name={p.name}
                   description={p.description || ""}
                   price={p.price}
                   originalPrice={p.original_price || undefined}
-                  image={p.images?.[0] || "/placeholder.svg"}
+                  image={p.images?.[0] || productPageSettings?.placeholderImage || "loading"}
                   rating={p.rating}
                   reviewCount={p.review_count}
                   badge={p.badge || undefined}
