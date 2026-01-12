@@ -44,7 +44,6 @@ const CategoryForm = ({
   const [parentId, setParentId] = useState<string | null>(null);
   const [displayOrder, setDisplayOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [showInMainListing, setShowInMainListing] = useState(true);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -55,7 +54,6 @@ const CategoryForm = ({
       setParentId(category.parent_id);
       setDisplayOrder(category.display_order);
       setIsActive(category.is_active);
-      setShowInMainListing(category.show_in_main_listing !== false);
     } else {
       setName('');
       setSlug('');
@@ -63,7 +61,6 @@ const CategoryForm = ({
       setParentId(null);
       setDisplayOrder(0);
       setIsActive(true);
-      setShowInMainListing(true);
     }
   }, [category, open]);
 
@@ -131,7 +128,6 @@ const CategoryForm = ({
       parent_id: parentId,
       display_order: displayOrder,
       is_active: isActive,
-      show_in_main_listing: showInMainListing,
     });
   };
 
@@ -246,20 +242,6 @@ const CategoryForm = ({
               id="active"
               checked={isActive}
               onCheckedChange={setIsActive}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="showInMainListing">Show in Main Listing</Label>
-              <p className="text-xs text-muted-foreground">
-                If disabled, products in this category won't appear in main product listings (but can still be used as addons)
-              </p>
-            </div>
-            <Switch
-              id="showInMainListing"
-              checked={showInMainListing}
-              onCheckedChange={setShowInMainListing}
             />
           </div>
 

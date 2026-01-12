@@ -20,7 +20,7 @@ import {
 import { Offer, OfferInsert, OfferType, uploadOfferImage } from "@/hooks/useOffers";
 import { Loader2, Upload } from "lucide-react";
 import { LinkUrlAutocomplete } from "./LinkUrlAutocomplete";
-import { validateSiteImage, validateImageSize, ALLOWED_SITE_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
 
 interface OfferFormProps {
@@ -96,7 +96,7 @@ export function OfferForm({ open, onOpenChange, offer, offerType = "special_offe
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formatCheck = validateSiteImage(file);
+    const formatCheck = validateWebPImage(file);
     if (!formatCheck.valid) {
       toast.error(formatCheck.error);
       return;
@@ -199,7 +199,7 @@ export function OfferForm({ open, onOpenChange, offer, offerType = "special_offe
               <div className="flex-1">
                 <Input
                   type="file"
-                  accept={ALLOWED_SITE_IMAGE_ACCEPT}
+                  accept={ALLOWED_IMAGE_ACCEPT}
                   onChange={handleImageUpload}
                   className="hidden"
                   id="offer-image"

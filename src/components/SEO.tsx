@@ -4,9 +4,8 @@ import { useSiteSetting } from '@/hooks/useSiteSettings';
 interface SeoSettings {
   metaTitle: string;
   metaDescription: string;
-  metaKeywords?: string;
-  twitterHandle?: string;
   ogImage: string;
+  keywords: string;
 }
 
 interface SEOProps {
@@ -22,8 +21,7 @@ export const SEO = ({ title, description, image, keywords }: SEOProps) => {
   const finalTitle = title || seo?.metaTitle || '';
   const finalDesc = description || seo?.metaDescription || '';
   const finalImage = image || seo?.ogImage || '';
-  const finalKeywords = keywords || seo?.metaKeywords || '';
-  const twitterHandle = seo?.twitterHandle || '';
+  const finalKeywords = keywords || seo?.keywords || '';
 
   return (
     <Helmet>
@@ -35,7 +33,6 @@ export const SEO = ({ title, description, image, keywords }: SEOProps) => {
       {finalImage && <meta property="og:image" content={finalImage} />}
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
-      {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
       <meta name="twitter:title" content={finalTitle} />
       {finalDesc && <meta name="twitter:description" content={finalDesc} />}
       {finalImage && <meta name="twitter:image" content={finalImage} />}

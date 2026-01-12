@@ -130,9 +130,12 @@ const ProductAddonsSelector = ({
     return productOptions.filter(opt => product.enabled_options?.includes(opt.id));
   };
 
-  // Calculate addon price preview (uses original product pricing)
+  // Calculate addon price preview
   const calculateAddonPrice = (addon: SelectedAddon, product: Product) => {
-    // Addons always use the original product's pricing
+    if (addon.price_override !== null) {
+      return addon.price_override;
+    }
+    
     // If custom options with proportional pricing
     if (product.pricing_by_option_id && product.base_unit_value && product.base_unit_value > 0) {
       const customValue = addon.custom_options[product.pricing_by_option_id];
@@ -260,7 +263,7 @@ const ProductAddonsSelector = ({
                         handleUpdateAddon(addon.addon_product_id, { 
                           addon_type: value,
                           // Reset type-specific fields when changing type
-                          price_override: null, // Addons always use original product pricing
+                          price_override: value === "addon" ? addon.price_override : null,
                           custom_options: value === "addon" ? addon.custom_options : {},
                           bundle_discount_percent: value === "bundle" ? addon.bundle_discount_percent : null,
                           bundle_discount_amount: value === "bundle" ? addon.bundle_discount_amount : null,
@@ -403,25 +406,24 @@ const ProductAddonsSelector = ({
                               </p>
                             )}
 
-                            {/* Price Info - Shows original product pricing */}
+                            {/* Price Override */}
                             <div className="space-y-1 pt-2 border-t">
-                              <Label className="text-xs">Pricing</Label>
-                              <div className="text-xs text-muted-foreground">
-                                <p>Addon will use the original product's pricing:</p>
-                                <p className="font-medium text-foreground mt-1">
-                                  {formatPrice(product.price)}
-                                  {product.pricing_by_option_id && product.base_unit_value && (
-                                    <span className="ml-1 text-muted-foreground font-normal">
-                                      (for {product.base_unit_value}
-                                      {productOptions.find(opt => opt.id === product.pricing_by_option_id)?.unit || ''})
-                                    </span>
-                                  )}
-                                </p>
-                                {product.pricing_by_option_id && product.base_unit_value && (
-                                  <p className="mt-1 text-muted-foreground">
-                                    Price scales proportionally based on selected options in cart
-                                  </p>
-                                )}
+                              <Label className="text-xs">Custom Price ({currencySymbol})</Label>
+                              <div className="flex items-center gap-3">
+                                <Input
+                                  type="number"
+                                  value={addon.price_override ?? ""}
+                                  onChange={(e) =>
+                                    handleUpdateAddon(addon.addon_product_id, {
+                                      price_override: e.target.value ? Number(e.target.value) : null,
+                                    })
+                                  }
+                                  placeholder="Leave empty for proportional pricing"
+                                  className="h-8 w-40"
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  Preview: <span className="font-medium text-foreground">{formatPrice(calculateAddonPrice(addon, product))}</span>
+                                </span>
                               </div>
                             </div>
                           </>

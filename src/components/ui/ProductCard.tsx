@@ -3,9 +3,6 @@ import { Heart, Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { ProductTheme } from "@/hooks/useProducts";
-import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
 
 interface ProductCardTheme {
   card_style: "default" | "minimal" | "bordered";
@@ -72,23 +69,6 @@ const ProductCard = ({
   
   // Merge individual product theme
   const itemTheme: ProductTheme = { ...defaultProductTheme, ...productTheme };
-
-  // Wishlist functionality
-  const { user } = useAuth();
-  const { data: isInWishlist = false } = useIsInWishlist(id);
-  const toggleWishlist = useToggleWishlist();
-
-  const handleWishlistClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({ title: "Please sign in to add items to wishlist", variant: "destructive" });
-      return;
-    }
-
-    await toggleWishlist.toggle(id, isInWishlist);
-  };
 
   const renderStars = () => {
     const stars = [];
@@ -229,18 +209,9 @@ const ProductCard = ({
           </span>
         )}
         {globalTheme.show_wishlist && (
-          <button 
-            onClick={handleWishlistClick}
-            disabled={toggleWishlist.isPending}
-            className={`absolute top-4 right-4 z-10 transition-colors ${
-              isInWishlist 
-                ? "text-sale" 
-                : "text-muted-foreground hover:text-sale"
-            }`}
-            aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-          >
+          <button className="absolute top-4 right-4 text-muted-foreground hover:text-sale z-10">
             <div className="bg-card rounded-full p-1 shadow-sm">
-              <Heart size={16} className={isInWishlist ? "fill-current" : ""} />
+              <Heart size={16} />
             </div>
           </button>
         )}

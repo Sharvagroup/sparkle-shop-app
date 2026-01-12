@@ -148,7 +148,7 @@ export const useProducts = (filters?: ProductFilters) => {
       if (error) throw error;
 
       // Inject dynamic "New" badge if no badge is manually set
-      return ((data || []) as Product[]).map(product => {
+      return (data as Product[]).map(product => {
         const created = new Date(product.created_at);
         if (!product.badge && created >= thresholdDate) {
           return { ...product, badge: 'new' as const };
@@ -174,7 +174,7 @@ export const useAdminProducts = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as Product[];
+      return data as Product[];
     },
   });
 };

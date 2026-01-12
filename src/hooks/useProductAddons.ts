@@ -18,16 +18,12 @@ export interface ProductAddon {
   addon_product?: {
     id: string;
     name: string;
-    description: string | null;
     price: number;
-    original_price: number | null;
     images: string[] | null;
     slug: string;
     enabled_options: string[] | null;
     pricing_by_option_id: string | null;
     base_unit_value: number | null;
-    rating: number;
-    review_count: number;
   };
 }
 
@@ -52,7 +48,7 @@ export const useProductAddons = (productId: string) => {
         .from("product_addons")
         .select(`
           *,
-          addon_product:products!product_addons_addon_product_id_fkey(id, name, description, price, original_price, images, slug, enabled_options, pricing_by_option_id, base_unit_value, rating, review_count)
+          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .eq("product_id", productId)
         .eq("is_active", true)
@@ -74,7 +70,7 @@ export const useAdminProductAddons = (productId: string) => {
         .from("product_addons")
         .select(`
           *,
-          addon_product:products!product_addons_addon_product_id_fkey(id, name, description, price, original_price, images, slug, enabled_options, pricing_by_option_id, base_unit_value, rating, review_count)
+          addon_product:products!product_addons_addon_product_id_fkey(id, name, price, images, slug, enabled_options, pricing_by_option_id, base_unit_value)
         `)
         .eq("product_id", productId)
         .order("display_order", { ascending: true });

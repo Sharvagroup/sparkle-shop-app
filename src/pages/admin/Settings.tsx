@@ -16,7 +16,7 @@ import {
 import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Search } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
-import { validateSiteImage, validateImageSize, ALLOWED_SITE_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
 
 interface ContactPageSettings {
@@ -78,17 +78,6 @@ interface SearchSettings {
   searchInMaterial: boolean;
 }
 
-interface ProductPageSettings {
-  shippingText: string;
-  trustBadges: {
-    qualityAssured: string;
-    securePackaging: string;
-    fastShipping: string;
-  };
-  defaultCareInstructions: string[];
-  placeholderImage: string;
-}
-
 const fontOptions = [
   { value: "Playfair Display", label: "Playfair Display (Elegant Serif)" },
   { value: "Lato", label: "Lato (Clean Sans-Serif)" },
@@ -134,8 +123,6 @@ const Settings = () => {
   // SEO
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
-  const [metaKeywords, setMetaKeywords] = useState("");
-  const [twitterHandle, setTwitterHandle] = useState("");
   const [ogImage, setOgImage] = useState("");
 
   // Theme
@@ -188,17 +175,6 @@ const Settings = () => {
   const [searchInDescription, setSearchInDescription] = useState(true);
   const [searchInMaterial, setSearchInMaterial] = useState(true);
 
-  // Product Page Settings
-  const [shippingText, setShippingText] = useState("Inclusive of all taxes. Free insured shipping.");
-  const [trustBadgeQuality, setTrustBadgeQuality] = useState("Quality Assured");
-  const [trustBadgePackaging, setTrustBadgePackaging] = useState("Secure Packaging");
-  const [trustBadgeShipping, setTrustBadgeShipping] = useState("Fast Shipping");
-  const [defaultCareInstructions, setDefaultCareInstructions] = useState<string[]>([
-    "Store in the provided jewelry box.",
-    "Clean with a soft, dry cloth only."
-  ]);
-  const [placeholderImage, setPlaceholderImage] = useState("/placeholder.svg");
-
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -241,8 +217,6 @@ const Settings = () => {
       if (seo) {
         setMetaTitle(seo.metaTitle || "");
         setMetaDescription(seo.metaDescription || "");
-        setMetaKeywords((seo as any).metaKeywords || "");
-        setTwitterHandle((seo as any).twitterHandle || "");
         setOgImage(seo.ogImage || "");
       }
       if (theme) {
@@ -293,18 +267,6 @@ const Settings = () => {
         setSearchInDescription(searchData.searchInDescription !== false);
         setSearchInMaterial(searchData.searchInMaterial !== false);
       }
-      const productPageData = settings.product_page as unknown as ProductPageSettings | undefined;
-      if (productPageData) {
-        setShippingText(productPageData.shippingText || "Inclusive of all taxes. Free insured shipping.");
-        setTrustBadgeQuality(productPageData.trustBadges?.qualityAssured || "Quality Assured");
-        setTrustBadgePackaging(productPageData.trustBadges?.securePackaging || "Secure Packaging");
-        setTrustBadgeShipping(productPageData.trustBadges?.fastShipping || "Fast Shipping");
-        setDefaultCareInstructions(productPageData.defaultCareInstructions || [
-          "Store in the provided jewelry box.",
-          "Clean with a soft, dry cloth only."
-        ]);
-        setPlaceholderImage(productPageData.placeholderImage || "/placeholder.svg");
-      }
 
     }
   }, [settings]);
@@ -313,7 +275,7 @@ const Settings = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formatCheck = validateSiteImage(file);
+    const formatCheck = validateWebPImage(file);
     if (!formatCheck.valid) {
       toast.error(formatCheck.error);
       return;
@@ -410,7 +372,7 @@ const Settings = () => {
   const saveSeo = async () => {
     await updateSetting.mutateAsync({
       key: "seo",
-      value: { metaTitle, metaDescription, metaKeywords, twitterHandle, ogImage },
+      value: { metaTitle, metaDescription, ogImage },
       category: "seo",
     });
   };
@@ -469,23 +431,6 @@ const Settings = () => {
     });
   };
 
-  const saveProductPage = async () => {
-    await updateSetting.mutateAsync({
-      key: "product_page",
-      value: {
-        shippingText,
-        trustBadges: {
-          qualityAssured: trustBadgeQuality,
-          securePackaging: trustBadgePackaging,
-          fastShipping: trustBadgeShipping,
-        },
-        defaultCareInstructions,
-        placeholderImage,
-      },
-      category: "content",
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -503,7 +448,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
           <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
           <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
@@ -512,6 +457,7 @@ const Settings = () => {
           <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
           <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
           <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
+          <TabsTrigger value="search" className="gap-2"><Search className="h-4 w-4" /> Search</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -542,7 +488,7 @@ const Settings = () => {
                         {logoUrl ? <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("logo-upload")?.click()} disabled={uploading === "logo"}>
                           {uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -558,7 +504,7 @@ const Settings = () => {
                         {footerLogoUrl ? <img src={footerLogoUrl} alt="Footer Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("footer-logo-upload")?.click()} disabled={uploading === "footerLogo"}>
                           {uploading === "footerLogo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -576,7 +522,7 @@ const Settings = () => {
                         {faviconUrl ? <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("favicon-upload")?.click()} disabled={uploading === "favicon"}>
                           {uploading === "favicon" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -592,7 +538,7 @@ const Settings = () => {
                         {loadingImageUrl ? <img src={loadingImageUrl} alt="Loading" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
                           {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -608,7 +554,7 @@ const Settings = () => {
                         {authBackgroundImage ? <img src={authBackgroundImage} alt="Auth BG" className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">Default</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "authBg", setAuthBackgroundImage)} className="hidden" id="auth-bg-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "authBg", setAuthBackgroundImage)} className="hidden" id="auth-bg-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("auth-bg-upload")?.click()} disabled={uploading === "authBg"}>
                           {uploading === "authBg" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -745,7 +691,7 @@ const Settings = () => {
                         {contactHeroImage ? <img src={contactHeroImage} alt="Contact Hero" className="max-h-full max-w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
+                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("contact-hero-upload")?.click()} disabled={uploading === "contactHero"}>
                           {uploading === "contactHero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -1076,21 +1022,11 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground">{metaDescription.length}/160 characters recommended</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Meta Keywords</Label>
-                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="jewelry, gold, diamond, bridal, necklace, earrings" />
-                  <p className="text-xs text-muted-foreground">Comma-separated keywords for search engines</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Twitter Handle</Label>
-                  <Input value={twitterHandle} onChange={(e) => setTwitterHandle(e.target.value)} placeholder="@YourStoreName" />
-                  <p className="text-xs text-muted-foreground">Used for twitter:site meta tag (include @)</p>
-                </div>
-                <div className="space-y-2">
                   <Label>OG Image</Label>
                   <p className="text-xs text-muted-foreground mb-2">Image shown when sharing on social media (1200x630px recommended)</p>
                   <div className="flex gap-4 items-center">
                     {ogImage && <img src={ogImage} alt="OG" className="h-20 w-auto rounded border" />}
-                    <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
+                    <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
                     <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("og-upload")?.click()} disabled={uploading === "og"}>
                       {uploading === "og" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Upload</>}
                     </Button>
@@ -1411,131 +1347,6 @@ const Settings = () => {
                     Search bar is currently disabled
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="product-page">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Product Page Settings</CardTitle>
-                <CardDescription>Configure text and content displayed on product detail pages</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Shipping Text</Label>
-                  <Textarea
-                    value={shippingText}
-                    onChange={(e) => setShippingText(e.target.value)}
-                    placeholder="Inclusive of all taxes. Free insured shipping."
-                    rows={2}
-                  />
-                  <p className="text-xs text-muted-foreground">This text appears below the price on product pages</p>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Trust Badges</Label>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Quality Assured Badge Text</Label>
-                      <Input
-                        value={trustBadgeQuality}
-                        onChange={(e) => setTrustBadgeQuality(e.target.value)}
-                        placeholder="Quality Assured"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Secure Packaging Badge Text</Label>
-                      <Input
-                        value={trustBadgePackaging}
-                        onChange={(e) => setTrustBadgePackaging(e.target.value)}
-                        placeholder="Secure Packaging"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Fast Shipping Badge Text</Label>
-                      <Input
-                        value={trustBadgeShipping}
-                        onChange={(e) => setTrustBadgeShipping(e.target.value)}
-                        placeholder="Fast Shipping"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Default Care Instructions</Label>
-                  <p className="text-xs text-muted-foreground">These instructions appear when a product doesn't have custom care instructions</p>
-                  <div className="space-y-2">
-                    {defaultCareInstructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Textarea
-                          value={instruction}
-                          onChange={(e) => {
-                            const newInstructions = [...defaultCareInstructions];
-                            newInstructions[index] = e.target.value;
-                            setDefaultCareInstructions(newInstructions);
-                          }}
-                          rows={1}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDefaultCareInstructions(defaultCareInstructions.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setDefaultCareInstructions([...defaultCareInstructions, ""]);
-                      }}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Care Instruction
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Placeholder Image Path</Label>
-                  <Input
-                    value={placeholderImage}
-                    onChange={(e) => setPlaceholderImage(e.target.value)}
-                    placeholder="/placeholder.svg"
-                  />
-                  <p className="text-xs text-muted-foreground">Path to the placeholder image used when products have no images</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={saveProductPage} className="w-full" disabled={updateSetting.isPending}>
-                  {updateSetting.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Product Page Settings
-                    </>
-                  )}
-                </Button>
               </CardContent>
             </Card>
           </div>

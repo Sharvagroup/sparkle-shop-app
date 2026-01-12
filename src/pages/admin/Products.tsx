@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -35,8 +33,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   useAdminProducts,
   useCreateProduct,
@@ -47,27 +43,14 @@ import {
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import { useAddProductAddon, useRemoveProductAddon, useAdminProductAddons } from '@/hooks/useProductAddons';
-import { useSiteSetting, useUpdateSiteSetting } from '@/hooks/useSiteSettings';
-import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 import ProductForm from '@/components/admin/ProductForm';
 import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
 import { ProductItemThemeDialog } from '@/components/admin/ProductItemThemeDialog';
 import { BulkProductUpload } from '@/components/admin/BulkProductUpload';
-import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload, Loader2, Save, Settings } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-
-interface ProductPageSettings {
-  shippingText: string;
-  trustBadges: {
-    qualityAssured: string;
-    securePackaging: string;
-    fastShipping: string;
-  };
-  defaultCareInstructions: string[];
-  placeholderImage: string;
-}
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
@@ -77,34 +60,6 @@ const AdminProducts = () => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
-  const updateSetting = useUpdateSiteSetting();
-  const { formatPrice } = usePriceFormatter();
-
-  // Product Page Settings
-  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>('product_page');
-  const [shippingText, setShippingText] = useState("Inclusive of all taxes. Free insured shipping.");
-  const [trustBadgeQuality, setTrustBadgeQuality] = useState("Quality Assured");
-  const [trustBadgePackaging, setTrustBadgePackaging] = useState("Secure Packaging");
-  const [trustBadgeShipping, setTrustBadgeShipping] = useState("Fast Shipping");
-  const [defaultCareInstructions, setDefaultCareInstructions] = useState<string[]>([
-    "Store in the provided jewelry box.",
-    "Clean with a soft, dry cloth only."
-  ]);
-  const [placeholderImage, setPlaceholderImage] = useState("/placeholder.svg");
-
-  useEffect(() => {
-    if (productPageSettings) {
-      setShippingText(productPageSettings.shippingText || "Inclusive of all taxes. Free insured shipping.");
-      setTrustBadgeQuality(productPageSettings.trustBadges?.qualityAssured || "Quality Assured");
-      setTrustBadgePackaging(productPageSettings.trustBadges?.securePackaging || "Secure Packaging");
-      setTrustBadgeShipping(productPageSettings.trustBadges?.fastShipping || "Fast Shipping");
-      setDefaultCareInstructions(productPageSettings.defaultCareInstructions || [
-        "Store in the provided jewelry box.",
-        "Clean with a soft, dry cloth only."
-      ]);
-      setPlaceholderImage(productPageSettings.placeholderImage || "/placeholder.svg");
-    }
-  }, [productPageSettings]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -119,24 +74,6 @@ const AdminProducts = () => {
   const [filterCollection, setFilterCollection] = useState<string>('_all');
   const [filterStatus, setFilterStatus] = useState<string>('_all');
   const [filterTag, setFilterTag] = useState<string>('_all');
-
-  const saveProductPageSettings = async () => {
-    await updateSetting.mutateAsync({
-      key: "product_page",
-      value: {
-        shippingText,
-        trustBadges: {
-          qualityAssured: trustBadgeQuality,
-          securePackaging: trustBadgePackaging,
-          fastShipping: trustBadgeShipping,
-        },
-        defaultCareInstructions,
-        placeholderImage,
-      },
-      category: "content",
-    });
-    toast.success('Product page settings saved!');
-  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
@@ -230,371 +167,239 @@ const AdminProducts = () => {
     }
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif tracking-wide">Products</h1>
-          <p className="text-muted-foreground">Manage your product catalog and settings</p>
+          <p className="text-muted-foreground">Manage your product catalog</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
+            <Paintbrush className="w-4 h-4 mr-2" />
+            Card Theme
+          </Button>
+          <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="catalog" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="catalog" className="gap-2">
-            <Package className="h-4 w-4" /> Catalog
-          </TabsTrigger>
-          <TabsTrigger value="page-settings" className="gap-2">
-            <Settings className="h-4 w-4" /> Page Settings
-          </TabsTrigger>
-        </TabsList>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or SKU..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
-        <TabsContent value="catalog" className="space-y-6">
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
-              <Paintbrush className="w-4 h-4 mr-2" />
-              Card Theme
-            </Button>
-            <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Bulk Upload
-            </Button>
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterCollection} onValueChange={setFilterCollection}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Collections" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">All Collections</SelectItem>
+            {collections.map((col) => (
+              <SelectItem key={col.id} value={col.id}>
+                {col.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTag} onValueChange={setFilterTag}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Tags" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">All Tags</SelectItem>
+            <SelectItem value="new_arrival">New Arrivals</SelectItem>
+            <SelectItem value="best_seller">Best Sellers</SelectItem>
+            <SelectItem value="celebrity_special">Celebrity Specials</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Products Table */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg bg-muted/50">
+          <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-1">No products found</h3>
+          <p className="text-muted-foreground mb-4">
+            {products.length === 0
+              ? 'Get started by adding your first product.'
+              : 'Try adjusting your filters.'}
+          </p>
+          {products.length === 0 && (
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or SKU..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterCollection} onValueChange={setFilterCollection}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Collections" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Collections</SelectItem>
-                {collections.map((col) => (
-                  <SelectItem key={col.id} value={col.id}>
-                    {col.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filterTag} onValueChange={setFilterTag}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All Tags" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Tags</SelectItem>
-                <SelectItem value="new_arrival">New Arrivals</SelectItem>
-                <SelectItem value="best_seller">Best Sellers</SelectItem>
-                <SelectItem value="celebrity_special">Celebrity Specials</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Products Table */}
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-12 border rounded-lg bg-muted/50">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-1">No products found</h3>
-              <p className="text-muted-foreground mb-4">
-                {products.length === 0
-                  ? 'Get started by adding your first product.'
-                  : 'Try adjusting your filters.'}
-              </p>
-              {products.length === 0 && (
-                <Button onClick={() => setIsFormOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">Image</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Collection</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        {product.images?.[0] ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{product.name}</p>
-                          {product.sku && (
-                            <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                          )}
-                          <div className="flex gap-1 mt-1">
-                            {product.is_new_arrival && (
-                              <Badge variant="secondary" className="text-xs">
-                                New
-                              </Badge>
-                            )}
-                            {product.is_best_seller && (
-                              <Badge variant="secondary" className="text-xs">
-                                Best Seller
-                              </Badge>
-                            )}
-                            {product.is_celebrity_special && (
-                              <Badge variant="secondary" className="text-xs">
-                                Celebrity
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{product.category?.name || '-'}</TableCell>
-                      <TableCell>{product.collection?.name || '-'}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{formatPrice(product.price)}</p>
-                          {product.original_price && (
-                            <p className="text-sm text-muted-foreground line-through">
-                              {formatPrice(product.original_price)}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={
-                            product.stock_quantity <= product.low_stock_threshold
-                              ? 'text-destructive font-medium'
-                              : ''
-                          }
-                        >
-                          {product.stock_quantity}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={product.is_active ? 'default' : 'secondary'}>
-                          {product.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setItemThemeProduct(product)}
-                            title="Theme"
-                          >
-                            <Paintbrush className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingProduct(product)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(product.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="page-settings">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Product Page Settings</CardTitle>
-                <CardDescription>Configure text and content displayed on product detail pages</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Shipping Text</Label>
-                  <Textarea
-                    value={shippingText}
-                    onChange={(e) => setShippingText(e.target.value)}
-                    placeholder="Inclusive of all taxes. Free insured shipping."
-                    rows={2}
-                  />
-                  <p className="text-xs text-muted-foreground">This text appears below the price on product pages</p>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Trust Badges</Label>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Quality Assured Badge Text</Label>
-                      <Input
-                        value={trustBadgeQuality}
-                        onChange={(e) => setTrustBadgeQuality(e.target.value)}
-                        placeholder="Quality Assured"
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Image</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Collection</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    {product.images?.[0] ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Secure Packaging Badge Text</Label>
-                      <Input
-                        value={trustBadgePackaging}
-                        onChange={(e) => setTrustBadgePackaging(e.target.value)}
-                        placeholder="Secure Packaging"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Fast Shipping Badge Text</Label>
-                      <Input
-                        value={trustBadgeShipping}
-                        onChange={(e) => setTrustBadgeShipping(e.target.value)}
-                        placeholder="Fast Shipping"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Default Care Instructions</Label>
-                  <p className="text-xs text-muted-foreground">These instructions appear when a product doesn't have custom care instructions</p>
-                  <div className="space-y-2">
-                    {defaultCareInstructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Textarea
-                          value={instruction}
-                          onChange={(e) => {
-                            const newInstructions = [...defaultCareInstructions];
-                            newInstructions[index] = e.target.value;
-                            setDefaultCareInstructions(newInstructions);
-                          }}
-                          rows={1}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDefaultCareInstructions(defaultCareInstructions.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    ) : (
+                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                        <Package className="w-6 h-6 text-muted-foreground" />
                       </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setDefaultCareInstructions([...defaultCareInstructions, ""]);
-                      }}
-                      className="w-full"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      {product.sku && (
+                        <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                      )}
+                      <div className="flex gap-1 mt-1">
+                        {product.is_new_arrival && (
+                          <Badge variant="secondary" className="text-xs">
+                            New
+                          </Badge>
+                        )}
+                        {product.is_best_seller && (
+                          <Badge variant="secondary" className="text-xs">
+                            Best Seller
+                          </Badge>
+                        )}
+                        {product.is_celebrity_special && (
+                          <Badge variant="secondary" className="text-xs">
+                            Celebrity
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{product.category?.name || '-'}</TableCell>
+                  <TableCell>{product.collection?.name || '-'}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{formatPrice(product.price)}</p>
+                      {product.original_price && (
+                        <p className="text-sm text-muted-foreground line-through">
+                          {formatPrice(product.original_price)}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={
+                        product.stock_quantity <= product.low_stock_threshold
+                          ? 'text-destructive font-medium'
+                          : ''
+                      }
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Care Instruction
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Placeholder Image Path</Label>
-                  <Input
-                    value={placeholderImage}
-                    onChange={(e) => setPlaceholderImage(e.target.value)}
-                    placeholder="/placeholder.svg"
-                  />
-                  <p className="text-xs text-muted-foreground">Path to the placeholder image used when products have no images</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={saveProductPageSettings} className="w-full" disabled={updateSetting.isPending}>
-                  {updateSetting.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Product Page Settings
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                      {product.stock_quantity}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={product.is_active ? 'default' : 'secondary'}>
+                      {product.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setItemThemeProduct(product)}
+                        title="Theme"
+                      >
+                        <Paintbrush className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingProduct(product)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteId(product.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog

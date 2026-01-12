@@ -115,25 +115,6 @@ const Checkout = () => {
     return unitPrice * item.quantity;
   };
 
-  // Calculate addon price using full product pricing logic
-  const calculateAddonPrice = (addon: typeof allAddons[0]) => {
-    const addonProduct = addon.addon_product;
-    if (!addonProduct) return 0;
-    
-    // Use the same pricing logic as main products
-    let unitPrice = addonProduct.price;
-    
-    // If addon has selected options and uses proportional pricing
-    if (addonProduct.pricing_by_option_id && addonProduct.base_unit_value && addonProduct.base_unit_value > 0) {
-      const selectedValue = addon.selected_options?.[addonProduct.pricing_by_option_id];
-      if (selectedValue && typeof selectedValue === 'number') {
-        unitPrice = (addonProduct.price / addonProduct.base_unit_value) * selectedValue;
-      }
-    }
-    
-    return unitPrice * (addon.quantity || 1);
-  };
-
   // Calculate subtotal including addons with dynamic pricing
   const subtotal = useMemo(() => {
     let total = 0;
@@ -141,11 +122,11 @@ const Checkout = () => {
       total += calculateItemPrice(item);
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
-        total += calculateAddonPrice(addon);
+        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
       });
     });
     return total;
-  }, [cartItems, addonsByCartItem, allAddons]);
+  }, [cartItems, addonsByCartItem]);
 
   // Dynamic shipping calculation from Commerce Settings
   // Dynamic shipping calculation from Commerce Settings
@@ -184,7 +165,7 @@ const Checkout = () => {
       const itemAddons = addonsByCartItem[item.id] || [];
       const itemTotal = calculateItemPrice(item);
       const addonsTotal = itemAddons.reduce(
-        (sum, addon) => sum + calculateAddonPrice(addon),
+        (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
         0
       );
       
@@ -205,9 +186,8 @@ const Checkout = () => {
             name: addon.addon_product?.name || "",
             image: addon.addon_product?.images?.[0] || "",
             quantity: addon.quantity || 1,
-            price: calculateAddonPrice(addon) / (addon.quantity || 1), // Unit price
-            total: calculateAddonPrice(addon),
-            selected_options: addon.selected_options || {},
+            price: addon.addon_product?.price || 0,
+            total: (addon.addon_product?.price || 0) * (addon.quantity || 1),
           })),
         },
       };

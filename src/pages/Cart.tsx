@@ -83,39 +83,20 @@ const Cart = () => {
     return unitPrice * item.quantity;
   };
 
-  // Calculate addon price using full product pricing logic
-  const calculateAddonPrice = (addon: typeof allAddons[0]) => {
-    const addonProduct = addon.addon_product;
-    if (!addonProduct) return 0;
-    
-    // Use the same pricing logic as main products
-    let unitPrice = addonProduct.price;
-    
-    // If addon has selected options and uses proportional pricing
-    if (addonProduct.pricing_by_option_id && addonProduct.base_unit_value && addonProduct.base_unit_value > 0) {
-      const selectedValue = addon.selected_options?.[addonProduct.pricing_by_option_id];
-      if (selectedValue && typeof selectedValue === 'number') {
-        unitPrice = (addonProduct.price / addonProduct.base_unit_value) * selectedValue;
-      }
-    }
-    
-    return unitPrice * (addon.quantity || 1);
-  };
-
   // Calculate subtotal including addons with dynamic pricing
   const subtotal = useMemo(() => {
     let total = 0;
     cartItems.forEach((item) => {
       // Main product price with dynamic pricing
       total += calculateItemPrice(item);
-      // Add addons for this item using full product pricing logic
+      // Add addons for this item
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
-        total += calculateAddonPrice(addon);
+        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
       });
     });
     return total;
-  }, [cartItems, addonsByCartItem, allAddons]);
+  }, [cartItems, addonsByCartItem]);
 
   const discountAmount = appliedDiscount?.discountAmount || 0;
 
@@ -378,15 +359,12 @@ const Cart = () => {
                                   <p className="text-sm font-medium truncate">
                                     + {addon.addon_product?.name}
                                   </p>
-                                  <div className="text-xs text-muted-foreground">
-                                    <span>Qty: {addon.quantity || 1}</span>
-                                    {addon.selected_options && Object.keys(addon.selected_options).length > 0 && (
-                                      <span className="ml-2">• {formatOptions(addon.selected_options)}</span>
-                                    )}
-                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Qty: {addon.quantity || 1}
+                                  </p>
                                 </div>
                                 <div className="text-sm font-medium">
-                                  {formatPrice(calculateAddonPrice(addon))}
+                                  {formatPrice((addon.addon_product?.price || 0) * (addon.quantity || 1))}
                                 </div>
                                 <button
                                   onClick={() => handleRemoveAddon(addon.id, item.id)}
