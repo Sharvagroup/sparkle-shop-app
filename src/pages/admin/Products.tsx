@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,31 +42,14 @@ import {
 } from '@/hooks/useProducts';
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
-import { useAddProductAddon, useRemoveProductAddon, useAdminProductAddons } from '@/hooks/useProductAddons';
 import ProductForm from '@/components/admin/ProductForm';
 import { ProductCardThemeDialog } from '@/components/admin/ProductCardThemeDialog';
 import { ProductItemThemeDialog } from '@/components/admin/ProductItemThemeDialog';
 import { BulkProductUpload } from '@/components/admin/BulkProductUpload';
-import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload, Settings, Save, Loader2, Trash2 as TrashIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useSiteSetting, useUpdateSiteSetting } from '@/hooks/useSiteSettings';
-
-interface ProductPageSettings {
-  shippingText: string;
-  trustBadges: {
-    qualityAssured: string;
-    securePackaging: string;
-    fastShipping: string;
-  };
-  defaultCareInstructions: string[];
-  placeholderImage: string;
-}
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
@@ -76,8 +59,6 @@ const AdminProducts = () => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
-  const updateSetting = useUpdateSiteSetting();
-  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -85,33 +66,6 @@ const AdminProducts = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [itemThemeProduct, setItemThemeProduct] = useState<Product | null>(null);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("products");
-
-  // Product Page Settings State
-  const [shippingText, setShippingText] = useState("Inclusive of all taxes. Free insured shipping.");
-  const [trustBadgeQuality, setTrustBadgeQuality] = useState("Quality Assured");
-  const [trustBadgePackaging, setTrustBadgePackaging] = useState("Secure Packaging");
-  const [trustBadgeShipping, setTrustBadgeShipping] = useState("Fast Shipping");
-  const [defaultCareInstructions, setDefaultCareInstructions] = useState<string[]>([
-    "Store in the provided jewelry box.",
-    "Clean with a soft, dry cloth only."
-  ]);
-  const [placeholderImage, setPlaceholderImage] = useState("/placeholder.svg");
-
-  // Load product page settings
-  useEffect(() => {
-    if (productPageSettings) {
-      setShippingText(productPageSettings.shippingText || "Inclusive of all taxes. Free insured shipping.");
-      setTrustBadgeQuality(productPageSettings.trustBadges?.qualityAssured || "Quality Assured");
-      setTrustBadgePackaging(productPageSettings.trustBadges?.securePackaging || "Secure Packaging");
-      setTrustBadgeShipping(productPageSettings.trustBadges?.fastShipping || "Fast Shipping");
-      setDefaultCareInstructions(productPageSettings.defaultCareInstructions || [
-        "Store in the provided jewelry box.",
-        "Clean with a soft, dry cloth only."
-      ]);
-      setPlaceholderImage(productPageSettings.placeholderImage || "/placeholder.svg");
-    }
-  }, [productPageSettings]);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,6 +96,7 @@ const AdminProducts = () => {
 
     return matchesSearch && matchesCategory && matchesCollection && matchesStatus && matchesTag;
   });
+
   const handleCreate = async (data: any) => {
     try {
       const { addons, ...productData } = data;
@@ -220,23 +175,6 @@ const AdminProducts = () => {
     }).format(price);
   };
 
-  const saveProductPage = async () => {
-    await updateSetting.mutateAsync({
-      key: "product_page",
-      value: {
-        shippingText,
-        trustBadges: {
-          qualityAssured: trustBadgeQuality,
-          securePackaging: trustBadgePackaging,
-          fastShipping: trustBadgeShipping,
-        },
-        defaultCareInstructions,
-        placeholderImage,
-      },
-      category: "content",
-    });
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -245,31 +183,21 @@ const AdminProducts = () => {
           <h1 className="text-2xl font-serif tracking-wide">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        {activeTab === "products" && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
-              <Paintbrush className="w-4 h-4 mr-2" />
-              Card Theme
-            </Button>
-            <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Bulk Upload
-            </Button>
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
+            <Paintbrush className="w-4 h-4 mr-2" />
+            Card Theme
+          </Button>
+          <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="product-details">Product Details Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products" className="space-y-6">
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
@@ -544,133 +472,6 @@ const AdminProducts = () => {
           queryClient.invalidateQueries({ queryKey: ['products'] });
         }}
       />
-        </TabsContent>
-
-        <TabsContent value="product-details">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Product Page Settings</CardTitle>
-                <CardDescription>Configure text and content displayed on product detail pages</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Shipping Text</Label>
-                  <Textarea
-                    value={shippingText}
-                    onChange={(e) => setShippingText(e.target.value)}
-                    placeholder="Inclusive of all taxes. Free insured shipping."
-                    rows={2}
-                  />
-                  <p className="text-xs text-muted-foreground">This text appears below the price on product pages</p>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Trust Badges</Label>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Quality Assured Badge Text</Label>
-                      <Input
-                        value={trustBadgeQuality}
-                        onChange={(e) => setTrustBadgeQuality(e.target.value)}
-                        placeholder="Quality Assured"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Secure Packaging Badge Text</Label>
-                      <Input
-                        value={trustBadgePackaging}
-                        onChange={(e) => setTrustBadgePackaging(e.target.value)}
-                        placeholder="Secure Packaging"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Fast Shipping Badge Text</Label>
-                      <Input
-                        value={trustBadgeShipping}
-                        onChange={(e) => setTrustBadgeShipping(e.target.value)}
-                        placeholder="Fast Shipping"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Default Care Instructions</Label>
-                  <p className="text-xs text-muted-foreground">These instructions appear when a product doesn't have custom care instructions</p>
-                  <div className="space-y-2">
-                    {defaultCareInstructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Textarea
-                          value={instruction}
-                          onChange={(e) => {
-                            const newInstructions = [...defaultCareInstructions];
-                            newInstructions[index] = e.target.value;
-                            setDefaultCareInstructions(newInstructions);
-                          }}
-                          rows={1}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDefaultCareInstructions(defaultCareInstructions.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setDefaultCareInstructions([...defaultCareInstructions, ""]);
-                      }}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Care Instruction
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Placeholder Image Path</Label>
-                  <Input
-                    value={placeholderImage}
-                    onChange={(e) => setPlaceholderImage(e.target.value)}
-                    placeholder="/placeholder.svg"
-                  />
-                  <p className="text-xs text-muted-foreground">Path to the placeholder image used when products have no images</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={saveProductPage} className="w-full" disabled={updateSetting.isPending}>
-                  {updateSetting.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Product Page Settings
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
