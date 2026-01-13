@@ -11,6 +11,12 @@ export interface ProductTheme {
   card_style?: 'minimal' | 'bordered' | 'shadow';
 }
 
+export interface TrustBadges {
+  qualityAssured?: string;
+  securePackaging?: string;
+  fastShipping?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -29,6 +35,8 @@ export interface Product {
   video_url: string | null;
   material: string | null;
   care_instructions: string | null;
+  shipping_text: string | null;
+  trust_badges: TrustBadges | null;
   stock_quantity: number;
   low_stock_threshold: number;
   badge: 'new' | 'sale' | 'trending' | null;
@@ -65,6 +73,8 @@ export interface ProductInput {
   video_url?: string | null;
   material?: string | null;
   care_instructions?: string | null;
+  shipping_text?: string | null;
+  trust_badges?: TrustBadges | null;
   stock_quantity?: number;
   low_stock_threshold?: number;
   badge?: 'new' | 'sale' | 'trending' | null;

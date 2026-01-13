@@ -26,7 +26,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
-import { useAdminProducts, Product, uploadProductImages, deleteProductImage } from '@/hooks/useProducts';
+import { useAdminProducts, Product, uploadProductImages, deleteProductImage, TrustBadges } from '@/hooks/useProducts';
 import { useProductOptions, ProductOption } from '@/hooks/useProductOptions';
 import { useAdminProductAddons, useAddProductAddon, useRemoveProductAddon } from '@/hooks/useProductAddons';
 import ProductAddonsSelector, { SelectedAddon } from '@/components/admin/ProductAddonsSelector';
@@ -49,6 +49,7 @@ const productSchema = z.object({
   original_price: z.coerce.number().min(0).optional().nullable(),
   material: z.string().max(100).optional().nullable(),
   care_instructions: z.string().max(1000).optional().nullable(),
+  shipping_text: z.string().max(500).optional().nullable(),
   stock_quantity: z.coerce.number().int().min(0).default(0),
   low_stock_threshold: z.coerce.number().int().min(0).default(5),
   badge: z.enum(['new', 'sale', 'trending']).optional().nullable(),
@@ -60,7 +61,15 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   product?: Product | null;
-  onSubmit: (data: ProductFormData & { images: string[]; enabled_options: string[]; has_addons: boolean; addons: SelectedAddon[]; pricing_by_option_id: string | null; base_unit_value: number | null }) => Promise<void>;
+  onSubmit: (data: ProductFormData & { 
+    images: string[]; 
+    enabled_options: string[]; 
+    has_addons: boolean; 
+    addons: SelectedAddon[]; 
+    pricing_by_option_id: string | null; 
+    base_unit_value: number | null;
+    trust_badges: TrustBadges | null;
+  }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -78,6 +87,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [pricingByOptionId, setPricingByOptionId] = useState<string | null>(product?.pricing_by_option_id || null);
   const [baseUnitValue, setBaseUnitValue] = useState<number | null>(product?.base_unit_value || null);
+  
+  // Trust badges state
+  const [trustBadgeQuality, setTrustBadgeQuality] = useState(product?.trust_badges?.qualityAssured || '');
+  const [trustBadgePackaging, setTrustBadgePackaging] = useState(product?.trust_badges?.securePackaging || '');
+  const [trustBadgeShipping, setTrustBadgeShipping] = useState(product?.trust_badges?.fastShipping || '');
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -96,6 +110,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       original_price: product?.original_price || null,
       material: product?.material || '',
       care_instructions: product?.care_instructions || '',
+      shipping_text: product?.shipping_text || '',
       stock_quantity: product?.stock_quantity || 0,
       low_stock_threshold: product?.low_stock_threshold || 5,
       badge: product?.badge || null,
@@ -226,6 +241,16 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       .map(opt => opt.id);
     const finalEnabledOptions = [...new Set([...enabledOptions, ...mandatoryOptionIds])];
 
+    // Build trust badges object
+    const trustBadges: TrustBadges | null = 
+      (trustBadgeQuality || trustBadgePackaging || trustBadgeShipping) 
+        ? {
+            qualityAssured: trustBadgeQuality || undefined,
+            securePackaging: trustBadgePackaging || undefined,
+            fastShipping: trustBadgeShipping || undefined,
+          }
+        : null;
+
     await onSubmit({
       ...data,
       images,
@@ -238,6 +263,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       badge: data.badge || null,
       pricing_by_option_id: pricingByOptionId,
       base_unit_value: baseUnitValue,
+      trust_badges: trustBadges,
     });
   };
 
@@ -693,6 +719,66 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
+
+        {/* Shipping & Trust */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Shipping & Trust Badges</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="shipping_text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Shipping Text</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Inclusive of all taxes. Free insured shipping."
+                      rows={2}
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">This text appears below the price on the product page</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base font-medium">Trust Badges</Label>
+              <p className="text-xs text-muted-foreground">Custom trust badges for this product. Leave empty to hide.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Quality Assured</Label>
+                  <Input
+                    value={trustBadgeQuality}
+                    onChange={(e) => setTrustBadgeQuality(e.target.value)}
+                    placeholder="Quality Assured"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Secure Packaging</Label>
+                  <Input
+                    value={trustBadgePackaging}
+                    onChange={(e) => setTrustBadgePackaging(e.target.value)}
+                    placeholder="Secure Packaging"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fast Shipping</Label>
+                  <Input
+                    value={trustBadgeShipping}
+                    onChange={(e) => setTrustBadgeShipping(e.target.value)}
+                    placeholder="Fast Shipping"
+                  />
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

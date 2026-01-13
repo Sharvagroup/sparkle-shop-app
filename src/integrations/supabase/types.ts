@@ -728,10 +728,12 @@ export type Database = {
           pricing_by_option_id: string | null
           rating: number | null
           review_count: number | null
+          shipping_text: string | null
           sku: string | null
           slug: string
           stock_quantity: number | null
           theme: Json | null
+          trust_badges: Json | null
           updated_at: string
           video_url: string | null
         }
@@ -761,10 +763,12 @@ export type Database = {
           pricing_by_option_id?: string | null
           rating?: number | null
           review_count?: number | null
+          shipping_text?: string | null
           sku?: string | null
           slug: string
           stock_quantity?: number | null
           theme?: Json | null
+          trust_badges?: Json | null
           updated_at?: string
           video_url?: string | null
         }
@@ -794,10 +798,12 @@ export type Database = {
           pricing_by_option_id?: string | null
           rating?: number | null
           review_count?: number | null
+          shipping_text?: string | null
           sku?: string | null
           slug?: string
           stock_quantity?: number | null
           theme?: Json | null
+          trust_badges?: Json | null
           updated_at?: string
           video_url?: string | null
         }
