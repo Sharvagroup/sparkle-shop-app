@@ -93,7 +93,6 @@ const Settings = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [whatsappEnabled, setWhatsappEnabled] = useState(true);
 
   // Social
   const [facebook, setFacebook] = useState("");
@@ -177,7 +176,6 @@ const Settings = () => {
         setPhone(contact.phone || "");
         setAddress(contact.address || "");
         setWhatsapp(contact.whatsapp || "");
-        setWhatsappEnabled(contact.whatsappEnabled !== false);
       }
       if (social) {
         setFacebook(social.facebook || "");
@@ -288,7 +286,7 @@ const Settings = () => {
   const saveContact = async () => {
     await updateSetting.mutateAsync({
       key: "contact",
-      value: { email, phone, address, whatsapp, whatsappEnabled },
+      value: { email, phone, address, whatsapp },
       category: "contact",
     });
     // Also save business hours
@@ -564,13 +562,6 @@ const Settings = () => {
                   <Label>WhatsApp Number</Label>
                   <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+91..." />
                   <p className="text-xs text-muted-foreground">Used for WhatsApp chat button. Include country code.</p>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div>
-                    <Label>Enable WhatsApp Button</Label>
-                    <p className="text-xs text-muted-foreground">Show WhatsApp chat button on the website</p>
-                  </div>
-                  <Switch checked={whatsappEnabled} onCheckedChange={setWhatsappEnabled} />
                 </div>
 
                 {/* Business Hours */}
@@ -963,7 +954,7 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Meta Title</Label>
-                  <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Your Store Name - Tagline" />
+                  <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder="Your Store - Premium Jewelry Collection" />
                   <p className="text-xs text-muted-foreground">{metaTitle.length}/60 characters recommended</p>
                 </div>
                 <div className="space-y-2">
@@ -973,7 +964,7 @@ const Settings = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Meta Keywords</Label>
-                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3" />
+                  <Input value={metaKeywords} onChange={(e) => setMetaKeywords(e.target.value)} placeholder="jewelry, gold, diamond, bridal, necklace, earrings" />
                   <p className="text-xs text-muted-foreground">Comma-separated keywords for search engines</p>
                 </div>
                 <div className="space-y-2">

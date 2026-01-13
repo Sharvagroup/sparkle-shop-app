@@ -86,7 +86,7 @@ const ResetPassword = () => {
           {branding?.siteName ? (
             <h1 className="text-3xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
           ) : (
-            <h1 className="text-3xl font-serif tracking-widest text-primary">loading</h1>
+            <div className="h-8 w-28 bg-muted animate-pulse rounded mx-auto" />
           )}
         </div>
 

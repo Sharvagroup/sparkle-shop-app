@@ -106,7 +106,7 @@ const NavigationManager = () => {
 
     // Search Settings State
     const [searchEnabled, setSearchEnabled] = useState(true);
-    const [searchPlaceholder, setSearchPlaceholder] = useState("");
+    const [searchPlaceholder, setSearchPlaceholder] = useState("Search for jewellery...");
     const [showRecentSearches, setShowRecentSearches] = useState(true);
     const [recentSearchLimit, setRecentSearchLimit] = useState(5);
     const [showProductSuggestions, setShowProductSuggestions] = useState(true);
@@ -127,7 +127,7 @@ const NavigationManager = () => {
     useEffect(() => {
         if (searchData) {
             setSearchEnabled(searchData.enabled !== false);
-            setSearchPlaceholder(searchData.placeholder || "");
+            setSearchPlaceholder(searchData.placeholder || "Search for jewellery...");
             setShowRecentSearches(searchData.showRecentSearches !== false);
             setRecentSearchLimit(searchData.recentSearchLimit || 5);
             setShowProductSuggestions(searchData.showProductSuggestions !== false);
@@ -570,7 +570,7 @@ const NavigationManager = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Placeholder Text</Label>
-                                        <Input value={searchPlaceholder} onChange={(e) => setSearchPlaceholder(e.target.value)} placeholder="Enter search placeholder text" />
+                                        <Input value={searchPlaceholder} onChange={(e) => setSearchPlaceholder(e.target.value)} placeholder="Search for jewellery..." />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Minimum Search Length</Label>

@@ -20,7 +20,7 @@ export interface SearchSettings {
 
 export const defaultSearchSettings: SearchSettings = {
   enabled: true,
-  placeholder: "",
+  placeholder: "Search for jewellery...",
   showRecentSearches: true,
   recentSearchLimit: 5,
   showProductSuggestions: true,

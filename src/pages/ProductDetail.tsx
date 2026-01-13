@@ -38,19 +38,6 @@ import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import CartConfirmationDialog from "@/components/ui/CartConfirmationDialog";
 import CartCollisionDialog from "@/components/ui/CartCollisionDialog";
 import { usePriceFormatter } from "@/hooks/usePriceFormatter";
-import { useSiteSetting } from "@/hooks/useSiteSettings";
-import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-
-interface ProductPageSettings {
-  shippingText: string;
-  trustBadges: {
-    qualityAssured: string;
-    securePackaging: string;
-    fastShipping: string;
-  };
-  defaultCareInstructions: string[];
-  placeholderImage: string;
-}
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -65,9 +52,6 @@ const ProductDetail = () => {
   const addCartItemAddon = useAddCartItemAddon();
   const checkCollision = useCheckCartCollision();
   const { formatPrice, currencySymbol } = usePriceFormatter();
-  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
-  const { data: isInWishlist = false } = useIsInWishlist(product?.id || "");
-  const { toggle, isPending: isWishlistPending } = useToggleWishlist();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -285,12 +269,12 @@ const ProductDetail = () => {
         <Header />
         <main className="flex-grow container mx-auto px-4 py-24 text-center">
           <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-display mb-2">loading</h1>
+          <h1 className="text-2xl font-display mb-2">Product Not Found</h1>
           <p className="text-muted-foreground mb-6">
-            loading
+            The product you're looking for doesn't exist or has been removed.
           </p>
           <Button asChild>
-            <Link to="/products">loading</Link>
+            <Link to="/products">Browse Products</Link>
           </Button>
         </main>
         <Footer />
@@ -300,7 +284,7 @@ const ProductDetail = () => {
 
   const productImages = product.images?.length
     ? product.images
-    : [productPageSettings?.placeholderImage || "loading"];
+    : ["/placeholder.svg"];
 
   const discount =
     product.original_price && product.original_price > product.price
@@ -428,24 +412,8 @@ const ProductDetail = () => {
                 <h1 className="font-display text-3xl md:text-5xl text-foreground mb-2 leading-tight">
                   {product.name}
                 </h1>
-                <button 
-                  onClick={async () => {
-                    if (!user) {
-                      navigate("/auth");
-                      return;
-                    }
-                    if (product) {
-                      await toggle(product.id, isInWishlist);
-                    }
-                  }}
-                  disabled={isWishlistPending || !product}
-                  className={`hidden md:block transition-colors ${
-                    isInWishlist 
-                      ? "text-sale hover:text-sale/80" 
-                      : "text-muted-foreground hover:text-sale"
-                  }`}
-                >
-                  <Heart size={28} className={isInWishlist ? "fill-current" : ""} />
+                <button className="hidden md:block text-muted-foreground hover:text-sale transition-colors">
+                  <Heart size={28} />
                 </button>
               </div>
 
@@ -501,11 +469,9 @@ const ProductDetail = () => {
                     );
                   })()
                 )}
-                {productPageSettings?.shippingText && (
-                  <span className="block text-xs text-muted-foreground mt-2">
-                    {productPageSettings.shippingText}
-                  </span>
-                )}
+                <span className="block text-xs text-muted-foreground mt-2">
+                  Inclusive of all taxes. Free insured shipping.
+                </span>
               </div>
 
               <div className="h-px bg-border w-full mb-8"></div>
@@ -614,18 +580,14 @@ const ProductDetail = () => {
                             <Droplet size={18} className="text-primary flex-shrink-0" />
                             {product.care_instructions}
                           </li>
-                          {productPageSettings?.defaultCareInstructions?.map((instruction, index) => (
-                            <li key={index} className="flex items-start gap-3">
-                              {index === 0 ? (
-                                <Package size={18} className="text-primary flex-shrink-0" />
-                              ) : index === 1 ? (
-                                <Sparkles size={18} className="text-primary flex-shrink-0" />
-                              ) : (
-                                <Droplet size={18} className="text-primary flex-shrink-0" />
-                              )}
-                              {instruction}
-                            </li>
-                          ))}
+                          <li className="flex items-start gap-3">
+                            <Package size={18} className="text-primary flex-shrink-0" />
+                            Store in the provided jewelry box.
+                          </li>
+                          <li className="flex items-start gap-3">
+                            <Sparkles size={18} className="text-primary flex-shrink-0" />
+                            Clean with a soft, dry cloth only.
+                          </li>
                         </ul>
                       </AccordionContent>
                     </AccordionItem>
@@ -634,34 +596,26 @@ const ProductDetail = () => {
               </div>
 
               {/* Trust Badges */}
-              {productPageSettings?.trustBadges && (
-                <div className="grid grid-cols-3 gap-4 py-6 mt-6 bg-muted rounded-sm">
-                  {productPageSettings.trustBadges.qualityAssured && (
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <Check size={24} className="text-primary" />
-                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                        {productPageSettings.trustBadges.qualityAssured}
-                      </span>
-                    </div>
-                  )}
-                  {productPageSettings.trustBadges.securePackaging && (
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <Package size={24} className="text-primary" />
-                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                        {productPageSettings.trustBadges.securePackaging}
-                      </span>
-                    </div>
-                  )}
-                  {productPageSettings.trustBadges.fastShipping && (
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <Truck size={24} className="text-primary" />
-                      <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                        {productPageSettings.trustBadges.fastShipping}
-                      </span>
-                    </div>
-                  )}
+              <div className="grid grid-cols-3 gap-4 py-6 mt-6 bg-muted rounded-sm">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <Check size={24} className="text-primary" />
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Quality Assured
+                  </span>
                 </div>
-              )}
+                <div className="flex flex-col items-center text-center gap-2">
+                  <Package size={24} className="text-primary" />
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Secure Packaging
+                  </span>
+                </div>
+                <div className="flex flex-col items-center text-center gap-2">
+                  <Truck size={24} className="text-primary" />
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Fast Shipping
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -669,24 +623,8 @@ const ProductDetail = () => {
         {/* Mobile Fixed Bottom Bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-50 md:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
           <div className="flex gap-3">
-            <button 
-              onClick={async () => {
-                if (!user) {
-                  navigate("/auth");
-                  return;
-                }
-                if (product) {
-                  await toggle(product.id, isInWishlist);
-                }
-              }}
-              disabled={isWishlistPending || !product}
-              className={`w-12 flex items-center justify-center border border-border rounded-sm transition-colors ${
-                isInWishlist 
-                  ? "text-sale hover:text-sale/80 border-sale" 
-                  : "text-muted-foreground hover:text-sale"
-              }`}
-            >
-              <Heart size={20} className={isInWishlist ? "fill-current" : ""} />
+            <button className="w-12 flex items-center justify-center border border-border rounded-sm text-muted-foreground hover:text-sale transition-colors">
+              <Heart size={20} />
             </button>
             <Button
               variant="outline"
@@ -763,7 +701,7 @@ const ProductDetail = () => {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  loading
+                  Be the first to review this product!
                 </p>
               )}
             </div>
@@ -797,11 +735,10 @@ const ProductDetail = () => {
                   <ProductCard
                     key={p.id}
                     id={p.slug}
-                    productId={p.id}
                     name={p.name}
                     description=""
                     price={p.price}
-                    image={p.images?.[0] || productPageSettings?.placeholderImage || "loading"}
+                    image={p.images?.[0] || "/placeholder.svg"}
                     rating={0}
                     reviewCount={0}
                   />
@@ -822,12 +759,11 @@ const ProductDetail = () => {
                 <ProductCard
                   key={p.id}
                   id={p.slug}
-                  productId={p.id}
                   name={p.name}
                   description={p.description || ""}
                   price={p.price}
                   originalPrice={p.original_price || undefined}
-                  image={p.images?.[0] || productPageSettings?.placeholderImage || "loading"}
+                  image={p.images?.[0] || "/placeholder.svg"}
                   rating={p.rating}
                   reviewCount={p.review_count}
                   badge={p.badge || undefined}

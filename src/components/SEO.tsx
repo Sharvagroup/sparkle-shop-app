@@ -18,8 +18,7 @@ interface SEOProps {
 export const SEO = ({ title, description, image, keywords }: SEOProps) => {
   const { data: seo } = useSiteSetting<SeoSettings>("seo");
 
-  // Use only provided title or database settings - show "loading" if empty
-  const finalTitle = title || seo?.metaTitle || 'loading';
+  const finalTitle = title || seo?.metaTitle || '';
   const finalDesc = description || seo?.metaDescription || '';
   const finalImage = image || seo?.ogImage || '';
   const finalKeywords = keywords || seo?.keywords || '';
@@ -29,12 +28,12 @@ export const SEO = ({ title, description, image, keywords }: SEOProps) => {
       <title>{finalTitle}</title>
       {finalDesc && <meta name="description" content={finalDesc} />}
       {finalKeywords && <meta name="keywords" content={finalKeywords} />}
-      {finalTitle && <meta property="og:title" content={finalTitle} />}
+      <meta property="og:title" content={finalTitle} />
       {finalDesc && <meta property="og:description" content={finalDesc} />}
       {finalImage && <meta property="og:image" content={finalImage} />}
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
-      {finalTitle && <meta name="twitter:title" content={finalTitle} />}
+      <meta name="twitter:title" content={finalTitle} />
       {finalDesc && <meta name="twitter:description" content={finalDesc} />}
       {finalImage && <meta name="twitter:image" content={finalImage} />}
     </Helmet>

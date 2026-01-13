@@ -5,24 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
 import { useAddToCart } from "@/hooks/useCart";
-import { usePriceFormatter } from "@/hooks/usePriceFormatter";
-import { useSiteSetting } from "@/hooks/useSiteSettings";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import SEO from "@/components/SEO";
-
-interface ProductPageSettings {
-  placeholderImage: string;
-}
 
 const Wishlist = () => {
   const { user, loading } = useAuth();
   const { data: wishlistItems = [], isLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const addToCart = useAddToCart();
-  const { formatPrice } = usePriceFormatter();
-  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   const handleAddToCart = async (productId: string) => {
     await addToCart.mutateAsync({ productId, quantity: 1 });
@@ -38,7 +29,6 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO />
       <PromoBanner />
       <Header />
       
@@ -53,10 +43,10 @@ const Wishlist = () => {
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-display text-foreground mb-4 tracking-wide">
-              loading
+              Sign in to view your wishlist
             </h1>
             <p className="text-lg text-muted-foreground mb-10 font-light">
-              loading
+              Save your favorite items and access them anytime.
             </p>
             <Link to="/auth">
               <Button size="lg" className="font-medium py-3 px-12 rounded-sm shadow-md tracking-wide uppercase text-sm">
@@ -71,10 +61,10 @@ const Wishlist = () => {
         ) : wishlistItems.length === 0 ? (
           <div className="text-center px-4 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
             <Heart size={80} className="text-muted-foreground/80 mb-8" strokeWidth={1.5} />
-            <h1 className="text-3xl font-display text-foreground mb-4">loading</h1>
-            <p className="text-muted-foreground mb-8">loading</p>
+            <h1 className="text-3xl font-display text-foreground mb-4">Your wishlist is empty</h1>
+            <p className="text-muted-foreground mb-8">Start adding items you love!</p>
             <Link to="/products">
-              <Button>loading</Button>
+              <Button>Browse Products</Button>
             </Link>
           </div>
         ) : (
@@ -90,8 +80,8 @@ const Wishlist = () => {
                   <div className="relative">
                     <Link to={`/product/${item.product?.slug}`}>
                       <img 
-                        src={item.product?.images?.[0] || productPageSettings?.placeholderImage || "loading"} 
-                        alt={item.product?.name || "loading"}
+                        src={item.product?.images?.[0] || "/placeholder.svg"} 
+                        alt={item.product?.name}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
@@ -116,11 +106,11 @@ const Wishlist = () => {
                     </Link>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold text-primary">
-                        {item.product?.price ? formatPrice(item.product.price) : "loading"}
+                        ₹{item.product?.price.toLocaleString("en-IN")}
                       </span>
                       {item.product?.original_price && (
                         <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(item.product.original_price)}
+                          ₹{item.product.original_price.toLocaleString("en-IN")}
                         </span>
                       )}
                     </div>

@@ -33,10 +33,6 @@ interface CommerceSettings {
   newArrivalDays?: number;
 }
 
-interface ProductPageSettings {
-  placeholderImage: string;
-}
-
 // Sort options - always available
 const SORT_OPTIONS = [
   { id: "featured", label: "Featured" },
@@ -57,7 +53,6 @@ const Products = () => {
 
   const { data: allProducts = [], isLoading } = useProducts();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
-  const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
 
   // Dynamic store settings from CMS
   const ITEMS_PER_PAGE = commerceSettings?.productsPerPage || 12;
@@ -513,7 +508,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO />
+      <SEO title="Shop All Products" description="Explore our complete collection of handcrafted heritage jewelry." />
       <PromoBanner />
       <Header />
 
@@ -542,11 +537,11 @@ const Products = () => {
                     ? "Celebrity Specials"
                     : "All Products"}
           </h1>
-          {searchQuery && (
-            <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
-              Found {filteredProducts.length} results for your search
-            </p>
-          )}
+          <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
+            {searchQuery
+              ? `Found ${filteredProducts.length} results for your search`
+              : "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life."}
+          </p>
         </section>
 
         {/* Filter Bar */}
@@ -628,12 +623,11 @@ const Products = () => {
                     <ProductCard
                       key={product.id}
                       id={product.slug}
-                      productId={product.id}
                       name={product.name}
                       description={product.description || ""}
                       price={product.price}
                       originalPrice={product.original_price || undefined}
-                      image={product.images?.[0] || productPageSettings?.placeholderImage || "loading"}
+                      image={product.images?.[0] || "/placeholder.svg"}
                       rating={product.rating}
                       reviewCount={product.review_count}
                       badge={product.badge as "new" | "sale" | "trending" | undefined}

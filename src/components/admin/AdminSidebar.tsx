@@ -68,7 +68,7 @@ const AdminSidebar = () => {
           {siteName ? (
             <h1 className="text-xl font-serif tracking-widest text-primary">{siteName}</h1>
           ) : (
-            <h1 className="text-xl font-serif tracking-widest text-primary">loading</h1>
+            <div className="h-7 w-24 bg-muted animate-pulse rounded" />
           )}
           <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
         </Link>

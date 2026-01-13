@@ -1,10 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart, Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { ProductTheme } from "@/hooks/useProducts";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 
 interface ProductCardTheme {
   card_style: "default" | "minimal" | "bordered";
@@ -51,7 +49,6 @@ interface ProductCardProps {
   badge?: "new" | "sale" | "trending";
   variant?: "default" | "featured";
   theme?: ProductTheme | null;
-  productId?: string; // Product ID for wishlist functionality
 }
 
 const ProductCard = ({
@@ -66,28 +63,12 @@ const ProductCard = ({
   badge,
   variant = "default",
   theme: productTheme,
-  productId,
 }: ProductCardProps) => {
   const { data: savedTheme } = useSiteSetting<ProductCardTheme>("product_card_theme");
   const globalTheme: ProductCardTheme = { ...defaultTheme, ...savedTheme };
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const actualProductId = productId || id; // Use productId if provided, otherwise use slug/id
-  const { data: isInWishlist = false } = useIsInWishlist(actualProductId);
-  const { toggle, isPending } = useToggleWishlist();
   
   // Merge individual product theme
   const itemTheme: ProductTheme = { ...defaultProductTheme, ...productTheme };
-
-  const handleWishlistClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    await toggle(actualProductId, isInWishlist);
-  };
 
   const renderStars = () => {
     const stars = [];
@@ -228,17 +209,9 @@ const ProductCard = ({
           </span>
         )}
         {globalTheme.show_wishlist && (
-          <button 
-            onClick={handleWishlistClick}
-            disabled={isPending}
-            className={`absolute top-4 right-4 z-10 transition-colors ${
-              isInWishlist 
-                ? "text-sale hover:text-sale/80" 
-                : "text-muted-foreground hover:text-sale"
-            }`}
-          >
+          <button className="absolute top-4 right-4 text-muted-foreground hover:text-sale z-10">
             <div className="bg-card rounded-full p-1 shadow-sm">
-              <Heart size={16} className={isInWishlist ? "fill-current" : ""} />
+              <Heart size={16} />
             </div>
           </button>
         )}

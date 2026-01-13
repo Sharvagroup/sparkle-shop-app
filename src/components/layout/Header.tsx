@@ -199,10 +199,10 @@ const Header = () => {
           <div className="w-full md:w-auto flex justify-between items-center">
             <Link to="/" className="flex items-center gap-2">
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "loading"} className="h-10 w-auto" />
+                <img src={logoUrl} alt={siteName} className="h-10 w-auto" />
               ) : (
                 <span className="text-3xl font-display font-bold text-primary tracking-wide">
-                  {siteName || "loading"}
+                  {siteName}
                 </span>
               )}
             </Link>

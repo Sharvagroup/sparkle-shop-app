@@ -246,20 +246,20 @@ const AdminProducts = () => {
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
         {activeTab === "products" && (
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
-            <Paintbrush className="w-4 h-4 mr-2" />
-            Card Theme
-          </Button>
-          <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Bulk Upload
-          </Button>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
-        </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setThemeDialogOpen(true)}>
+              <Paintbrush className="w-4 h-4 mr-2" />
+              Card Theme
+            </Button>
+            <Button variant="outline" onClick={() => setBulkUploadOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Bulk Upload
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
+            </Button>
+          </div>
         )}
       </div>
 

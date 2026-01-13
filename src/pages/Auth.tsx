@@ -163,7 +163,7 @@ const Auth = () => {
             {branding?.siteName ? (
               <h1 className="text-4xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
             ) : (
-              <h1 className="text-4xl font-serif tracking-widest text-primary">loading</h1>
+              <div className="h-10 w-32 bg-muted/50 animate-pulse rounded mx-auto" />
             )}
           </Link>
           {branding?.tagline && (
@@ -186,7 +186,7 @@ const Auth = () => {
             {branding?.siteName ? (
               <h1 className="text-3xl font-serif tracking-widest text-primary">{branding.siteName}</h1>
             ) : (
-              <h1 className="text-3xl font-serif tracking-widest text-primary">loading</h1>
+              <div className="h-8 w-28 bg-muted animate-pulse rounded mx-auto" />
             )}
           </div>
 
