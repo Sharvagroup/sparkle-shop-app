@@ -11,11 +11,12 @@ export interface ProductTheme {
   card_style?: 'minimal' | 'bordered' | 'shadow';
 }
 
-export interface TrustBadges {
-  qualityAssured?: string;
-  securePackaging?: string;
-  fastShipping?: string;
+export interface TrustBadge {
+  icon: string;
+  label: string;
 }
+
+export type TrustBadges = TrustBadge[];
 
 export interface Product {
   id: string;
@@ -158,7 +159,7 @@ export const useProducts = (filters?: ProductFilters) => {
       if (error) throw error;
 
       // Inject dynamic "New" badge if no badge is manually set
-      return (data as Product[]).map(product => {
+      return (data as unknown as Product[]).map(product => {
         const created = new Date(product.created_at);
         if (!product.badge && created >= thresholdDate) {
           return { ...product, badge: 'new' as const };
@@ -184,7 +185,7 @@ export const useAdminProducts = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data as Product[];
+      return data as unknown as Product[];
     },
   });
 };
@@ -205,7 +206,7 @@ export const useProduct = (slug: string) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Product | null;
+      return data as unknown as Product | null;
     },
     enabled: !!slug,
   });

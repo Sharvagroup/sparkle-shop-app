@@ -10,7 +10,7 @@ const WhatsAppButton = () => {
   
   const whatsappNumber = contact?.whatsapp || contact?.phone || "+919876543210";
   const cleanPhone = whatsappNumber.replace(/\D/g, "");
-  const defaultMessage = contact?.whatsappMessage || "Hello! I have a question about your jewelry collection.";
+  const defaultMessage = contact?.whatsappMessage || "Hello! I have a question.";
   const message = encodeURIComponent(defaultMessage);
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
 

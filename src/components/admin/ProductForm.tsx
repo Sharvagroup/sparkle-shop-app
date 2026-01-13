@@ -88,10 +88,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const [pricingByOptionId, setPricingByOptionId] = useState<string | null>(product?.pricing_by_option_id || null);
   const [baseUnitValue, setBaseUnitValue] = useState<number | null>(product?.base_unit_value || null);
   
-  // Trust badges state
-  const [trustBadgeQuality, setTrustBadgeQuality] = useState(product?.trust_badges?.qualityAssured || '');
-  const [trustBadgePackaging, setTrustBadgePackaging] = useState(product?.trust_badges?.securePackaging || '');
-  const [trustBadgeShipping, setTrustBadgeShipping] = useState(product?.trust_badges?.fastShipping || '');
+  // Trust badges state - now as array
+  const [trustBadges, setTrustBadges] = useState<{icon: string; label: string}[]>(
+    (product?.trust_badges as {icon: string; label: string}[] | null) || []
+  );
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -241,14 +241,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       .map(opt => opt.id);
     const finalEnabledOptions = [...new Set([...enabledOptions, ...mandatoryOptionIds])];
 
-    // Build trust badges object
-    const trustBadges: TrustBadges | null = 
-      (trustBadgeQuality || trustBadgePackaging || trustBadgeShipping) 
-        ? {
-            qualityAssured: trustBadgeQuality || undefined,
-            securePackaging: trustBadgePackaging || undefined,
-            fastShipping: trustBadgeShipping || undefined,
-          }
+    // Build trust badges array
+    const finalTrustBadges: TrustBadges | null = 
+      trustBadges.length > 0 
+        ? trustBadges.filter(b => b.label.trim())
         : null;
 
     await onSubmit({
@@ -263,7 +259,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       badge: data.badge || null,
       pricing_by_option_id: pricingByOptionId,
       base_unit_value: baseUnitValue,
-      trust_badges: trustBadges,
+      trust_badges: finalTrustBadges,
     });
   };
 
@@ -749,35 +745,67 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
             />
 
             <div className="space-y-4 border-t pt-4">
-              <Label className="text-base font-medium">Trust Badges</Label>
-              <p className="text-xs text-muted-foreground">Custom trust badges for this product. Leave empty to hide.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Quality Assured</Label>
-                  <Input
-                    value={trustBadgeQuality}
-                    onChange={(e) => setTrustBadgeQuality(e.target.value)}
-                    placeholder="Quality Assured"
-                  />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Trust Badges</Label>
+                  <p className="text-xs text-muted-foreground">Custom trust badges displayed on product page. Leave empty to hide.</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Secure Packaging</Label>
-                  <Input
-                    value={trustBadgePackaging}
-                    onChange={(e) => setTrustBadgePackaging(e.target.value)}
-                    placeholder="Secure Packaging"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Fast Shipping</Label>
-                  <Input
-                    value={trustBadgeShipping}
-                    onChange={(e) => setTrustBadgeShipping(e.target.value)}
-                    placeholder="Fast Shipping"
-                  />
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTrustBadges([...trustBadges, { icon: 'Check', label: '' }])}
+                >
+                  Add Badge
+                </Button>
               </div>
+              
+              {trustBadges.length > 0 && (
+                <div className="space-y-2">
+                  {trustBadges.map((badge, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Select
+                        value={badge.icon}
+                        onValueChange={(value) => {
+                          const newBadges = [...trustBadges];
+                          newBadges[index].icon = value;
+                          setTrustBadges(newBadges);
+                        }}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Icon" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Check">✓ Check</SelectItem>
+                          <SelectItem value="Package">📦 Package</SelectItem>
+                          <SelectItem value="Truck">🚚 Truck</SelectItem>
+                          <SelectItem value="Shield">🛡️ Shield</SelectItem>
+                          <SelectItem value="Star">⭐ Star</SelectItem>
+                          <SelectItem value="Heart">❤️ Heart</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={badge.label}
+                        onChange={(e) => {
+                          const newBadges = [...trustBadges];
+                          newBadges[index].label = e.target.value;
+                          setTrustBadges(newBadges);
+                        }}
+                        placeholder="Badge label (e.g., Quality Assured)"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setTrustBadges(trustBadges.filter((_, i) => i !== index))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

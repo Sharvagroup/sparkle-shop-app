@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
 import { useAddToCart } from "@/hooks/useCart";
 import { usePriceFormatter } from "@/hooks/usePriceFormatter";
-import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSiteSetting, PageContentSettings } from "@/hooks/useSiteSettings";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -23,6 +23,7 @@ const Wishlist = () => {
   const addToCart = useAddToCart();
   const { formatPrice } = usePriceFormatter();
   const { data: productPageSettings } = useSiteSetting<ProductPageSettings>("product_page");
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
 
   const handleAddToCart = async (productId: string) => {
     await addToCart.mutateAsync({ productId, quantity: 1 });
@@ -38,7 +39,7 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <SEO />
+      <SEO title={pageContent?.wishlistTitle || "Wishlist"} />
       <PromoBanner />
       <Header />
       
@@ -53,14 +54,14 @@ const Wishlist = () => {
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-display text-foreground mb-4 tracking-wide">
-              loading
+              {pageContent?.signInTitle || "Sign In Required"}
             </h1>
             <p className="text-lg text-muted-foreground mb-10 font-light">
-              loading
+              {pageContent?.signInToWishlist || "Please sign in to view and manage your wishlist."}
             </p>
             <Link to="/auth">
               <Button size="lg" className="font-medium py-3 px-12 rounded-sm shadow-md tracking-wide uppercase text-sm">
-                Sign In
+                {pageContent?.signInButtonText || "Sign In"}
               </Button>
             </Link>
           </div>
@@ -71,17 +72,21 @@ const Wishlist = () => {
         ) : wishlistItems.length === 0 ? (
           <div className="text-center px-4 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
             <Heart size={80} className="text-muted-foreground/80 mb-8" strokeWidth={1.5} />
-            <h1 className="text-3xl font-display text-foreground mb-4">loading</h1>
-            <p className="text-muted-foreground mb-8">loading</p>
+            <h1 className="text-3xl font-display text-foreground mb-4">
+              {pageContent?.emptyWishlistTitle || "Your Wishlist is Empty"}
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              {pageContent?.emptyWishlistMessage || "Start adding items you love to your wishlist."}
+            </p>
             <Link to="/products">
-              <Button>loading</Button>
+              <Button>{pageContent?.browseProductsText || "Browse Products"}</Button>
             </Link>
           </div>
         ) : (
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-display text-foreground mb-8 flex items-center gap-3">
               <Heart className="h-8 w-8" />
-              My Wishlist ({wishlistItems.length} items)
+              {pageContent?.wishlistTitle || "My Wishlist"} ({wishlistItems.length} items)
             </h1>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -90,8 +95,8 @@ const Wishlist = () => {
                   <div className="relative">
                     <Link to={`/product/${item.product?.slug}`}>
                       <img 
-                        src={item.product?.images?.[0] || productPageSettings?.placeholderImage || "loading"} 
-                        alt={item.product?.name || "loading"}
+                        src={item.product?.images?.[0] || productPageSettings?.placeholderImage || "/placeholder.svg"} 
+                        alt={item.product?.name || "Product"}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
@@ -116,7 +121,7 @@ const Wishlist = () => {
                     </Link>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold text-primary">
-                        {item.product?.price ? formatPrice(item.product.price) : "loading"}
+                        {item.product?.price ? formatPrice(item.product.price) : "—"}
                       </span>
                       {item.product?.original_price && (
                         <span className="text-sm text-muted-foreground line-through">
