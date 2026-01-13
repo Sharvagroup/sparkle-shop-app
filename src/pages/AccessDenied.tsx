@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShieldX, Home } from 'lucide-react';
+import { useSiteSetting, PageContentSettings } from '@/hooks/useSiteSettings';
 
 const AccessDenied = () => {
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="text-center max-w-md">
@@ -10,9 +13,11 @@ const AccessDenied = () => {
           <ShieldX className="w-8 h-8 text-destructive" />
         </div>
 
-        <h1 className="text-3xl font-semibold mb-2">Access Denied</h1>
+        <h1 className="text-3xl font-semibold mb-2">
+          {pageContent?.accessDeniedTitle || "Access Denied"}
+        </h1>
         <p className="text-muted-foreground mb-8">
-          You don't have permission to access this page. If you believe this is an error, please contact the administrator.
+          {pageContent?.accessDeniedMessage || "You don't have permission to access this page. If you believe this is an error, please contact the administrator."}
         </p>
 
         <Button asChild>

@@ -48,6 +48,51 @@ export interface SeoSettings {
   ogImage: string;
 }
 
+export interface PageContentSettings {
+  // Auth prompts
+  signInTitle?: string;
+  signInSubtitle?: string;
+  signInToCart?: string;
+  signInToCheckout?: string;
+  signInToWishlist?: string;
+  
+  // Empty states
+  emptyCartTitle?: string;
+  emptyCartMessage?: string;
+  emptyWishlistTitle?: string;
+  emptyWishlistMessage?: string;
+  
+  // Page titles
+  cartTitle?: string;
+  wishlistTitle?: string;
+  checkoutTitle?: string;
+  
+  // Order confirmation
+  orderPlacedTitle?: string;
+  orderPlacedMessage?: string;
+  orderConfirmationNote?: string;
+  
+  // Product not found
+  productNotFoundTitle?: string;
+  productNotFoundMessage?: string;
+  
+  // Access denied
+  accessDeniedTitle?: string;
+  accessDeniedMessage?: string;
+  
+  // Buttons
+  signInButtonText?: string;
+  continueShoppingText?: string;
+  browseProductsText?: string;
+}
+
+export interface RegionalSettings {
+  countries?: { value: string; label: string }[];
+  defaultCountry?: string;
+  statesByCountry?: Record<string, string[]>;
+  paymentMethods?: { id: string; label: string; description: string; enabled: boolean }[];
+}
+
 // FilterSettings removed - filters are now fully automated based on product data
 
 export interface SiteSetting {

@@ -12,6 +12,7 @@ import {
   Check,
   Truck,
   Loader2,
+  Shield,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -494,9 +495,11 @@ const ProductDetail = () => {
                     );
                   })()
                 )}
-                <span className="block text-xs text-muted-foreground mt-2">
-                  Inclusive of all taxes. Free insured shipping.
-                </span>
+                {product.shipping_text && (
+                  <span className="block text-xs text-muted-foreground mt-2">
+                    {product.shipping_text}
+                  </span>
+                )}
               </div>
 
               <div className="h-px bg-border w-full mb-8"></div>
@@ -620,27 +623,23 @@ const ProductDetail = () => {
                 </Accordion>
               </div>
 
-              {/* Trust Badges */}
-              <div className="grid grid-cols-3 gap-4 py-6 mt-6 bg-muted rounded-sm">
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Check size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Quality Assured
-                  </span>
+              {/* Trust Badges - Only render if product has trust badges */}
+              {product.trust_badges && Array.isArray(product.trust_badges) && product.trust_badges.length > 0 && (
+                <div className={`grid gap-4 py-6 mt-6 bg-muted rounded-sm`} style={{ gridTemplateColumns: `repeat(${Math.min(product.trust_badges.length, 3)}, 1fr)` }}>
+                  {product.trust_badges.map((badge: { icon: string; label: string }, index: number) => {
+                    const iconMap: Record<string, typeof Check> = { Check, Package, Truck, Shield, Star, Heart };
+                    const IconComponent = iconMap[badge.icon] || Check;
+                    return (
+                      <div key={index} className="flex flex-col items-center text-center gap-2">
+                        <IconComponent size={24} className="text-primary" />
+                        <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                          {badge.label}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Package size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Secure Packaging
-                  </span>
-                </div>
-                <div className="flex flex-col items-center text-center gap-2">
-                  <Truck size={24} className="text-primary" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Fast Shipping
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
