@@ -52,6 +52,8 @@ export interface PageContentSettings {
   // Auth prompts
   signInTitle?: string;
   signInSubtitle?: string;
+  signUpTitle?: string;
+  signUpSubtitle?: string;
   signInToCart?: string;
   signInToCheckout?: string;
   signInToWishlist?: string;
@@ -61,11 +63,15 @@ export interface PageContentSettings {
   emptyCartMessage?: string;
   emptyWishlistTitle?: string;
   emptyWishlistMessage?: string;
+  emptyOrdersTitle?: string;
+  emptyOrdersMessage?: string;
   
   // Page titles
   cartTitle?: string;
   wishlistTitle?: string;
   checkoutTitle?: string;
+  profileTitle?: string;
+  ordersTitle?: string;
   
   // Order confirmation
   orderPlacedTitle?: string;

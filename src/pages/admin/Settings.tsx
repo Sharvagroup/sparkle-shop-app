@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Search } from "lucide-react";
-import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings } from "@/hooks/useSiteSettings";
+import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Search, Type, CreditCard, MapPinned } from "lucide-react";
+import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings, PageContentSettings, RegionalSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
@@ -62,6 +62,37 @@ interface CommerceSettings {
   currencyCode: string;
   currencySymbol: string;
 }
+
+// Default countries and states for regional settings
+const DEFAULT_COUNTRIES = [
+  { value: "IN", label: "India" },
+  { value: "US", label: "United States" },
+  { value: "UK", label: "United Kingdom" },
+  { value: "CA", label: "Canada" },
+  { value: "AU", label: "Australia" },
+  { value: "AE", label: "United Arab Emirates" },
+  { value: "SG", label: "Singapore" },
+];
+
+const DEFAULT_STATES_BY_COUNTRY: Record<string, string[]> = {
+  IN: [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+    "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh", "Puducherry", "Chandigarh",
+  ],
+  US: ["Alabama", "Alaska", "Arizona", "California", "Colorado", "Florida", "New York", "Texas", "Washington"],
+  UK: ["England", "Scotland", "Wales", "Northern Ireland"],
+  CA: ["Alberta", "British Columbia", "Manitoba", "Ontario", "Quebec"],
+  AU: ["New South Wales", "Queensland", "Victoria", "Western Australia"],
+};
+
+const DEFAULT_PAYMENT_METHODS = [
+  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay", enabled: true },
+  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc.", enabled: true },
+  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order", enabled: true },
+];
 
 
 const fontOptions = [
@@ -149,6 +180,32 @@ const Settings = () => {
   const [defaultSort, setDefaultSort] = useState("featured");
   const [newArrivalDays, setNewArrivalDays] = useState(30);
 
+  // Page Content Settings
+  const [signInTitle, setSignInTitle] = useState("Welcome back");
+  const [signInSubtitle, setSignInSubtitle] = useState("Sign in to your account");
+  const [signUpTitle, setSignUpTitle] = useState("Create an account");
+  const [signUpSubtitle, setSignUpSubtitle] = useState("Join us today");
+  const [signInToCart, setSignInToCart] = useState("Sign in to view your cart");
+  const [signInToCheckout, setSignInToCheckout] = useState("Sign in to checkout");
+  const [signInToWishlist, setSignInToWishlist] = useState("Sign in to view your wishlist");
+  const [emptyCartTitle, setEmptyCartTitle] = useState("Your cart is empty");
+  const [emptyCartMessage, setEmptyCartMessage] = useState("Add some items to get started");
+  const [emptyWishlistTitle, setEmptyWishlistTitle] = useState("Your wishlist is empty");
+  const [emptyWishlistMessage, setEmptyWishlistMessage] = useState("Save items you love for later");
+  const [orderPlacedTitle, setOrderPlacedTitle] = useState("Order Placed!");
+  const [orderPlacedMessage, setOrderPlacedMessage] = useState("Thank you for your order.");
+  const [productNotFoundTitle, setProductNotFoundTitle] = useState("Product Not Found");
+  const [productNotFoundMessage, setProductNotFoundMessage] = useState("The product you're looking for doesn't exist or has been removed.");
+  const [accessDeniedTitle, setAccessDeniedTitle] = useState("Access Denied");
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState("You don't have permission to access this page.");
+
+  // Regional Settings
+  const [countries, setCountries] = useState<{ value: string; label: string }[]>(DEFAULT_COUNTRIES);
+  const [defaultCountry, setDefaultCountry] = useState("IN");
+  const [statesByCountry, setStatesByCountry] = useState<Record<string, string[]>>(DEFAULT_STATES_BY_COUNTRY);
+  const [paymentMethods, setPaymentMethods] = useState<{ id: string; label: string; description: string; enabled: boolean }[]>(DEFAULT_PAYMENT_METHODS);
+  const [editingCountryStates, setEditingCountryStates] = useState<string | null>(null);
+  const [newStateName, setNewStateName] = useState("");
 
   const [uploading, setUploading] = useState<string | null>(null);
 
@@ -228,6 +285,37 @@ const Settings = () => {
         setProductsPerPage((commerceData as any).productsPerPage || 12);
         setDefaultSort((commerceData as any).defaultSort || "featured");
         setNewArrivalDays((commerceData as any).newArrivalDays || 30);
+      }
+      
+      // Page Content Settings
+      const pageContentData = settings.page_content as unknown as PageContentSettings | undefined;
+      if (pageContentData) {
+        setSignInTitle(pageContentData.signInTitle || "Welcome back");
+        setSignInSubtitle(pageContentData.signInSubtitle || "Sign in to your account");
+        setSignUpTitle(pageContentData.signUpTitle || "Create an account");
+        setSignUpSubtitle(pageContentData.signUpSubtitle || "Join us today");
+        setSignInToCart(pageContentData.signInToCart || "Sign in to view your cart");
+        setSignInToCheckout(pageContentData.signInToCheckout || "Sign in to checkout");
+        setSignInToWishlist(pageContentData.signInToWishlist || "Sign in to view your wishlist");
+        setEmptyCartTitle(pageContentData.emptyCartTitle || "Your cart is empty");
+        setEmptyCartMessage(pageContentData.emptyCartMessage || "Add some items to get started");
+        setEmptyWishlistTitle(pageContentData.emptyWishlistTitle || "Your wishlist is empty");
+        setEmptyWishlistMessage(pageContentData.emptyWishlistMessage || "Save items you love for later");
+        setOrderPlacedTitle(pageContentData.orderPlacedTitle || "Order Placed!");
+        setOrderPlacedMessage(pageContentData.orderPlacedMessage || "Thank you for your order.");
+        setProductNotFoundTitle(pageContentData.productNotFoundTitle || "Product Not Found");
+        setProductNotFoundMessage(pageContentData.productNotFoundMessage || "The product you're looking for doesn't exist or has been removed.");
+        setAccessDeniedTitle(pageContentData.accessDeniedTitle || "Access Denied");
+        setAccessDeniedMessage(pageContentData.accessDeniedMessage || "You don't have permission to access this page.");
+      }
+      
+      // Regional Settings
+      const regionalData = settings.regional as unknown as RegionalSettings | undefined;
+      if (regionalData) {
+        if (regionalData.countries?.length) setCountries(regionalData.countries);
+        if (regionalData.defaultCountry) setDefaultCountry(regionalData.defaultCountry);
+        if (regionalData.statesByCountry) setStatesByCountry(regionalData.statesByCountry);
+        if (regionalData.paymentMethods?.length) setPaymentMethods(regionalData.paymentMethods);
       }
 
     }
@@ -372,6 +460,100 @@ const Settings = () => {
     });
   };
 
+  const savePageContent = async () => {
+    await updateSetting.mutateAsync({
+      key: "page_content",
+      value: {
+        signInTitle,
+        signInSubtitle,
+        signUpTitle,
+        signUpSubtitle,
+        signInToCart,
+        signInToCheckout,
+        signInToWishlist,
+        emptyCartTitle,
+        emptyCartMessage,
+        emptyWishlistTitle,
+        emptyWishlistMessage,
+        orderPlacedTitle,
+        orderPlacedMessage,
+        productNotFoundTitle,
+        productNotFoundMessage,
+        accessDeniedTitle,
+        accessDeniedMessage,
+      },
+      category: "content",
+    });
+  };
+
+  const saveRegional = async () => {
+    await updateSetting.mutateAsync({
+      key: "regional",
+      value: {
+        countries,
+        defaultCountry,
+        statesByCountry,
+        paymentMethods,
+      },
+      category: "regional",
+    });
+  };
+
+  const addCountry = () => {
+    const newValue = `NEW${countries.length + 1}`;
+    setCountries([...countries, { value: newValue, label: "New Country" }]);
+    setStatesByCountry({ ...statesByCountry, [newValue]: [] });
+  };
+
+  const removeCountry = (value: string) => {
+    setCountries(countries.filter(c => c.value !== value));
+    const newStates = { ...statesByCountry };
+    delete newStates[value];
+    setStatesByCountry(newStates);
+    if (defaultCountry === value) setDefaultCountry(countries[0]?.value || "");
+  };
+
+  const updateCountry = (oldValue: string, field: "value" | "label", newVal: string) => {
+    if (field === "value") {
+      setCountries(countries.map(c => c.value === oldValue ? { ...c, value: newVal } : c));
+      const newStates = { ...statesByCountry };
+      newStates[newVal] = newStates[oldValue] || [];
+      delete newStates[oldValue];
+      setStatesByCountry(newStates);
+      if (defaultCountry === oldValue) setDefaultCountry(newVal);
+    } else {
+      setCountries(countries.map(c => c.value === oldValue ? { ...c, label: newVal } : c));
+    }
+  };
+
+  const addStateToCountry = (countryValue: string) => {
+    if (!newStateName.trim()) return;
+    setStatesByCountry({
+      ...statesByCountry,
+      [countryValue]: [...(statesByCountry[countryValue] || []), newStateName.trim()],
+    });
+    setNewStateName("");
+  };
+
+  const removeStateFromCountry = (countryValue: string, stateName: string) => {
+    setStatesByCountry({
+      ...statesByCountry,
+      [countryValue]: (statesByCountry[countryValue] || []).filter(s => s !== stateName),
+    });
+  };
+
+  const updatePaymentMethod = (id: string, field: string, value: string | boolean) => {
+    setPaymentMethods(paymentMethods.map(m => m.id === id ? { ...m, [field]: value } : m));
+  };
+
+  const addPaymentMethod = () => {
+    setPaymentMethods([...paymentMethods, { id: `method_${Date.now()}`, label: "New Method", description: "Description", enabled: true }]);
+  };
+
+  const removePaymentMethod = (id: string) => {
+    setPaymentMethods(paymentMethods.filter(m => m.id !== id));
+  };
+
 
   if (isLoading) {
     return (
@@ -390,15 +572,17 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="branding" className="gap-2"><Building2 className="h-4 w-4" /> Branding</TabsTrigger>
-          <TabsTrigger value="contact" className="gap-2"><Phone className="h-4 w-4" /> Contact</TabsTrigger>
-          <TabsTrigger value="social" className="gap-2"><Globe className="h-4 w-4" /> Social</TabsTrigger>
-          <TabsTrigger value="theme" className="gap-2"><Palette className="h-4 w-4" /> Theme</TabsTrigger>
-          <TabsTrigger value="promo" className="gap-2"><Megaphone className="h-4 w-4" /> Promo</TabsTrigger>
-          <TabsTrigger value="legal" className="gap-2"><Scale className="h-4 w-4" /> Legal</TabsTrigger>
-          <TabsTrigger value="seo" className="gap-2"><Image className="h-4 w-4" /> SEO</TabsTrigger>
-          <TabsTrigger value="commerce" className="gap-2"><ShoppingCart className="h-4 w-4" /> Commerce</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+          <TabsTrigger value="branding" className="gap-1 text-xs"><Building2 className="h-3 w-3" /> Branding</TabsTrigger>
+          <TabsTrigger value="contact" className="gap-1 text-xs"><Phone className="h-3 w-3" /> Contact</TabsTrigger>
+          <TabsTrigger value="social" className="gap-1 text-xs"><Globe className="h-3 w-3" /> Social</TabsTrigger>
+          <TabsTrigger value="theme" className="gap-1 text-xs"><Palette className="h-3 w-3" /> Theme</TabsTrigger>
+          <TabsTrigger value="promo" className="gap-1 text-xs"><Megaphone className="h-3 w-3" /> Promo</TabsTrigger>
+          <TabsTrigger value="legal" className="gap-1 text-xs"><Scale className="h-3 w-3" /> Legal</TabsTrigger>
+          <TabsTrigger value="seo" className="gap-1 text-xs"><Image className="h-3 w-3" /> SEO</TabsTrigger>
+          <TabsTrigger value="commerce" className="gap-1 text-xs"><ShoppingCart className="h-3 w-3" /> Commerce</TabsTrigger>
+          <TabsTrigger value="content" className="gap-1 text-xs"><Type className="h-3 w-3" /> Content</TabsTrigger>
+          <TabsTrigger value="regional" className="gap-1 text-xs"><MapPinned className="h-3 w-3" /> Regional</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding">
@@ -1124,6 +1308,331 @@ const Settings = () => {
                 <p className="text-xs text-muted-foreground">
                   {freeShippingThreshold > 0 && `Free shipping on orders over ${currencySymbol}${freeShippingThreshold}`}
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Page Content Tab */}
+        <TabsContent value="content">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2 max-h-[80vh] overflow-y-auto">
+              <CardHeader>
+                <CardTitle>Page Content</CardTitle>
+                <CardDescription>Customize text shown throughout your store</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Auth Section */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium flex items-center gap-2">🔐 Authentication Pages</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Sign In Title</Label>
+                      <Input value={signInTitle} onChange={(e) => setSignInTitle(e.target.value)} placeholder="Welcome back" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Sign In Subtitle</Label>
+                      <Input value={signInSubtitle} onChange={(e) => setSignInSubtitle(e.target.value)} placeholder="Sign in to your account" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Sign Up Title</Label>
+                      <Input value={signUpTitle} onChange={(e) => setSignUpTitle(e.target.value)} placeholder="Create an account" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Sign Up Subtitle</Label>
+                      <Input value={signUpSubtitle} onChange={(e) => setSignUpSubtitle(e.target.value)} placeholder="Join us today" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sign In Prompts */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium flex items-center gap-2">🛒 Sign-In Prompts</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label>Cart Page (when not signed in)</Label>
+                      <Input value={signInToCart} onChange={(e) => setSignInToCart(e.target.value)} placeholder="Sign in to view your cart" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Checkout Page (when not signed in)</Label>
+                      <Input value={signInToCheckout} onChange={(e) => setSignInToCheckout(e.target.value)} placeholder="Sign in to checkout" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Wishlist Page (when not signed in)</Label>
+                      <Input value={signInToWishlist} onChange={(e) => setSignInToWishlist(e.target.value)} placeholder="Sign in to view your wishlist" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Empty States */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium flex items-center gap-2">📭 Empty States</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Empty Cart Title</Label>
+                      <Input value={emptyCartTitle} onChange={(e) => setEmptyCartTitle(e.target.value)} placeholder="Your cart is empty" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Empty Cart Message</Label>
+                      <Input value={emptyCartMessage} onChange={(e) => setEmptyCartMessage(e.target.value)} placeholder="Add some items to get started" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Empty Wishlist Title</Label>
+                      <Input value={emptyWishlistTitle} onChange={(e) => setEmptyWishlistTitle(e.target.value)} placeholder="Your wishlist is empty" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Empty Wishlist Message</Label>
+                      <Input value={emptyWishlistMessage} onChange={(e) => setEmptyWishlistMessage(e.target.value)} placeholder="Save items you love for later" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Confirmation */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium flex items-center gap-2">✅ Order Confirmation</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Order Placed Title</Label>
+                      <Input value={orderPlacedTitle} onChange={(e) => setOrderPlacedTitle(e.target.value)} placeholder="Order Placed!" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Order Placed Message</Label>
+                      <Input value={orderPlacedMessage} onChange={(e) => setOrderPlacedMessage(e.target.value)} placeholder="Thank you for your order." />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error States */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <h4 className="font-medium flex items-center gap-2">⚠️ Error Pages</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Product Not Found Title</Label>
+                      <Input value={productNotFoundTitle} onChange={(e) => setProductNotFoundTitle(e.target.value)} placeholder="Product Not Found" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Product Not Found Message</Label>
+                      <Input value={productNotFoundMessage} onChange={(e) => setProductNotFoundMessage(e.target.value)} placeholder="The product you're looking for doesn't exist" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Access Denied Title</Label>
+                      <Input value={accessDeniedTitle} onChange={(e) => setAccessDeniedTitle(e.target.value)} placeholder="Access Denied" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Access Denied Message</Label>
+                      <Input value={accessDeniedMessage} onChange={(e) => setAccessDeniedMessage(e.target.value)} placeholder="You don't have permission to access this page" />
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={savePageContent} disabled={updateSetting.isPending} className="gap-2">
+                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Page Content
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>Sample messages</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="p-3 border rounded-lg bg-card">
+                  <p className="font-semibold">{signInTitle}</p>
+                  <p className="text-muted-foreground text-xs">{signInSubtitle}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-muted/50 text-center">
+                  <p className="font-medium">{emptyCartTitle}</p>
+                  <p className="text-muted-foreground text-xs">{emptyCartMessage}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-green-50 text-center">
+                  <p className="font-semibold text-green-700">{orderPlacedTitle}</p>
+                  <p className="text-green-600 text-xs">{orderPlacedMessage}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Regional Settings Tab */}
+        <TabsContent value="regional">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2 max-h-[80vh] overflow-y-auto">
+              <CardHeader>
+                <CardTitle>Regional Settings</CardTitle>
+                <CardDescription>Configure countries, states, and payment methods for checkout</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Countries */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2"><MapPinned className="h-4 w-4" /> Countries</h4>
+                    <Button type="button" variant="outline" size="sm" onClick={addCountry} className="gap-1">
+                      <Plus className="h-3 w-3" /> Add Country
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {countries.map((country) => (
+                      <div key={country.value} className="flex items-center gap-2 p-2 bg-background rounded border">
+                        <Input
+                          value={country.value}
+                          onChange={(e) => updateCountry(country.value, "value", e.target.value.toUpperCase())}
+                          className="w-20"
+                          placeholder="Code"
+                          maxLength={3}
+                        />
+                        <Input
+                          value={country.label}
+                          onChange={(e) => updateCountry(country.value, "label", e.target.value)}
+                          className="flex-1"
+                          placeholder="Country Name"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingCountryStates(editingCountryStates === country.value ? null : country.value)}
+                          className="text-xs"
+                        >
+                          {(statesByCountry[country.value] || []).length} states
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCountry(country.value)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* States Editor */}
+                  {editingCountryStates && (
+                    <div className="mt-4 p-3 bg-background rounded border">
+                      <h5 className="font-medium mb-2">States for {countries.find(c => c.value === editingCountryStates)?.label}</h5>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {(statesByCountry[editingCountryStates] || []).map((state) => (
+                          <span key={state} className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-sm">
+                            {state}
+                            <button onClick={() => removeStateFromCountry(editingCountryStates, state)} className="text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newStateName}
+                          onChange={(e) => setNewStateName(e.target.value)}
+                          placeholder="Add state..."
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addStateToCountry(editingCountryStates))}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={() => addStateToCountry(editingCountryStates)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label>Default Country</Label>
+                    <Select value={defaultCountry} onValueChange={setDefaultCountry}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {countries.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Payment Methods */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2"><CreditCard className="h-4 w-4" /> Payment Methods</h4>
+                    <Button type="button" variant="outline" size="sm" onClick={addPaymentMethod} className="gap-1">
+                      <Plus className="h-3 w-3" /> Add Method
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {paymentMethods.map((method) => (
+                      <div key={method.id} className="p-3 bg-background rounded border space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={method.enabled}
+                            onCheckedChange={(checked) => updatePaymentMethod(method.id, "enabled", checked)}
+                          />
+                          <Input
+                            value={method.label}
+                            onChange={(e) => updatePaymentMethod(method.id, "label", e.target.value)}
+                            className="flex-1"
+                            placeholder="Payment Method Name"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removePaymentMethod(method.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Input
+                          value={method.description}
+                          onChange={(e) => updatePaymentMethod(method.id, "description", e.target.value)}
+                          placeholder="Description shown at checkout"
+                          className="text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button onClick={saveRegional} disabled={updateSetting.isPending} className="gap-2">
+                  {updateSetting.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Regional Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>Checkout configuration</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div>
+                  <p className="font-medium mb-2">Countries ({countries.length})</p>
+                  <div className="flex flex-wrap gap-1">
+                    {countries.slice(0, 5).map((c) => (
+                      <span key={c.value} className={`px-2 py-1 rounded text-xs ${c.value === defaultCountry ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                        {c.label}
+                      </span>
+                    ))}
+                    {countries.length > 5 && <span className="px-2 py-1 text-xs text-muted-foreground">+{countries.length - 5} more</span>}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium mb-2">Payment Methods</p>
+                  <div className="space-y-1">
+                    {paymentMethods.filter(m => m.enabled).map((m) => (
+                      <div key={m.id} className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>{m.label}</span>
+                      </div>
+                    ))}
+                    {paymentMethods.filter(m => !m.enabled).map((m) => (
+                      <div key={m.id} className="flex items-center gap-2 opacity-50">
+                        <span className="w-2 h-2 rounded-full bg-muted"></span>
+                        <span className="line-through">{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

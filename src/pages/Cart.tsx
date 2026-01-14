@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useValidateDiscountCode, AppliedDiscount } from "@/hooks/useDiscountCodes";
 import { toast } from "@/hooks/use-toast";
-import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSiteSetting, PageContentSettings } from "@/hooks/useSiteSettings";
 import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 
 interface CommerceSettings {
@@ -32,6 +32,7 @@ const Cart = () => {
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
   const validateDiscount = useValidateDiscountCode();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
 
   // Group addons by cart item id
   const addonsByCartItem = useMemo(() => {
@@ -158,10 +159,10 @@ const Cart = () => {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-display font-bold mb-4">Sign in to view your cart</h2>
+            <h2 className="text-2xl font-display font-bold mb-4">{pageContent?.signInToCart || "Sign in to view your cart"}</h2>
             <p className="text-muted-foreground mb-6">Please sign in to add items to your cart and checkout.</p>
             <Button asChild>
-              <Link to="/auth">Sign In</Link>
+              <Link to="/auth">{pageContent?.signInButtonText || "Sign In"}</Link>
             </Button>
           </div>
         </main>
@@ -176,7 +177,7 @@ const Cart = () => {
 
       <main className="flex-1">
         <div className="container mx-auto px-4 md:px-8 py-8">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">Your Cart</h1>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">{pageContent?.cartTitle || "Your Cart"}</h1>
 
           {isLoading || addonsLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -189,9 +190,10 @@ const Cart = () => {
             </div>
           ) : cartItems.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg mb-6">Your cart is empty</p>
+              <p className="text-muted-foreground text-lg mb-2">{pageContent?.emptyCartTitle || "Your cart is empty"}</p>
+              <p className="text-muted-foreground text-sm mb-6">{pageContent?.emptyCartMessage || "Add some items to get started"}</p>
               <Button asChild>
-                <Link to="/products">Continue Shopping</Link>
+                <Link to="/products">{pageContent?.continueShoppingText || "Continue Shopping"}</Link>
               </Button>
             </div>
           ) : (
