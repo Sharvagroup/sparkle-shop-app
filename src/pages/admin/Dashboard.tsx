@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ORDER_STATUS_COLORS } from '@/lib/constants';
+import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 
 const Dashboard = () => {
   // Fetch real stats from database
@@ -95,13 +96,7 @@ const Dashboard = () => {
     },
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const { formatCurrency } = usePriceFormatter();
 
   const getStatusColor = (status: string) => {
     return ORDER_STATUS_COLORS[status] || 'bg-gray-100 text-gray-800';

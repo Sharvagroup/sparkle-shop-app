@@ -106,7 +106,7 @@ const NavigationManager = () => {
 
     // Search Settings State
     const [searchEnabled, setSearchEnabled] = useState(true);
-    const [searchPlaceholder, setSearchPlaceholder] = useState("Search for jewellery...");
+    const [searchPlaceholder, setSearchPlaceholder] = useState("Search products...");
     const [showRecentSearches, setShowRecentSearches] = useState(true);
     const [recentSearchLimit, setRecentSearchLimit] = useState(5);
     const [showProductSuggestions, setShowProductSuggestions] = useState(true);
@@ -127,7 +127,7 @@ const NavigationManager = () => {
     useEffect(() => {
         if (searchData) {
             setSearchEnabled(searchData.enabled !== false);
-            setSearchPlaceholder(searchData.placeholder || "Search for jewellery...");
+            setSearchPlaceholder(searchData.placeholder || "Search products...");
             setShowRecentSearches(searchData.showRecentSearches !== false);
             setRecentSearchLimit(searchData.recentSearchLimit || 5);
             setShowProductSuggestions(searchData.showProductSuggestions !== false);

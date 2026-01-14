@@ -73,34 +73,29 @@ const Contact = () => {
     setErrors({});
   };
 
+  // Only show contact details if data is available - no hardcoded fallbacks
   const contactDetails = [
     {
       icon: Phone,
       title: "Phone Number",
-      primary: contact?.phone || "+91 1234567890",
+      primary: contact?.phone || null,
       secondary: "Mon-Fri 9am to 6pm",
     },
     {
       icon: Mail,
       title: "Email Address",
-      primary: contact?.email || "support@store.com",
+      primary: contact?.email || null,
       secondary: "We reply within 24 hours",
     },
     {
       icon: MapPin,
       title: "Store Address",
-      primary: contact?.address?.split(',')[0] || "Store Address",
-      secondary: contact?.address?.split(',').slice(1).join(',') || "City, Country",
+      primary: contact?.address?.split(',')[0] || null,
+      secondary: contact?.address?.split(',').slice(1).join(',') || null,
     },
-  ];
+  ].filter(detail => detail.primary); // Only show details that have data
 
-  const defaultBusinessHours = [
-    { day: "Monday - Friday", hours: "10:00 AM - 8:00 PM", closed: false },
-    { day: "Saturday", hours: "11:00 AM - 7:00 PM", closed: false },
-    { day: "Sunday", hours: "Closed", closed: true },
-  ];
-
-  const businessHours = businessHoursSettings?.hours || defaultBusinessHours;
+  const businessHours = businessHoursSettings?.hours || [];
 
   const socialLinks = [
     { icon: Instagram, url: social?.instagram, label: "Instagram" },
@@ -108,6 +103,7 @@ const Contact = () => {
     { icon: Facebook, url: social?.facebook, label: "Facebook" },
     { icon: Twitter, url: social?.twitter, label: "Twitter" },
   ].filter(s => s.url);
+
 
   const isLoading = contactLoading || socialLoading;
 
@@ -248,6 +244,10 @@ const Contact = () => {
                         </div>
                       ))}
                     </div>
+                  ) : contactDetails.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Contact details not configured yet.</p>
+                    </div>
                   ) : (
                     <div className="space-y-8">
                       {contactDetails.map((detail) => (
@@ -258,7 +258,7 @@ const Contact = () => {
                           <div>
                             <h3 className="font-display text-lg text-foreground mb-1">{detail.title}</h3>
                             <p className="text-muted-foreground text-sm">{detail.primary}</p>
-                            <p className="text-muted-foreground text-xs mt-1 italic">{detail.secondary}</p>
+                            {detail.secondary && <p className="text-muted-foreground text-xs mt-1 italic">{detail.secondary}</p>}
                           </div>
                         </div>
                       ))}
@@ -266,36 +266,40 @@ const Contact = () => {
                   )}
                 </div>
 
-                {/* Business Hours */}
-                <div className="bg-muted p-6 border border-border rounded-sm">
-                  <h3 className="font-display text-lg text-foreground mb-4 border-b border-border pb-2">
-                    Business Hours
-                  </h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {businessHours.map((item) => (
-                      <li 
-                        key={item.day} 
-                        className={`flex justify-between ${item.closed ? 'text-muted-foreground/50' : ''}`}
-                      >
-                        <span>{item.day}</span>
-                        <span>{item.hours}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* Business Hours - only show if configured */}
+                {businessHours.length > 0 && (
+                  <div className="bg-muted p-6 border border-border rounded-sm">
+                    <h3 className="font-display text-lg text-foreground mb-4 border-b border-border pb-2">
+                      Business Hours
+                    </h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {businessHours.map((item) => (
+                        <li 
+                          key={item.day} 
+                          className={`flex justify-between ${item.closed ? 'text-muted-foreground/50' : ''}`}
+                        >
+                          <span>{item.day}</span>
+                          <span>{item.hours}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-                {/* Map */}
-                <div className="w-full h-56 bg-muted rounded-sm overflow-hidden grayscale filter hover:grayscale-0 transition-all duration-500">
-                  <iframe 
-                    src={contactPageSettings?.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425878428698!3d40.74076364379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c16587d%3A0x44b6c6563456747b!2s123%20Madison%20Ave%2C%20New%20York%2C%20NY%2010016%2C%20USA!5e0!3m2!1sen!2s!4v1647424683072!5m2!1sen!2s"}
-                    width="100%" 
-                    height="100%" 
-                    style={{ border: 0 }} 
-                    allowFullScreen 
-                    loading="lazy"
-                    title="Store Location"
-                  />
-                </div>
+                {/* Map - only show if configured */}
+                {contactPageSettings?.mapEmbedUrl && (
+                  <div className="w-full h-56 bg-muted rounded-sm overflow-hidden grayscale filter hover:grayscale-0 transition-all duration-500">
+                    <iframe 
+                      src={contactPageSettings.mapEmbedUrl}
+                      width="100%" 
+                      height="100%" 
+                      style={{ border: 0 }} 
+                      allowFullScreen 
+                      loading="lazy"
+                      title="Store Location"
+                    />
+                  </div>
+                )}
 
                 {/* Social Links */}
                 {socialLinks.length > 0 && (

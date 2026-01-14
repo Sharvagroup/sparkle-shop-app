@@ -10,6 +10,8 @@ import { format } from "date-fns";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
+import { useSiteSetting, PageContentSettings } from "@/hooks/useSiteSettings";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -21,15 +23,12 @@ const statusColors: Record<string, string> = {
   refunded: "bg-gray-100 text-gray-800",
 };
 
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(price);
-};
+interface OrderItemDetailsProps {
+  order: Order;
+  formatPrice: (price: number) => string;
+}
 
-const OrderItemDetails = ({ order }: { order: Order }) => {
+const OrderItemDetails = ({ order, formatPrice }: OrderItemDetailsProps) => {
   return (
     <div className="space-y-3 mt-4 pt-4 border-t">
       {order.items?.map((item) => {
@@ -107,6 +106,11 @@ const UserOrders = () => {
   const navigate = useNavigate();
   const { data: orders = [], isLoading } = useMyOrders();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const { formatCurrency } = usePriceFormatter();
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
+
+  // Local formatPrice using the hook
+  const formatPrice = (price: number) => formatCurrency(price);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -135,17 +139,17 @@ const UserOrders = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-display font-medium text-foreground mb-8 flex items-center gap-3">
             <Package className="h-8 w-8" />
-            My Orders
+            {pageContent?.ordersTitle || "My Orders"}
           </h1>
           
           {orders.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground mb-4" />
-                <h2 className="text-xl font-medium mb-2">No orders yet</h2>
-                <p className="text-muted-foreground mb-6">Start shopping to see your orders here</p>
+                <h2 className="text-xl font-medium mb-2">{pageContent?.emptyOrdersTitle || "No orders yet"}</h2>
+                <p className="text-muted-foreground mb-6">{pageContent?.emptyOrdersMessage || "Start shopping to see your orders here"}</p>
                 <Link to="/products">
-                  <Button>Browse Products</Button>
+                  <Button>{pageContent?.browseProductsText || "Browse Products"}</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -187,7 +191,7 @@ const UserOrders = () => {
                     </div>
                     
                     {expandedOrder === order.id && (
-                      <OrderItemDetails order={order} />
+                      <OrderItemDetails order={order} formatPrice={formatPrice} />
                     )}
                   </CardContent>
                 </Card>
