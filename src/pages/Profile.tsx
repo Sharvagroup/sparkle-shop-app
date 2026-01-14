@@ -11,12 +11,14 @@ import PromoBanner from "@/components/layout/PromoBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useState } from "react";
+import { useSiteSetting, PageContentSettings } from "@/hooks/useSiteSettings";
 
 const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,7 +56,7 @@ const Profile = () => {
       
       <main className="flex-grow container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-display font-medium text-foreground mb-8">My Profile</h1>
+          <h1 className="text-3xl font-display font-medium text-foreground mb-8">{pageContent?.profileTitle || "My Profile"}</h1>
           
           <Card>
             <CardHeader>

@@ -20,13 +20,14 @@ import {
   DiscountCode,
   DiscountCodeInput,
 } from "@/hooks/useDiscountCodes";
-import { DISCOUNT_TYPES } from "@/lib/constants";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 const DiscountCodes = () => {
   const { data: codes, isLoading } = useDiscountCodes();
   const createCode = useCreateDiscountCode();
   const updateCode = useUpdateDiscountCode();
   const deleteCode = useDeleteDiscountCode();
+  const { formatCurrency, currencySymbol } = usePriceFormatter();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
@@ -94,13 +95,13 @@ const DiscountCodes = () => {
     resetForm();
   };
 
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatPrice = (amount: number) => formatCurrency(amount);
+
+  // Dynamic discount types using currency symbol from settings
+  const DISCOUNT_TYPES = [
+    { value: "percentage", label: "Percentage (%)" },
+    { value: "fixed", label: `Fixed Amount (${currencySymbol})` },
+  ];
 
   const getCodeStatus = (code: DiscountCode) => {
     if (!code.is_active) return { label: "Inactive", variant: "secondary" as const };
@@ -162,7 +163,7 @@ const DiscountCodes = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="value">
-                  {formData.discount_type === "percentage" ? "Percentage" : "Amount (₹)"}
+                  {formData.discount_type === "percentage" ? "Percentage" : `Amount (${currencySymbol})`}
                 </Label>
                 <Input
                   id="value"
@@ -178,7 +179,7 @@ const DiscountCodes = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="min_order">Min Order (₹)</Label>
+                <Label htmlFor="min_order">Min Order ({currencySymbol})</Label>
                 <Input
                   id="min_order"
                   type="number"

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useSiteSetting, BrandingSettings } from "@/hooks/useSiteSettings";
+import { useSiteSetting, BrandingSettings, PageContentSettings } from "@/hooks/useSiteSettings";
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -40,6 +40,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: branding } = useSiteSetting<BrandingSettings>("branding");
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
 
   useEffect(() => {
     if (user) {
@@ -192,8 +193,8 @@ const Auth = () => {
 
           {mode === 'signin' && (
             <>
-              <h2 className="text-2xl font-semibold mb-2">Welcome back</h2>
-              <p className="text-muted-foreground mb-8">Sign in to your account</p>
+              <h2 className="text-2xl font-semibold mb-2">{pageContent?.signInTitle || "Welcome back"}</h2>
+              <p className="text-muted-foreground mb-8">{pageContent?.signInSubtitle || "Sign in to your account"}</p>
 
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div>
@@ -260,8 +261,8 @@ const Auth = () => {
 
           {mode === 'signup' && (
             <>
-              <h2 className="text-2xl font-semibold mb-2">Create an account</h2>
-              <p className="text-muted-foreground mb-8">Join us today</p>
+              <h2 className="text-2xl font-semibold mb-2">{pageContent?.signUpTitle || "Create an account"}</h2>
+              <p className="text-muted-foreground mb-8">{pageContent?.signUpSubtitle || "Join us today"}</p>
 
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div>

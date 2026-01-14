@@ -280,7 +280,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                   <FormItem>
                     <FormLabel>Product Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Gold Plated Necklace" {...field} />
+                      <Input placeholder="Product Name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

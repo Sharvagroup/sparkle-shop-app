@@ -28,10 +28,12 @@ import { useAllOrders, useUpdateOrderStatus, Order } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ORDER_STATUS_COLORS, PAYMENT_STATUS_COLORS } from "@/lib/constants";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 const Orders = () => {
   const { data: orders = [], isLoading } = useAllOrders();
   const updateStatus = useUpdateOrderStatus();
+  const { formatCurrency } = usePriceFormatter();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -45,13 +47,7 @@ const Orders = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const formatPrice = (price: number) => formatCurrency(price);
 
   const handleStatusChange = async (orderId: string, status: Order["status"]) => {
     await updateStatus.mutateAsync({ id: orderId, status });
