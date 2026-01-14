@@ -20,11 +20,11 @@ import { useAllCartAddons } from "@/hooks/useCartItemAddons";
 import { useProductOptions } from "@/hooks/useProductOptions";
 import { useCreateOrder, ShippingAddress } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSiteSetting } from "@/hooks/useSiteSettings";
+import { useSiteSetting, PageContentSettings, RegionalSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
 import { useRecordDiscountUsage } from "@/hooks/useDiscountCodeUsage";
-import { INDIAN_STATES, PAYMENT_METHODS, DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
 
 // Commerce settings interface
@@ -36,12 +36,29 @@ interface CommerceSettings {
   currencySymbol?: string;
 }
 
+// Fallback data
+const FALLBACK_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+  "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh", "Puducherry", "Chandigarh",
+];
+
+const FALLBACK_PAYMENT_METHODS = [
+  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay", enabled: true },
+  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc.", enabled: true },
+  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order", enabled: true },
+];
+
 const Checkout = () => {
   const { user } = useAuth();
   const { data: cartItems = [], isLoading } = useCart();
   const { data: allAddons = [], isLoading: addonsLoading } = useAllCartAddons();
   const { data: productOptions = [] } = useProductOptions();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
+  const { data: pageContent } = useSiteSetting<PageContentSettings>("page_content");
+  const { data: regionalSettings } = useSiteSetting<RegionalSettings>("regional");
   const createOrder = useCreateOrder();
   const clearCart = useClearCart();
   const navigate = useNavigate();
@@ -376,7 +393,7 @@ const Checkout = () => {
                       <Select value={state} onValueChange={setState}>
                         <SelectTrigger className="flex-1"><SelectValue placeholder="State" /></SelectTrigger>
                         <SelectContent>
-                          {INDIAN_STATES.map((s) => (
+                          {(regionalSettings?.statesByCountry?.[country === "India" ? "IN" : country] || FALLBACK_STATES).map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
@@ -395,8 +412,8 @@ const Checkout = () => {
 
                   <div className="border border-border rounded-sm overflow-hidden">
                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                      {PAYMENT_METHODS.map((method, index) => (
-                        <div key={method.id} className={`p-4 ${index !== PAYMENT_METHODS.length - 1 ? 'border-b border-border' : ''} ${index % 2 === 0 ? 'bg-muted' : ''}`}>
+                      {(regionalSettings?.paymentMethods?.filter(m => m.enabled) || FALLBACK_PAYMENT_METHODS).map((method, index, arr) => (
+                        <div key={method.id} className={`p-4 ${index !== arr.length - 1 ? 'border-b border-border' : ''} ${index % 2 === 0 ? 'bg-muted' : ''}`}>
                           <div className="flex items-center gap-3">
                             <RadioGroupItem value={method.id} id={method.id} />
                             <div className="grid gap-1.5 leading-none">
