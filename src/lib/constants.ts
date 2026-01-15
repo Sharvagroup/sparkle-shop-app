@@ -16,7 +16,13 @@ export const PAYMENT_STATUS_COLORS: Record<string, string> = {
   refunded: "bg-gray-500/10 text-gray-600 border-gray-500/20",
 } as const;
 
-// Countries for checkout
+// ============================================================================
+// LEGACY FALLBACKS - Regional settings should be managed via Admin Settings
+// These constants serve as fallbacks when admin settings are not configured.
+// Primary source: Admin Panel → Settings → Commerce tab
+// ============================================================================
+
+// Countries fallback - use commerce settings from admin panel when available
 export const COUNTRIES = [
   { value: "IN", label: "India" },
   { value: "US", label: "United States" },
@@ -27,7 +33,7 @@ export const COUNTRIES = [
   { value: "SG", label: "Singapore" },
 ] as const;
 
-// Indian states for checkout
+// Indian states fallback - use commerce settings from admin panel when available
 export const INDIAN_STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -64,18 +70,13 @@ export const INDIAN_STATES = [
   "Chandigarh",
 ] as const;
 
-// Discount types
-export const DISCOUNT_TYPES = [
-  { value: "percentage", label: "Percentage (%)" },
-  { value: "fixed", label: "Fixed Amount (₹)" },
-] as const;
-
-// Payment Methods
+// Payment Methods fallback - use commerce settings from admin panel when available
 export const PAYMENT_METHODS = [
   { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay" },
   { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc." },
   { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order" },
 ] as const;
 
+// Currency fallbacks - use commerce settings from admin panel when available
 export const DEFAULT_CURRENCY = "INR";
 export const DEFAULT_CURRENCY_SYMBOL = "₹";
