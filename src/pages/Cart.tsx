@@ -17,6 +17,7 @@ import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 
 interface CommerceSettings {
   currencySymbol?: string;
+  localeCode?: string;
 }
 
 const Cart = () => {
@@ -103,7 +104,8 @@ const Cart = () => {
 
   const formatPrice = (price: number) => {
     const symbol = commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
-    return `${symbol}${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    const locale = commerceSettings?.localeCode || "en-US";
+    return `${symbol}${price.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
   };
 
   // Format selected options for display
