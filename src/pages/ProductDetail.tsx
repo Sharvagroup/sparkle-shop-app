@@ -602,21 +602,8 @@ const ProductDetail = () => {
                       <AccordionTrigger className="text-sm font-bold uppercase tracking-wider py-5 hover:text-primary">
                         Care Instructions
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground text-sm pb-6">
-                        <ul className="space-y-3">
-                          <li className="flex items-start gap-3">
-                            <Droplet size={18} className="text-primary flex-shrink-0" />
-                            {product.care_instructions}
-                          </li>
-                          <li className="flex items-start gap-3">
-                            <Package size={18} className="text-primary flex-shrink-0" />
-                            Store in the provided jewelry box.
-                          </li>
-                          <li className="flex items-start gap-3">
-                            <Sparkles size={18} className="text-primary flex-shrink-0" />
-                            Clean with a soft, dry cloth only.
-                          </li>
-                        </ul>
+                      <AccordionContent className="text-muted-foreground text-sm pb-6 whitespace-pre-line">
+                        {product.care_instructions}
                       </AccordionContent>
                     </AccordionItem>
                   )}

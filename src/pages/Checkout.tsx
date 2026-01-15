@@ -34,6 +34,7 @@ interface CommerceSettings {
   taxRate?: number;
   currencyCode?: string;
   currencySymbol?: string;
+  localeCode?: string;
 }
 
 // Fallback data
@@ -244,6 +245,8 @@ const Checkout = () => {
           discount: discountAmount,
           total,
           shippingAddress: shippingAddr,
+          currencySymbol: commerceSettings?.currencySymbol || "₹",
+          localeCode: commerceSettings?.localeCode || "en-IN",
         },
       }).catch(err => console.error("Failed to send order email:", err));
 
@@ -261,10 +264,10 @@ const Checkout = () => {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-display font-bold mb-4">Sign in to checkout</h2>
+            <h2 className="text-2xl font-display font-bold mb-4">{pageContent?.signInToCheckout || "Sign in to checkout"}</h2>
             <p className="text-muted-foreground mb-6">Please sign in to complete your order.</p>
             <Button asChild>
-              <Link to="/auth">Sign In</Link>
+              <Link to="/auth">{pageContent?.signInButtonText || "Sign In"}</Link>
             </Button>
           </div>
         </main>
@@ -282,20 +285,20 @@ const Checkout = () => {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <h2 className="text-3xl font-display font-bold mb-4">Order Placed!</h2>
+            <h2 className="text-3xl font-display font-bold mb-4">{pageContent?.orderPlacedTitle || "Order Placed!"}</h2>
             <p className="text-muted-foreground mb-2">
-              Thank you for your order. Your order number is:
+              {pageContent?.orderPlacedMessage || "Thank you for your order. Your order number is:"}
             </p>
             <p className="text-xl font-mono font-bold text-primary mb-6">{orderNumber}</p>
             <p className="text-sm text-muted-foreground mb-8">
-              We've sent a confirmation email to {email}. You can track your order in "My Orders".
+              {pageContent?.orderConfirmationNote || `We've sent a confirmation email to ${email}. You can track your order in "My Orders".`}
             </p>
             <div className="flex gap-4 justify-center">
               <Button variant="outline" asChild>
                 <Link to="/orders">View Orders</Link>
               </Button>
               <Button asChild>
-                <Link to="/products">Continue Shopping</Link>
+                <Link to="/products">{pageContent?.continueShoppingText || "Continue Shopping"}</Link>
               </Button>
             </div>
           </div>
@@ -330,9 +333,9 @@ const Checkout = () => {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-display font-bold mb-4">Your cart is empty</h2>
+            <h2 className="text-2xl font-display font-bold mb-4">{pageContent?.emptyCartTitle || "Your cart is empty"}</h2>
             <Button asChild>
-              <Link to="/products">Browse Products</Link>
+              <Link to="/products">{pageContent?.browseProductsText || "Browse Products"}</Link>
             </Button>
           </div>
         </main>

@@ -83,99 +83,34 @@ interface FAQSettings {
 
 // ========== Defaults ==========
 const defaultAboutSettings: AboutSettings = {
-  heroImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop",
-  heroTitle: "Our Story",
-  heroSubtitle: "Crafting timeless elegance rooted in Indian heritage",
-  missionTitle: "Redefining traditional luxury for the modern soul.",
-  missionText: "We believe that jewelry is more than just an accessory; it is a repository of memories, a symbol of heritage, and a work of art.",
-  missionImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=400&fit=crop",
-  artisans: [
-    { id: "1", name: "Aanya Kapoor", role: "Founder & Creative Director", quote: "I wanted to create pieces that don't just adorn the body, but also touch the soul.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face" },
-    { id: "2", name: "Rajesh Verma", role: "Head Goldsmith", quote: "Thirty years of shaping gold has taught me that patience is the true secret to beauty.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face" }
-  ],
-  values: [
-    { id: "1", icon: "Hammer", title: "Our Craftsmanship", description: "Every curve and contour is meticulously shaped by master artisans who have inherited their skills through generations." },
-    { id: "2", icon: "BookOpen", title: "Our Heritage", description: "Rooted in the royal traditions of India, our designs pay homage to the grandeur of the past while embracing today." },
-    { id: "3", icon: "Diamond", title: "Our Values", description: "We are committed to ethical sourcing and sustainability, ensuring the beauty of our jewelry is matched by its integrity." }
-  ],
-  ctaTitle: "Experience the Legacy",
-  ctaText: "Explore our curated collections and find the piece that speaks to your unique story.",
-  ctaButtonText: "Shop Our Collections"
+  heroImage: "",
+  heroTitle: "",
+  heroSubtitle: "",
+  missionTitle: "",
+  missionText: "",
+  missionImage: "",
+  artisans: [],
+  values: [],
+  ctaTitle: "",
+  ctaText: "",
+  ctaButtonText: ""
 };
 
 const defaultSizeGuideSettings: SizeGuideSettings = {
-  pageTitle: "Size Guide",
-  pageSubtitle: "Find your perfect fit with our comprehensive sizing charts",
-  categories: [
-    {
-      id: "rings",
-      name: "Rings",
-      instructions: "Wrap a piece of string or paper around your finger, mark where it overlaps, measure the length in millimeters, and use the circumference column to find your size.",
-      columns: ["Indian Size", "US Size", "UK Size", "Diameter (mm)", "Circumference (mm)"],
-      rows: [
-        { "Indian Size": "6", "US Size": "3", "UK Size": "F", "Diameter (mm)": "14.1", "Circumference (mm)": "44.2" },
-        { "Indian Size": "7", "US Size": "3.5", "UK Size": "G", "Diameter (mm)": "14.5", "Circumference (mm)": "45.5" },
-        { "Indian Size": "8", "US Size": "4", "UK Size": "H", "Diameter (mm)": "14.9", "Circumference (mm)": "46.8" },
-        { "Indian Size": "9", "US Size": "4.5", "UK Size": "I", "Diameter (mm)": "15.3", "Circumference (mm)": "48.0" },
-        { "Indian Size": "10", "US Size": "5", "UK Size": "J", "Diameter (mm)": "15.7", "Circumference (mm)": "49.3" },
-      ]
-    },
-    {
-      id: "bracelets",
-      name: "Bracelets",
-      instructions: "Measure around your wrist with a flexible tape measure. Add 0.5\" for a comfortable fit or 1\" for a loose fit.",
-      columns: ["Size", "Wrist Size (inches)", "Bracelet Length (inches)"],
-      rows: [
-        { "Size": "XS", "Wrist Size (inches)": "5.5 - 6", "Bracelet Length (inches)": "6.5" },
-        { "Size": "S", "Wrist Size (inches)": "6 - 6.5", "Bracelet Length (inches)": "7" },
-        { "Size": "M", "Wrist Size (inches)": "6.5 - 7", "Bracelet Length (inches)": "7.5" },
-        { "Size": "L", "Wrist Size (inches)": "7 - 7.5", "Bracelet Length (inches)": "8" },
-        { "Size": "XL", "Wrist Size (inches)": "7.5 - 8", "Bracelet Length (inches)": "8.5" },
-      ]
-    },
-    {
-      id: "necklaces",
-      name: "Necklaces",
-      instructions: "Consider your neckline, body type, and the occasion when choosing a necklace length.",
-      columns: ["Style", "Length (inches)", "How It Fits"],
-      rows: [
-        { "Style": "Choker", "Length (inches)": "14-16", "How It Fits": "Sits snugly around the neck" },
-        { "Style": "Princess", "Length (inches)": "17-19", "How It Fits": "Falls just below the collarbone" },
-        { "Style": "Matinee", "Length (inches)": "20-24", "How It Fits": "Falls at or above the bust line" },
-        { "Style": "Opera", "Length (inches)": "28-34", "How It Fits": "Falls at the bust line or below" },
-        { "Style": "Rope", "Length (inches)": "36+", "How It Fits": "Falls below the bust, can be doubled" },
-      ]
-    }
-  ],
-  footerText: "Need help finding your size? Contact our team for personalized assistance."
+  pageTitle: "",
+  pageSubtitle: "",
+  categories: [],
+  footerText: ""
 };
 
 const defaultFAQSettings: FAQSettings = {
-  pageTitle: "Frequently Asked Questions",
-  pageSubtitle: "Find answers to common questions about our products and services",
-  categories: [
-    {
-      id: "orders",
-      name: "Orders & Shipping",
-      questions: [
-        { id: "1", question: "How long does shipping take?", answer: "Standard shipping takes 5-7 business days. Express shipping is available for 2-3 business days delivery. Free shipping is available on orders above ₹2,000." },
-        { id: "2", question: "Do you ship internationally?", answer: "Yes, we ship to select international destinations. International shipping typically takes 10-15 business days. Additional customs duties may apply." },
-        { id: "3", question: "How can I track my order?", answer: "Once your order is shipped, you'll receive a tracking link via email and SMS. You can also track your order from the 'My Orders' section in your account." }
-      ]
-    },
-    {
-      id: "returns",
-      name: "Returns & Exchanges",
-      questions: [
-        { id: "1", question: "What is your return policy?", answer: "We offer a 15-day return policy for unused items in their original packaging. Items must be returned with all tags intact and in the original condition." },
-        { id: "2", question: "How do I initiate a return?", answer: "To initiate a return, go to 'My Orders', select the order, and click 'Request Return'. Our team will guide you through the process." }
-      ]
-    }
-  ],
-  ctaTitle: "Still have questions?",
-  ctaText: "Can't find what you're looking for? Our support team is here to help.",
-  ctaButtonText: "Contact Us",
-  ctaButtonLink: "/contact"
+  pageTitle: "",
+  pageSubtitle: "",
+  categories: [],
+  ctaTitle: "",
+  ctaText: "",
+  ctaButtonText: "",
+  ctaButtonLink: ""
 };
 
 const iconOptions = ["Hammer", "BookOpen", "Diamond", "Heart", "Star", "Award", "Shield", "Gem"];

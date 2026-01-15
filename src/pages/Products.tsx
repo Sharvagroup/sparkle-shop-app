@@ -508,7 +508,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title="Shop All Products" description="Explore our complete collection of handcrafted heritage jewelry." />
+      <SEO title="Shop All Products" description="Explore our complete product collection." />
       <PromoBanner />
       <Header />
 
@@ -540,7 +540,7 @@ const Products = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto font-light text-sm md:text-base">
             {searchQuery
               ? `Found ${filteredProducts.length} results for your search`
-              : "Explore our complete collection of handcrafted heritage jewelry, designed to bring timeless elegance to your everyday life."}
+              : "Browse our complete collection of products."}
           </p>
         </section>
 

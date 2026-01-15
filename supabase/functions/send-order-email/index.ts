@@ -33,10 +33,12 @@ interface OrderEmailRequest {
     pinCode: string;
     country: string;
   };
+  currencySymbol?: string;
+  localeCode?: string;
 }
 
-const formatPrice = (price: number) => `₹${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-
+const formatPrice = (price: number, currencySymbol = "₹", localeCode = "en-IN") => 
+  `${currencySymbol}${price.toLocaleString(localeCode, { minimumFractionDigits: 2 })}`;
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -46,6 +48,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const data: OrderEmailRequest = await req.json();
     console.log("Sending order confirmation email to:", data.to);
+    
+    const currencySymbol = data.currencySymbol || "₹";
+    const localeCode = data.localeCode || "en-IN";
+    const priceFormatter = (price: number) => formatPrice(price, currencySymbol, localeCode);
 
     const itemsHtml = data.items.map(item => `
       <tr>
@@ -54,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
           <span style="color: #666;">Qty: ${item.quantity}</span>
         </td>
         <td style="padding: 12px 0; border-bottom: 1px solid #eee; text-align: right;">
-          ${formatPrice(item.price * item.quantity)}
+          ${priceFormatter(item.price * item.quantity)}
         </td>
       </tr>
     `).join("");
@@ -87,21 +93,21 @@ const handler = async (req: Request): Promise<Response> => {
           <table style="width: 100%; margin-bottom: 25px;">
             <tr>
               <td style="padding: 5px 0; color: #666;">Subtotal</td>
-              <td style="padding: 5px 0; text-align: right;">${formatPrice(data.subtotal)}</td>
+              <td style="padding: 5px 0; text-align: right;">${priceFormatter(data.subtotal)}</td>
             </tr>
             ${data.discount > 0 ? `
             <tr>
               <td style="padding: 5px 0; color: #22c55e;">Discount</td>
-              <td style="padding: 5px 0; text-align: right; color: #22c55e;">-${formatPrice(data.discount)}</td>
+              <td style="padding: 5px 0; text-align: right; color: #22c55e;">-${priceFormatter(data.discount)}</td>
             </tr>
             ` : ""}
             <tr>
               <td style="padding: 5px 0; color: #666;">Shipping</td>
-              <td style="padding: 5px 0; text-align: right;">${data.shipping === 0 ? "FREE" : formatPrice(data.shipping)}</td>
+              <td style="padding: 5px 0; text-align: right;">${data.shipping === 0 ? "FREE" : priceFormatter(data.shipping)}</td>
             </tr>
             <tr>
               <td style="padding: 10px 0; font-weight: bold; font-size: 18px; border-top: 2px solid #333;">Total</td>
-              <td style="padding: 10px 0; font-weight: bold; font-size: 18px; border-top: 2px solid #333; text-align: right;">${formatPrice(data.total)}</td>
+              <td style="padding: 10px 0; font-weight: bold; font-size: 18px; border-top: 2px solid #333; text-align: right;">${priceFormatter(data.total)}</td>
             </tr>
           </table>
 
