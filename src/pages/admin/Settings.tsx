@@ -61,6 +61,7 @@ interface CommerceSettings {
   taxRate: number;
   currencyCode: string;
   currencySymbol: string;
+  localeCode: string;
 }
 
 // Default countries and states for regional settings
@@ -175,6 +176,7 @@ const Settings = () => {
   const [taxRate, setTaxRate] = useState(0);
   const [currencyCode, setCurrencyCode] = useState("INR");
   const [currencySymbol, setCurrencySymbol] = useState("₹");
+  const [localeCode, setLocaleCode] = useState("en-IN");
   // Store Settings
   const [productsPerPage, setProductsPerPage] = useState(12);
   const [defaultSort, setDefaultSort] = useState("featured");
@@ -282,6 +284,7 @@ const Settings = () => {
         setTaxRate(commerceData.taxRate || 0);
         setCurrencyCode(commerceData.currencyCode || "INR");
         setCurrencySymbol(commerceData.currencySymbol || "₹");
+        setLocaleCode((commerceData as any).localeCode || "en-IN");
         setProductsPerPage((commerceData as any).productsPerPage || 12);
         setDefaultSort((commerceData as any).defaultSort || "featured");
         setNewArrivalDays((commerceData as any).newArrivalDays || 30);
@@ -452,6 +455,7 @@ const Settings = () => {
         taxRate,
         currencyCode,
         currencySymbol,
+        localeCode,
         productsPerPage,
         defaultSort,
         newArrivalDays,
@@ -1197,16 +1201,36 @@ const Settings = () => {
                 <CardDescription>Configure shipping, tax, and currency for your store</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2"><IndianRupee className="h-4 w-4" /> Currency Code</Label>
                     <Input value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value.toUpperCase())} placeholder="INR" maxLength={3} />
-                    <p className="text-xs text-muted-foreground">ISO 4217 currency code (e.g., INR, USD)</p>
+                    <p className="text-xs text-muted-foreground">ISO 4217 code (e.g., INR, USD)</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Currency Symbol</Label>
                     <Input value={currencySymbol} onChange={(e) => setCurrencySymbol(e.target.value)} placeholder="₹" maxLength={3} />
                     <p className="text-xs text-muted-foreground">Symbol shown in prices</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Locale Code</Label>
+                    <Select value={localeCode} onValueChange={setLocaleCode}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select locale" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en-IN">English (India)</SelectItem>
+                        <SelectItem value="en-US">English (US)</SelectItem>
+                        <SelectItem value="en-GB">English (UK)</SelectItem>
+                        <SelectItem value="en-AU">English (Australia)</SelectItem>
+                        <SelectItem value="en-CA">English (Canada)</SelectItem>
+                        <SelectItem value="en-SG">English (Singapore)</SelectItem>
+                        <SelectItem value="ar-AE">Arabic (UAE)</SelectItem>
+                        <SelectItem value="de-DE">German</SelectItem>
+                        <SelectItem value="fr-FR">French</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Number formatting locale</p>
                   </div>
                 </div>
 
