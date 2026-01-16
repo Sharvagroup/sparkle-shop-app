@@ -5,6 +5,7 @@ import { useSiteSetting } from "@/hooks/useSiteSettings";
 import { ProductTheme } from "@/hooks/useProducts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsInWishlist, useToggleWishlist } from "@/hooks/useWishlist";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 interface ProductCardTheme {
   card_style: "default" | "minimal" | "bordered";
@@ -72,6 +73,7 @@ const ProductCard = ({
   const globalTheme: ProductCardTheme = { ...defaultTheme, ...savedTheme };
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { formatPrice } = usePriceFormatter();
   const actualProductId = productId || id; // Use productId if provided, otherwise use slug/id
   const { data: isInWishlist = false } = useIsInWishlist(actualProductId);
   const { toggle, isPending } = useToggleWishlist();
@@ -267,10 +269,10 @@ const ProductCard = ({
         <div className="font-bold text-lg mb-4 text-foreground">
           {originalPrice && (
             <span className="text-muted-foreground line-through text-sm mr-2">
-              ₹{originalPrice.toLocaleString()}
+              {formatPrice(originalPrice)}
             </span>
           )}
-          ₹{price.toLocaleString()}
+          {formatPrice(price)}
         </div>
         <Button className={`w-full py-3 text-xs font-bold uppercase tracking-wider transition-colors ${getButtonClass()}`}>
           Add to Cart
