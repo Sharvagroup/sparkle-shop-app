@@ -17,6 +17,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { Product, ProductTheme, useUpdateProduct } from "@/hooks/useProducts";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 const defaultTheme: ProductTheme = {
   badge_style: "default",
@@ -41,6 +42,7 @@ export const ProductItemThemeDialog = ({
 }: ProductItemThemeDialogProps) => {
   const [theme, setTheme] = useState<ProductTheme>(defaultTheme);
   const updateProduct = useUpdateProduct();
+  const { formatPrice } = usePriceFormatter();
 
   useEffect(() => {
     if (product?.theme) {
@@ -250,7 +252,7 @@ export const ProductItemThemeDialog = ({
                 </div>
                 <div className="p-3">
                   <h3 className="font-medium text-sm truncate">{product?.name || 'Product Name'}</h3>
-                  <p className="text-primary font-semibold">₹{product?.price?.toLocaleString() || '1,999'}</p>
+                  <p className="text-primary font-semibold">{formatPrice(product?.price || 1999)}</p>
                 </div>
               </div>
             </div>

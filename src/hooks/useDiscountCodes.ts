@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 
 export interface DiscountCode {
   id: string;
@@ -99,7 +100,7 @@ export const useValidateDiscountCode = () => {
 
       // Check minimum order amount
       if (discountCode.min_order_amount && cartTotal < discountCode.min_order_amount) {
-        throw new Error(`Minimum order amount of ₹${discountCode.min_order_amount} required`);
+        throw new Error(`Minimum order amount of ${DEFAULT_CURRENCY_SYMBOL}${discountCode.min_order_amount} required`);
       }
 
       // Calculate discount amount
