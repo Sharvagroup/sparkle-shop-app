@@ -37,7 +37,7 @@ interface OrderEmailRequest {
   localeCode?: string;
 }
 
-const formatPrice = (price: number, currencySymbol = "₹", localeCode = "en-IN") => 
+const formatPrice = (price: number, currencySymbol = "$", localeCode = "en-US") => 
   `${currencySymbol}${price.toLocaleString(localeCode, { minimumFractionDigits: 2 })}`;
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight

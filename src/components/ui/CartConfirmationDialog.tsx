@@ -27,6 +27,7 @@ interface SelectedAddonState {
   productId: string;
   quantity: number;
   options: Record<string, any>;
+  unitPrice?: number; // Calculated price to persist (includes discounts/overrides)
 }
 
 interface CartConfirmationDialogProps {
@@ -39,7 +40,7 @@ interface CartConfirmationDialogProps {
   onConfirm: (data: {
     quantity: number;
     selectedOptions: Record<string, any>;
-    selectedAddons: SelectedAddonState[];
+    selectedAddons: (SelectedAddonState & { unitPrice: number })[];
   }) => void;
   isLoading?: boolean;
 }
@@ -213,10 +214,25 @@ const CartConfirmationDialog = ({
     : null;
 
   const handleConfirm = () => {
+    // Build addons with their calculated prices for persistence
+    const addonsWithPrices = selectedAddons.map((selectedAddon) => {
+      const addonData = productAddons.find((a) => a.addon_product_id === selectedAddon.productId);
+      let unitPrice = 0;
+      if (addonData) {
+        unitPrice = addonData.addon_type === "bundle" 
+          ? calculateBundlePrice(addonData) 
+          : calculateAddonPrice(addonData);
+      }
+      return {
+        ...selectedAddon,
+        unitPrice,
+      };
+    });
+
     onConfirm({
       quantity,
       selectedOptions,
-      selectedAddons,
+      selectedAddons: addonsWithPrices,
     });
   };
 

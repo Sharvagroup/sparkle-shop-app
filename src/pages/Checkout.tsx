@@ -140,7 +140,8 @@ const Checkout = () => {
       total += calculateItemPrice(item);
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
-        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
+        // Use persisted unit_price if available, fallback to product price
+        total += (addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1);
       });
     });
     return total;
@@ -157,8 +158,9 @@ const Checkout = () => {
   const taxAmount = taxRate > 0 ? Math.round(subtotal * taxRate / 100) : 0;
   const total = subtotal - discountAmount + shipping + taxAmount;
 
+  const localeCode = commerceSettings?.localeCode || "en-US";
   const formatPrice = (price: number) => {
-    return `${currencySymbol}${price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    return `${currencySymbol}${price.toLocaleString(localeCode, { minimumFractionDigits: 2 })}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -183,7 +185,7 @@ const Checkout = () => {
       const itemAddons = addonsByCartItem[item.id] || [];
       const itemTotal = calculateItemPrice(item);
       const addonsTotal = itemAddons.reduce(
-        (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
+        (sum, addon) => sum + (addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1),
         0
       );
       
@@ -200,12 +202,12 @@ const Checkout = () => {
           image: item.product?.images?.[0] || "",
           slug: item.product?.slug || "",
           selected_options: item.selected_options || {},
-          addons: itemAddons.map((addon) => ({
+        addons: itemAddons.map((addon) => ({
             name: addon.addon_product?.name || "",
             image: addon.addon_product?.images?.[0] || "",
             quantity: addon.quantity || 1,
-            price: addon.addon_product?.price || 0,
-            total: (addon.addon_product?.price || 0) * (addon.quantity || 1),
+            price: addon.unit_price ?? addon.addon_product?.price ?? 0,
+            total: (addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1),
           })),
         },
       };
@@ -245,8 +247,8 @@ const Checkout = () => {
           discount: discountAmount,
           total,
           shippingAddress: shippingAddr,
-          currencySymbol: commerceSettings?.currencySymbol || "₹",
-          localeCode: commerceSettings?.localeCode || "en-IN",
+          currencySymbol: commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL,
+          localeCode: commerceSettings?.localeCode || "en-US",
         },
       }).catch(err => console.error("Failed to send order email:", err));
 

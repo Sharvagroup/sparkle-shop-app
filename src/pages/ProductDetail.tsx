@@ -175,7 +175,7 @@ const ProductDetail = () => {
     data: {
       quantity: number;
       selectedOptions: Record<string, any>;
-      selectedAddons: { productId: string; quantity: number; options: Record<string, any> }[];
+      selectedAddons: { productId: string; quantity: number; options: Record<string, any>; unitPrice?: number }[];
     },
     mode: 'add' | 'replace' | 'separate',
     existingItemId?: string
@@ -192,13 +192,14 @@ const ProductDetail = () => {
         existingItemId,
       });
 
-      // Add addons to cart_item_addons
+      // Add addons to cart_item_addons with persisted unit_price
       for (const addon of data.selectedAddons) {
         await addCartItemAddon.mutateAsync({
           cart_item_id: result.id,
           addon_product_id: addon.productId,
           quantity: addon.quantity,
           selected_options: addon.options,
+          unit_price: addon.unitPrice,
         });
       }
 
