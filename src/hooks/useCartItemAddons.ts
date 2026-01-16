@@ -9,6 +9,7 @@ export interface CartItemAddon {
   addon_product_id: string;
   quantity: number;
   selected_options: Record<string, any>;
+  unit_price: number | null; // Captured price at time of adding (includes discounts)
   created_at: string;
   // Joined addon product
   addon_product?: {
@@ -24,6 +25,7 @@ export interface CartItemAddonInput {
   addon_product_id: string;
   quantity?: number;
   selected_options?: Record<string, any>;
+  unit_price?: number; // Calculated price to persist
 }
 
 // Fetch addons for a specific cart item

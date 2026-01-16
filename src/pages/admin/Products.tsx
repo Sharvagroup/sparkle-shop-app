@@ -50,6 +50,7 @@ import { Plus, Pencil, Trash2, Search, Package, Paintbrush, Upload } from 'lucid
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
@@ -167,13 +168,7 @@ const AdminProducts = () => {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const { formatPrice } = usePriceFormatter();
 
   return (
     <div className="space-y-6">

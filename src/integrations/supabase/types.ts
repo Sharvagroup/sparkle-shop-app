@@ -165,6 +165,7 @@ export type Database = {
           id: string
           quantity: number | null
           selected_options: Json | null
+          unit_price: number | null
         }
         Insert: {
           addon_product_id: string
@@ -173,6 +174,7 @@ export type Database = {
           id?: string
           quantity?: number | null
           selected_options?: Json | null
+          unit_price?: number | null
         }
         Update: {
           addon_product_id?: string
@@ -181,6 +183,7 @@ export type Database = {
           id?: string
           quantity?: number | null
           selected_options?: Json | null
+          unit_price?: number | null
         }
         Relationships: [
           {

@@ -91,10 +91,10 @@ const Cart = () => {
     cartItems.forEach((item) => {
       // Main product price with dynamic pricing
       total += calculateItemPrice(item);
-      // Add addons for this item
+      // Add addons for this item - use persisted unit_price if available
       const itemAddons = addonsByCartItem[item.id] || [];
       itemAddons.forEach((addon) => {
-        total += (addon.addon_product?.price || 0) * (addon.quantity || 1);
+        total += (addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1);
       });
     });
     return total;
@@ -207,7 +207,7 @@ const Cart = () => {
                     const formattedOptions = formatOptions(item.selected_options);
                     const itemTotal = calculateItemPrice(item);
                     const addonsTotal = itemAddons.reduce(
-                      (sum, addon) => sum + (addon.addon_product?.price || 0) * (addon.quantity || 1),
+                      (sum, addon) => sum + (addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1),
                       0
                     );
 
@@ -368,7 +368,7 @@ const Cart = () => {
                                   </p>
                                 </div>
                                 <div className="text-sm font-medium">
-                                  {formatPrice((addon.addon_product?.price || 0) * (addon.quantity || 1))}
+                                  {formatPrice((addon.unit_price ?? addon.addon_product?.price ?? 0) * (addon.quantity || 1))}
                                 </div>
                                 <button
                                   onClick={() => handleRemoveAddon(addon.id, item.id)}
