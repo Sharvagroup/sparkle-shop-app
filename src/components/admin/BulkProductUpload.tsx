@@ -27,6 +27,7 @@ import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import { useAdminProductOptions } from '@/hooks/useProductOptions';
 import { validateWebPImage, validateImageSize } from '@/lib/imageValidation';
+import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 
 interface BulkProductUploadProps {
   open: boolean;
@@ -102,6 +103,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
   const { data: categories = [] } = useAdminCategories();
   const { data: collections = [] } = useAdminCollections();
   const { data: productOptions = [] } = useAdminProductOptions();
+  const { currencySymbol } = usePriceFormatter();
 
   const [step, setStep] = useState<'template' | 'upload' | 'images' | 'review' | 'progress'>('template');
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
@@ -667,7 +669,7 @@ export const BulkProductUpload = ({ open, onOpenChange, onSuccess }: BulkProduct
                       <TableCell className="text-muted-foreground">{product.row}</TableCell>
                       <TableCell className="font-medium">{product.name || '-'}</TableCell>
                       <TableCell>{product.sku || '-'}</TableCell>
-                      <TableCell>₹{product.price || 0}</TableCell>
+                      <TableCell>{currencySymbol}{product.price || 0}</TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
                           {(productImages[product.slug] || []).map((file, idx) => (

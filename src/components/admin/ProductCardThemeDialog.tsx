@@ -16,6 +16,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { useUpdateSiteSetting, useSiteSetting } from "@/hooks/useSiteSettings";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 export interface ProductCardTheme {
   card_style: "default" | "minimal" | "bordered";
@@ -51,6 +52,7 @@ export const ProductCardThemeDialog = ({
   const [theme, setTheme] = useState<ProductCardTheme>(defaultTheme);
   const { data: savedTheme } = useSiteSetting<ProductCardTheme>("product_card_theme");
   const updateSetting = useUpdateSiteSetting();
+  const { formatPrice } = usePriceFormatter();
 
   useEffect(() => {
     if (savedTheme) {
@@ -268,7 +270,7 @@ export const ProductCardThemeDialog = ({
                     Product description text
                   </p>
                 )}
-                <p className="font-bold text-sm mb-3">₹1,999</p>
+                <p className="font-bold text-sm mb-3">{formatPrice(1999)}</p>
                 <button className={`w-full py-2 text-xs font-bold uppercase tracking-wider rounded ${getButtonClass()}`}>
                   Add to Cart
                 </button>

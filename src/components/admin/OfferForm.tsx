@@ -22,6 +22,7 @@ import { Loader2, Upload } from "lucide-react";
 import { LinkUrlAutocomplete } from "./LinkUrlAutocomplete";
 import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
+import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 interface OfferFormProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface OfferFormProps {
 }
 
 export function OfferForm({ open, onOpenChange, offer, offerType = "special_offer", onSubmit, isLoading }: OfferFormProps) {
+  const { currencySymbol } = usePriceFormatter();
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
@@ -237,7 +239,7 @@ export function OfferForm({ open, onOpenChange, offer, offerType = "special_offe
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="percentage">Percentage (%)</SelectItem>
-                      <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount ({currencySymbol})</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -260,7 +262,7 @@ export function OfferForm({ open, onOpenChange, offer, offerType = "special_offe
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Minimum Cart Value (₹)</Label>
+                <Label>Minimum Cart Value ({currencySymbol})</Label>
                 <Input
                   type="number"
                   value={minCartValue}

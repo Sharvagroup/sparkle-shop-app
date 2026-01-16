@@ -78,5 +78,5 @@ export const PAYMENT_METHODS = [
 ] as const;
 
 // Currency fallbacks - use commerce settings from admin panel when available
-export const DEFAULT_CURRENCY = "INR";
-export const DEFAULT_CURRENCY_SYMBOL = "₹";
+export const DEFAULT_CURRENCY = "USD";
+export const DEFAULT_CURRENCY_SYMBOL = "$";

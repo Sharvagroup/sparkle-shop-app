@@ -28,6 +28,7 @@ import { useAdminCategories } from '@/hooks/useCategories';
 import { useAdminCollections } from '@/hooks/useCollections';
 import { useAdminProducts, Product, uploadProductImages, deleteProductImage, TrustBadges } from '@/hooks/useProducts';
 import { useProductOptions, ProductOption } from '@/hooks/useProductOptions';
+import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 import { useAdminProductAddons, useAddProductAddon, useRemoveProductAddon } from '@/hooks/useProductAddons';
 import ProductAddonsSelector, { SelectedAddon } from '@/components/admin/ProductAddonsSelector';
 import { X, Upload, Loader2 } from 'lucide-react';
@@ -80,6 +81,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const { data: allProducts = [] } = useAdminProducts();
   const { data: productOptions = [] } = useProductOptions();
   const { data: existingAddons = [] } = useAdminProductAddons(product?.id || '');
+  const { currencySymbol, formatPrice } = usePriceFormatter();
   
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -499,7 +501,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base Price (₹) *</FormLabel>
+                    <FormLabel>Base Price ({currencySymbol}) *</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" min="0" {...field} />
                     </FormControl>
@@ -513,7 +515,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                 name="original_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Original Price (₹)</FormLabel>
+                    <FormLabel>Original Price ({currencySymbol})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -596,10 +598,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                       return (
                         <>
                           <p className="text-sm text-muted-foreground">
-                            ₹{price.toLocaleString()} is the price for {baseUnitValue}{unit}
+                            {formatPrice(price)} is the price for {baseUnitValue}{unit}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Rate: ₹{perUnit.toFixed(2)} per {unit || 'unit'}
+                            Rate: {currencySymbol}{perUnit.toFixed(2)} per {unit || 'unit'}
                           </p>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {[1, 2, 3].map(multiplier => {
@@ -607,7 +609,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                               const calcPrice = perUnit * value;
                               return (
                                 <span key={multiplier} className="text-xs bg-background px-2 py-1 rounded border">
-                                  {value}{unit} = ₹{calcPrice.toLocaleString()}
+                                  {value}{unit} = {formatPrice(calcPrice)}
                                 </span>
                               );
                             })}
