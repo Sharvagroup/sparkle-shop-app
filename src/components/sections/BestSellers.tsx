@@ -88,6 +88,7 @@ const BestSellers = () => {
             <ProductCard
               key={product.id}
               id={product.slug}
+              productId={product.id}
               name={product.name}
               description={product.description || ""}
               price={product.price}
