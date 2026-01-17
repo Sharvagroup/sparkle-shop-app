@@ -1,5 +1,4 @@
 import { useSiteSetting } from "@/hooks/useSiteSettings";
-import { DEFAULT_CURRENCY_SYMBOL, DEFAULT_CURRENCY } from "@/lib/constants";
 
 interface CommerceSettings {
   currencySymbol?: string;
@@ -10,8 +9,10 @@ interface CommerceSettings {
 export const usePriceFormatter = () => {
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
   
-  const currencySymbol = commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
-  const currencyCode = commerceSettings?.currencyCode || DEFAULT_CURRENCY;
+  // Use database settings, fallback to empty string for symbol and "USD" for code
+  // Empty string will display as-is, which is better than showing wrong currency
+  const currencySymbol = commerceSettings?.currencySymbol || "";
+  const currencyCode = commerceSettings?.currencyCode || "USD";
   const localeCode = commerceSettings?.localeCode || "en-US";
   
   const formatPrice = (price: number, options?: { showDecimals?: boolean }) => {

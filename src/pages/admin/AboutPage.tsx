@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,7 +126,20 @@ const AboutPage = () => {
   const [sizeGuideSettings, setSizeGuideSettings] = useState<SizeGuideSettings>(defaultSizeGuideSettings);
   const [faqSettings, setFaqSettings] = useState<FAQSettings>(defaultFAQSettings);
   const [uploading, setUploading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("story");
+  const location = useLocation();
+  
+  // Set active tab based on route
+  const getInitialTab = () => {
+    if (location.pathname.includes("/faq")) return "faq";
+    if (location.pathname.includes("/size-guide")) return "size-guide";
+    return "story";
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+  
+  // Update tab when route changes
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [location.pathname]);
 
   useEffect(() => {
     if (aboutData) setAboutSettings({ ...defaultAboutSettings, ...aboutData });

@@ -24,7 +24,6 @@ import { useSiteSetting, PageContentSettings, RegionalSettings } from "@/hooks/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIncrementDiscountUsage } from "@/hooks/useDiscountCodes";
 import { useRecordDiscountUsage } from "@/hooks/useDiscountCodeUsage";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
 
 // Commerce settings interface
@@ -36,21 +35,6 @@ interface CommerceSettings {
   currencySymbol?: string;
   localeCode?: string;
 }
-
-// Fallback data
-const FALLBACK_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
-  "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh", "Puducherry", "Chandigarh",
-];
-
-const FALLBACK_PAYMENT_METHODS = [
-  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay", enabled: true },
-  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc.", enabled: true },
-  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order", enabled: true },
-];
 
 const Checkout = () => {
   const { user } = useAuth();
@@ -152,7 +136,7 @@ const Checkout = () => {
   const shippingFlatRate = commerceSettings?.shippingFlatRate ?? 0;
   const freeShippingThreshold = commerceSettings?.freeShippingThreshold ?? 0;
   const taxRate = commerceSettings?.taxRate ?? 0;
-  const currencySymbol = commerceSettings?.currencySymbol ?? DEFAULT_CURRENCY_SYMBOL;
+  const currencySymbol = commerceSettings?.currencySymbol || "";
 
   const shipping = subtotal >= freeShippingThreshold && freeShippingThreshold > 0 ? 0 : shippingFlatRate;
   const taxAmount = taxRate > 0 ? Math.round(subtotal * taxRate / 100) : 0;
@@ -247,7 +231,7 @@ const Checkout = () => {
           discount: discountAmount,
           total,
           shippingAddress: shippingAddr,
-          currencySymbol: commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL,
+          currencySymbol: commerceSettings?.currencySymbol || "",
           localeCode: commerceSettings?.localeCode || "en-US",
         },
       }).catch(err => console.error("Failed to send order email:", err));
@@ -398,7 +382,7 @@ const Checkout = () => {
                       <Select value={state} onValueChange={setState}>
                         <SelectTrigger className="flex-1"><SelectValue placeholder="State" /></SelectTrigger>
                         <SelectContent>
-                          {(regionalSettings?.statesByCountry?.[country === "India" ? "IN" : country] || FALLBACK_STATES).map((s) => (
+                          {(regionalSettings?.statesByCountry?.[country === "India" ? "IN" : country] || []).map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
@@ -417,7 +401,7 @@ const Checkout = () => {
 
                   <div className="border border-border rounded-sm overflow-hidden">
                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                      {(regionalSettings?.paymentMethods?.filter(m => m.enabled) || FALLBACK_PAYMENT_METHODS).map((method, index, arr) => (
+                      {(regionalSettings?.paymentMethods?.filter(m => m.enabled) || []).map((method, index, arr) => (
                         <div key={method.id} className={`p-4 ${index !== arr.length - 1 ? 'border-b border-border' : ''} ${index % 2 === 0 ? 'bg-muted' : ''}`}>
                           <div className="flex items-center gap-3">
                             <RadioGroupItem value={method.id} id={method.id} />

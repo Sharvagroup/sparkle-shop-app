@@ -25,8 +25,6 @@ import {
   type SearchSuggestion,
 } from "@/hooks/useSearch";
 import { useSiteSetting } from "@/hooks/useSiteSettings";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
-
 interface CommerceSettings {
   currencySymbol?: string;
 }
@@ -45,7 +43,7 @@ const SearchBar = ({ className }: SearchBarProps) => {
   const { data: searchSettings } = useSearchSettings();
   const { data: commerceSettings } = useSiteSetting<CommerceSettings>("commerce");
   const settings = searchSettings || defaultSearchSettings;
-  const currencySymbol = commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
+  const currencySymbol = commerceSettings?.currencySymbol || "";
 
   const { recentSearches, addSearch, removeSearch, clearSearches } = useRecentSearches(
     settings.recentSearchLimit

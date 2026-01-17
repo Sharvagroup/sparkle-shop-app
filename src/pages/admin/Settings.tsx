@@ -16,7 +16,7 @@ import {
 import { Loader2, Upload, Save, Building2, Phone, Globe, Image, Scale, Palette, FileText, Megaphone, Plus, Trash2, Clock, MapPin, ShoppingCart, Truck, Percent, IndianRupee, Package, SortAsc, Sparkles, Search, Type, CreditCard, MapPinned } from "lucide-react";
 import { useSiteSettings, useUpdateSiteSetting, uploadSiteAsset, BrandingSettings, ContactSettings, SocialSettings, SeoSettings, PageContentSettings, RegionalSettings } from "@/hooks/useSiteSettings";
 import { Skeleton } from "@/components/ui/skeleton";
-import { validateWebPImage, validateImageSize, ALLOWED_IMAGE_ACCEPT } from "@/lib/imageValidation";
+import { validateSiteImage, validateImageSize, ALLOWED_SITE_IMAGE_ACCEPT } from "@/lib/imageValidation";
 import { toast } from "sonner";
 
 interface ContactPageSettings {
@@ -64,36 +64,8 @@ interface CommerceSettings {
   localeCode: string;
 }
 
-// Default countries and states for regional settings
-const DEFAULT_COUNTRIES = [
-  { value: "IN", label: "India" },
-  { value: "US", label: "United States" },
-  { value: "UK", label: "United Kingdom" },
-  { value: "CA", label: "Canada" },
-  { value: "AU", label: "Australia" },
-  { value: "AE", label: "United Arab Emirates" },
-  { value: "SG", label: "Singapore" },
-];
-
-const DEFAULT_STATES_BY_COUNTRY: Record<string, string[]> = {
-  IN: [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
-    "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh", "Puducherry", "Chandigarh",
-  ],
-  US: ["Alabama", "Alaska", "Arizona", "California", "Colorado", "Florida", "New York", "Texas", "Washington"],
-  UK: ["England", "Scotland", "Wales", "Northern Ireland"],
-  CA: ["Alberta", "British Columbia", "Manitoba", "Ontario", "Quebec"],
-  AU: ["New South Wales", "Queensland", "Victoria", "Western Australia"],
-};
-
-const DEFAULT_PAYMENT_METHODS = [
-  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay", enabled: true },
-  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc.", enabled: true },
-  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order", enabled: true },
-];
+// Regional data should come from database settings (regional category)
+// No hardcoded defaults - initialize as empty and load from database
 
 
 const fontOptions = [
@@ -158,13 +130,8 @@ const Settings = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoVisible, setPromoVisible] = useState(true);
 
-  // Business Hours
-  const defaultBusinessHours: BusinessHour[] = [
-    { day: "Monday - Friday", hours: "10:00 AM - 8:00 PM", closed: false },
-    { day: "Saturday", hours: "11:00 AM - 7:00 PM", closed: false },
-    { day: "Sunday", hours: "Closed", closed: true },
-  ];
-  const [businessHours, setBusinessHours] = useState<BusinessHour[]>(defaultBusinessHours);
+  // Business Hours - initialize as empty, load from database
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
 
   // Contact Page Settings
   const [contactHeroImage, setContactHeroImage] = useState("");
@@ -182,30 +149,30 @@ const Settings = () => {
   const [defaultSort, setDefaultSort] = useState("featured");
   const [newArrivalDays, setNewArrivalDays] = useState(30);
 
-  // Page Content Settings
-  const [signInTitle, setSignInTitle] = useState("Welcome back");
-  const [signInSubtitle, setSignInSubtitle] = useState("Sign in to your account");
-  const [signUpTitle, setSignUpTitle] = useState("Create an account");
-  const [signUpSubtitle, setSignUpSubtitle] = useState("Join us today");
-  const [signInToCart, setSignInToCart] = useState("Sign in to view your cart");
-  const [signInToCheckout, setSignInToCheckout] = useState("Sign in to checkout");
-  const [signInToWishlist, setSignInToWishlist] = useState("Sign in to view your wishlist");
-  const [emptyCartTitle, setEmptyCartTitle] = useState("Your cart is empty");
-  const [emptyCartMessage, setEmptyCartMessage] = useState("Add some items to get started");
-  const [emptyWishlistTitle, setEmptyWishlistTitle] = useState("Your wishlist is empty");
-  const [emptyWishlistMessage, setEmptyWishlistMessage] = useState("Save items you love for later");
-  const [orderPlacedTitle, setOrderPlacedTitle] = useState("Order Placed!");
-  const [orderPlacedMessage, setOrderPlacedMessage] = useState("Thank you for your order.");
-  const [productNotFoundTitle, setProductNotFoundTitle] = useState("Product Not Found");
-  const [productNotFoundMessage, setProductNotFoundMessage] = useState("The product you're looking for doesn't exist or has been removed.");
-  const [accessDeniedTitle, setAccessDeniedTitle] = useState("Access Denied");
-  const [accessDeniedMessage, setAccessDeniedMessage] = useState("You don't have permission to access this page.");
+  // Page Content Settings - initialize as empty, load from database
+  const [signInTitle, setSignInTitle] = useState("");
+  const [signInSubtitle, setSignInSubtitle] = useState("");
+  const [signUpTitle, setSignUpTitle] = useState("");
+  const [signUpSubtitle, setSignUpSubtitle] = useState("");
+  const [signInToCart, setSignInToCart] = useState("");
+  const [signInToCheckout, setSignInToCheckout] = useState("");
+  const [signInToWishlist, setSignInToWishlist] = useState("");
+  const [emptyCartTitle, setEmptyCartTitle] = useState("");
+  const [emptyCartMessage, setEmptyCartMessage] = useState("");
+  const [emptyWishlistTitle, setEmptyWishlistTitle] = useState("");
+  const [emptyWishlistMessage, setEmptyWishlistMessage] = useState("");
+  const [orderPlacedTitle, setOrderPlacedTitle] = useState("");
+  const [orderPlacedMessage, setOrderPlacedMessage] = useState("");
+  const [productNotFoundTitle, setProductNotFoundTitle] = useState("");
+  const [productNotFoundMessage, setProductNotFoundMessage] = useState("");
+  const [accessDeniedTitle, setAccessDeniedTitle] = useState("");
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState("");
 
-  // Regional Settings
-  const [countries, setCountries] = useState<{ value: string; label: string }[]>(DEFAULT_COUNTRIES);
-  const [defaultCountry, setDefaultCountry] = useState("IN");
-  const [statesByCountry, setStatesByCountry] = useState<Record<string, string[]>>(DEFAULT_STATES_BY_COUNTRY);
-  const [paymentMethods, setPaymentMethods] = useState<{ id: string; label: string; description: string; enabled: boolean }[]>(DEFAULT_PAYMENT_METHODS);
+  // Regional Settings - initialize as empty, load from database
+  const [countries, setCountries] = useState<{ value: string; label: string }[]>([]);
+  const [defaultCountry, setDefaultCountry] = useState("");
+  const [statesByCountry, setStatesByCountry] = useState<Record<string, string[]>>({});
+  const [paymentMethods, setPaymentMethods] = useState<{ id: string; label: string; description: string; enabled: boolean }[]>([]);
   const [editingCountryStates, setEditingCountryStates] = useState<string | null>(null);
   const [newStateName, setNewStateName] = useState("");
 
@@ -256,11 +223,11 @@ const Settings = () => {
         setOgImage(seo.ogImage || "");
       }
       if (theme) {
-        setPrimaryColor(theme.primaryColor || "#C9A227");
-        setSecondaryColor(theme.secondaryColor || "#2F5D62");
-        setAccentColor(theme.accentColor || "#2F5D62");
-        setFontHeading(theme.fontHeading || "Playfair Display");
-        setFontBody(theme.fontBody || "Lato");
+        setPrimaryColor(theme.primaryColor || "");
+        setSecondaryColor(theme.secondaryColor || "");
+        setAccentColor(theme.accentColor || "");
+        setFontHeading(theme.fontHeading || "");
+        setFontBody(theme.fontBody || "");
         setDarkMode(theme.darkMode || false);
       }
       if (promoBanner) {
@@ -282,9 +249,9 @@ const Settings = () => {
         setShippingFlatRate(commerceData.shippingFlatRate || 0);
         setFreeShippingThreshold(commerceData.freeShippingThreshold || 0);
         setTaxRate(commerceData.taxRate || 0);
-        setCurrencyCode(commerceData.currencyCode || "INR");
-        setCurrencySymbol(commerceData.currencySymbol || "₹");
-        setLocaleCode((commerceData as any).localeCode || "en-IN");
+        setCurrencyCode(commerceData.currencyCode || "");
+        setCurrencySymbol(commerceData.currencySymbol || "");
+        setLocaleCode((commerceData as any).localeCode || "");
         setProductsPerPage((commerceData as any).productsPerPage || 12);
         setDefaultSort((commerceData as any).defaultSort || "featured");
         setNewArrivalDays((commerceData as any).newArrivalDays || 30);
@@ -293,23 +260,23 @@ const Settings = () => {
       // Page Content Settings
       const pageContentData = settings.page_content as unknown as PageContentSettings | undefined;
       if (pageContentData) {
-        setSignInTitle(pageContentData.signInTitle || "Welcome back");
-        setSignInSubtitle(pageContentData.signInSubtitle || "Sign in to your account");
-        setSignUpTitle(pageContentData.signUpTitle || "Create an account");
-        setSignUpSubtitle(pageContentData.signUpSubtitle || "Join us today");
-        setSignInToCart(pageContentData.signInToCart || "Sign in to view your cart");
-        setSignInToCheckout(pageContentData.signInToCheckout || "Sign in to checkout");
-        setSignInToWishlist(pageContentData.signInToWishlist || "Sign in to view your wishlist");
-        setEmptyCartTitle(pageContentData.emptyCartTitle || "Your cart is empty");
-        setEmptyCartMessage(pageContentData.emptyCartMessage || "Add some items to get started");
-        setEmptyWishlistTitle(pageContentData.emptyWishlistTitle || "Your wishlist is empty");
-        setEmptyWishlistMessage(pageContentData.emptyWishlistMessage || "Save items you love for later");
-        setOrderPlacedTitle(pageContentData.orderPlacedTitle || "Order Placed!");
-        setOrderPlacedMessage(pageContentData.orderPlacedMessage || "Thank you for your order.");
-        setProductNotFoundTitle(pageContentData.productNotFoundTitle || "Product Not Found");
-        setProductNotFoundMessage(pageContentData.productNotFoundMessage || "The product you're looking for doesn't exist or has been removed.");
-        setAccessDeniedTitle(pageContentData.accessDeniedTitle || "Access Denied");
-        setAccessDeniedMessage(pageContentData.accessDeniedMessage || "You don't have permission to access this page.");
+        setSignInTitle(pageContentData.signInTitle || "");
+        setSignInSubtitle(pageContentData.signInSubtitle || "");
+        setSignUpTitle(pageContentData.signUpTitle || "");
+        setSignUpSubtitle(pageContentData.signUpSubtitle || "");
+        setSignInToCart(pageContentData.signInToCart || "");
+        setSignInToCheckout(pageContentData.signInToCheckout || "");
+        setSignInToWishlist(pageContentData.signInToWishlist || "");
+        setEmptyCartTitle(pageContentData.emptyCartTitle || "");
+        setEmptyCartMessage(pageContentData.emptyCartMessage || "");
+        setEmptyWishlistTitle(pageContentData.emptyWishlistTitle || "");
+        setEmptyWishlistMessage(pageContentData.emptyWishlistMessage || "");
+        setOrderPlacedTitle(pageContentData.orderPlacedTitle || "");
+        setOrderPlacedMessage(pageContentData.orderPlacedMessage || "");
+        setProductNotFoundTitle(pageContentData.productNotFoundTitle || "");
+        setProductNotFoundMessage(pageContentData.productNotFoundMessage || "");
+        setAccessDeniedTitle(pageContentData.accessDeniedTitle || "");
+        setAccessDeniedMessage(pageContentData.accessDeniedMessage || "");
       }
       
       // Regional Settings
@@ -328,7 +295,7 @@ const Settings = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formatCheck = validateWebPImage(file);
+    const formatCheck = validateSiteImage(file);
     if (!formatCheck.valid) {
       toast.error(formatCheck.error);
       return;
@@ -617,7 +584,7 @@ const Settings = () => {
                         {logoUrl ? <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "logo", setLogoUrl)} className="hidden" id="logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("logo-upload")?.click()} disabled={uploading === "logo"}>
                           {uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -633,7 +600,7 @@ const Settings = () => {
                         {footerLogoUrl ? <img src={footerLogoUrl} alt="Footer Logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">No logo</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "footerLogo", setFooterLogoUrl)} className="hidden" id="footer-logo-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("footer-logo-upload")?.click()} disabled={uploading === "footerLogo"}>
                           {uploading === "footerLogo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -651,7 +618,7 @@ const Settings = () => {
                         {faviconUrl ? <img src={faviconUrl} alt="Favicon" className="w-8 h-8 object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "favicon", setFaviconUrl)} className="hidden" id="favicon-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("favicon-upload")?.click()} disabled={uploading === "favicon"}>
                           {uploading === "favicon" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -667,7 +634,7 @@ const Settings = () => {
                         {loadingImageUrl ? <img src={loadingImageUrl} alt="Loading" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "loading", setLoadingImageUrl)} className="hidden" id="loading-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("loading-upload")?.click()} disabled={uploading === "loading"}>
                           {uploading === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -683,7 +650,7 @@ const Settings = () => {
                         {authBackgroundImage ? <img src={authBackgroundImage} alt="Auth BG" className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">Default</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "authBg", setAuthBackgroundImage)} className="hidden" id="auth-bg-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "authBg", setAuthBackgroundImage)} className="hidden" id="auth-bg-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("auth-bg-upload")?.click()} disabled={uploading === "authBg"}>
                           {uploading === "authBg" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -820,7 +787,7 @@ const Settings = () => {
                         {contactHeroImage ? <img src={contactHeroImage} alt="Contact Hero" className="max-h-full max-w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
                       </div>
                       <div>
-                        <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
+                        <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "contactHero", setContactHeroImage)} className="hidden" id="contact-hero-upload" />
                         <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("contact-hero-upload")?.click()} disabled={uploading === "contactHero"}>
                           {uploading === "contactHero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />} Upload
                         </Button>
@@ -1165,7 +1132,7 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground mb-2">Image shown when sharing on social media (1200x630px recommended)</p>
                   <div className="flex gap-4 items-center">
                     {ogImage && <img src={ogImage} alt="OG" className="h-20 w-auto rounded border" />}
-                    <Input type="file" accept={ALLOWED_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
+                    <Input type="file" accept={ALLOWED_SITE_IMAGE_ACCEPT} onChange={(e) => handleImageUpload(e, "og", setOgImage)} className="hidden" id="og-upload" />
                     <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById("og-upload")?.click()} disabled={uploading === "og"}>
                       {uploading === "og" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Upload</>}
                     </Button>

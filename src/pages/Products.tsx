@@ -628,10 +628,11 @@ const Products = () => {
                       description={product.description || ""}
                       price={product.price}
                       originalPrice={product.original_price || undefined}
-                      image={product.images?.[0] || "/placeholder.svg"}
+                      image={product.images?.[0] || ""}
                       rating={product.rating}
                       reviewCount={product.review_count}
                       badge={product.badge as "new" | "sale" | "trending" | undefined}
+                      theme={product.theme}
                     />
                   ))}
                 </div>

@@ -180,11 +180,8 @@ const Header = () => {
         });
     }
 
-    // Fallback to empty if no settings (or simple home link if preferred, but user asked to remove redundancy)
-    return [
-      { label: "Home", href: "/" },
-      { label: "Shop", href: "/products" }
-    ];
+    // Return empty array if no navigation settings configured
+    return [];
   }, [categories, collections, navSettings, bestSellers, newArrivals, celebritySpecials, announcements]);
 
   const handleSignOut = async () => {

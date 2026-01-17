@@ -95,6 +95,7 @@ const NewArrivals = () => {
               rating={product.rating}
               reviewCount={product.review_count}
               badge={product.badge || undefined}
+              theme={product.theme}
             />
           ))}
         </div>

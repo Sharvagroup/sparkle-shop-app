@@ -13,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useValidateDiscountCode, AppliedDiscount } from "@/hooks/useDiscountCodes";
 import { toast } from "@/hooks/use-toast";
 import { useSiteSetting, PageContentSettings } from "@/hooks/useSiteSettings";
-import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/constants";
 
 interface CommerceSettings {
   currencySymbol?: string;
@@ -103,7 +102,7 @@ const Cart = () => {
   const discountAmount = appliedDiscount?.discountAmount || 0;
 
   const formatPrice = (price: number) => {
-    const symbol = commerceSettings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
+    const symbol = commerceSettings?.currencySymbol || "";
     const locale = commerceSettings?.localeCode || "en-US";
     return `${symbol}${price.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
   };

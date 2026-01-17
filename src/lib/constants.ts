@@ -17,66 +17,21 @@ export const PAYMENT_STATUS_COLORS: Record<string, string> = {
 } as const;
 
 // ============================================================================
-// LEGACY FALLBACKS - Regional settings should be managed via Admin Settings
-// These constants serve as fallbacks when admin settings are not configured.
-// Primary source: Admin Panel → Settings → Commerce tab
+// TYPE DEFINITIONS - Regional data should be managed via Admin Settings
+// These types are kept for TypeScript type safety.
+// All actual data should come from site_settings table (regional category)
 // ============================================================================
 
-// Countries fallback - use commerce settings from admin panel when available
-export const COUNTRIES = [
-  { value: "IN", label: "India" },
-  { value: "US", label: "United States" },
-  { value: "UK", label: "United Kingdom" },
-  { value: "CA", label: "Canada" },
-  { value: "AU", label: "Australia" },
-  { value: "AE", label: "United Arab Emirates" },
-  { value: "SG", label: "Singapore" },
-] as const;
+// Type definitions for regional data (actual data comes from database)
+export type Country = { value: string; label: string };
+export type PaymentMethod = { id: string; label: string; description: string; enabled?: boolean };
 
-// Indian states fallback - use commerce settings from admin panel when available
-export const INDIAN_STATES = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Puducherry",
-  "Chandigarh",
-] as const;
-
-// Payment Methods fallback - use commerce settings from admin panel when available
-export const PAYMENT_METHODS = [
-  { id: "card", label: "Credit/Debit Card", description: "Secure payment via Razorpay" },
-  { id: "upi", label: "UPI / NetBanking", description: "Pay via GPay, PhonePe, Paytm, etc." },
-  { id: "cod", label: "Cash on Delivery", description: "Pay when you receive the order" },
-] as const;
+// ============================================================================
+// LEGACY FALLBACKS - Only used as last resort when database settings are unavailable
+// These should only be used in helper functions, not directly in components
+// ============================================================================
 
 // Currency fallbacks - use commerce settings from admin panel when available
+// These are kept as absolute last resort fallbacks only
 export const DEFAULT_CURRENCY = "USD";
 export const DEFAULT_CURRENCY_SYMBOL = "$";

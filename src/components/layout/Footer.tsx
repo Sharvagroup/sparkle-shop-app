@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useActiveFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
-import { useSiteSetting, ContactSettings, BrandingSettings } from "@/hooks/useSiteSettings";
+import { useSiteSetting, ContactSettings, BrandingSettings, FooterSettings } from "@/hooks/useSiteSettings";
 
 interface LegalSettings {
   privacyPolicyUrl?: string;
@@ -12,6 +12,7 @@ const Footer = () => {
   const { data: contact } = useSiteSetting<ContactSettings>("contact");
   const { data: branding } = useSiteSetting<BrandingSettings>("branding");
   const { data: legal } = useSiteSetting<LegalSettings>("legal");
+  const { data: footerSettings } = useSiteSetting<FooterSettings>("footer");
 
   const groupedLinks = footerLinks.reduce((acc, link) => {
     const section = link.section.toLowerCase();
@@ -48,8 +49,9 @@ const Footer = () => {
     return <Link to={url} className="hover:text-primary transition-colors">{label}</Link>;
   };
 
-  const sectionTitles: Record<string, string> = { shop: "Shop", support: "Support", connect: "Connect" };
-  const orderedSections = ["shop", "support", "connect"];
+  // Use footer settings from database, fallback to empty
+  const sectionTitles: Record<string, string> = footerSettings?.sectionTitles || {};
+  const orderedSections = footerSettings?.sectionOrder || [];
   const allSections = [...new Set([...orderedSections, ...Object.keys(groupedLinks)])];
   const displaySections = allSections.filter((s) => groupedLinks[s]?.length > 0).slice(0, 3);
 
@@ -77,7 +79,7 @@ const Footer = () => {
 
           {displaySections.map((section) => (
             <div key={section}>
-              <h4 className="font-display font-medium text-lg mb-6 text-foreground capitalize">{sectionTitles[section] || section}</h4>
+              <h4 className="font-display font-medium text-lg mb-6 text-foreground capitalize">{sectionTitles[section] || section.charAt(0).toUpperCase() + section.slice(1)}</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
                 {groupedLinks[section]?.map((link) => <li key={link.id}>{renderLinkItem(link)}</li>)}
               </ul>

@@ -7,8 +7,8 @@ export interface ProductTheme {
   image_fit?: 'cover' | 'contain';
   highlight_color?: string;
   featured_border?: boolean;
-  hover_effect?: 'none' | 'lift' | 'glow' | 'zoom';
-  card_style?: 'minimal' | 'bordered' | 'shadow';
+  hover_effect?: 'shadow' | 'scale' | 'border' | 'none';
+  card_style?: 'default' | 'minimal' | 'bordered';
 }
 
 export interface TrustBadge {

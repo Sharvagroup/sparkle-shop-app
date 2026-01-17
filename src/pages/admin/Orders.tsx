@@ -27,11 +27,14 @@ import { Search, Eye, Package } from "lucide-react";
 import { useAllOrders, useUpdateOrderStatus, Order } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { ORDER_STATUS_COLORS, PAYMENT_STATUS_COLORS } from "@/lib/constants";
+import { useOrderStatusColors } from "@/hooks/useOrderStatusColors";
+import { usePaymentStatusColors } from "@/hooks/usePaymentStatusColors";
 import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 
 const Orders = () => {
   const { data: orders = [], isLoading } = useAllOrders();
+  const orderStatusColors = useOrderStatusColors();
+  const paymentStatusColors = usePaymentStatusColors();
   const updateStatus = useUpdateOrderStatus();
   const { formatCurrency } = usePriceFormatter();
 
@@ -139,7 +142,7 @@ const Orders = () => {
                   <TableCell>{order.items?.length || 0} items</TableCell>
                   <TableCell className="font-medium">{formatPrice(order.total_amount)}</TableCell>
                   <TableCell>
-                    <Badge className={PAYMENT_STATUS_COLORS[order.payment_status] || ""}>
+                    <Badge className={paymentStatusColors[order.payment_status] || ""}>
                       {order.payment_status}
                     </Badge>
                   </TableCell>
@@ -148,7 +151,7 @@ const Orders = () => {
                       value={order.status}
                       onValueChange={(value) => handleStatusChange(order.id, value as Order["status"])}
                     >
-                      <SelectTrigger className={`w-[130px] h-8 text-xs ${ORDER_STATUS_COLORS[order.status] || ""}`}>
+                      <SelectTrigger className={`w-[130px] h-8 text-xs ${orderStatusColors[order.status] || ""}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

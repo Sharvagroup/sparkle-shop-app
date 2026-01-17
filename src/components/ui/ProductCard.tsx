@@ -29,7 +29,7 @@ const defaultTheme: ProductCardTheme = {
   image_fit: "contain",
 };
 
-// Default individual product theme
+// Default individual product theme - undefined values fall back to global theme
 const defaultProductTheme: ProductTheme = {
   card_style: undefined,
   badge_style: "default",
@@ -37,8 +37,10 @@ const defaultProductTheme: ProductTheme = {
   image_fit: undefined,
   hover_effect: undefined,
   featured_border: false,
-  highlight_color: "#d4af37",
+  highlight_color: undefined,
 };
+
+// Note: Individual product theme values (if set) override global theme values
 
 interface ProductCardProps {
   id: string;
@@ -200,11 +202,11 @@ const ProductCard = ({
     }
   };
   
-  // Get featured border style
-  const getFeaturedBorderStyle = () => {
+  // Get featured border style - uses primary color from CSS variables if no custom color set
+  const getFeaturedBorderStyle = (): React.CSSProperties => {
     if (itemTheme.featured_border) {
       return {
-        borderColor: itemTheme.highlight_color || "#d4af37",
+        borderColor: itemTheme.highlight_color || "hsl(var(--primary))",
         borderWidth: "3px",
       };
     }

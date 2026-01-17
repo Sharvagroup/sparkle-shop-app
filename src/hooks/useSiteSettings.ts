@@ -99,6 +99,28 @@ export interface RegionalSettings {
   paymentMethods?: { id: string; label: string; description: string; enabled: boolean }[];
 }
 
+export interface OrderStatusColorsSettings {
+  pending?: string;
+  confirmed?: string;
+  processing?: string;
+  shipped?: string;
+  delivered?: string;
+  cancelled?: string;
+  refunded?: string;
+}
+
+export interface PaymentStatusColorsSettings {
+  pending?: string;
+  paid?: string;
+  failed?: string;
+  refunded?: string;
+}
+
+export interface FooterSettings {
+  sectionTitles?: Record<string, string>;
+  sectionOrder?: string[];
+}
+
 // FilterSettings removed - filters are now fully automated based on product data
 
 export interface SiteSetting {

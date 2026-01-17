@@ -791,10 +791,11 @@ const ProductDetail = () => {
                   description={p.description || ""}
                   price={p.price}
                   originalPrice={p.original_price || undefined}
-                  image={p.images?.[0] || productPageSettings?.placeholderImage || "loading"}
+                  image={p.images?.[0] || productPageSettings?.placeholderImage || ""}
                   rating={p.rating}
                   reviewCount={p.review_count}
                   badge={p.badge || undefined}
+                  theme={p.theme}
                 />
               ))}
             </div>

@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ORDER_STATUS_COLORS } from '@/lib/constants';
+import { useOrderStatusColors } from '@/hooks/useOrderStatusColors';
 import { usePriceFormatter } from '@/hooks/usePriceFormatter';
 
 const Dashboard = () => {
+  const orderStatusColors = useOrderStatusColors();
+  
   // Fetch real stats from database
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-dashboard-stats'],
@@ -99,7 +101,7 @@ const Dashboard = () => {
   const { formatCurrency } = usePriceFormatter();
 
   const getStatusColor = (status: string) => {
-    return ORDER_STATUS_COLORS[status] || 'bg-gray-100 text-gray-800';
+    return orderStatusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const statCards = [

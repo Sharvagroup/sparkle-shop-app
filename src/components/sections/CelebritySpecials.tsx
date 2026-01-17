@@ -96,6 +96,7 @@ const CelebritySpecials = () => {
               reviewCount={product.review_count}
               badge={product.badge || undefined}
               variant={index < 2 ? "featured" : undefined}
+              theme={product.theme}
             />
           ))}
         </div>

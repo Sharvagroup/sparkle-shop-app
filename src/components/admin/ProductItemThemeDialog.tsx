@@ -22,11 +22,11 @@ import { usePriceFormatter } from "@/hooks/usePriceFormatter";
 const defaultTheme: ProductTheme = {
   badge_style: "default",
   badge_color: "",
-  image_fit: "cover",
+  image_fit: undefined,
   highlight_color: "",
   featured_border: false,
-  hover_effect: "lift",
-  card_style: "shadow",
+  hover_effect: undefined,
+  card_style: undefined,
 };
 
 interface ProductItemThemeDialogProps {
@@ -80,18 +80,19 @@ export const ProductItemThemeDialog = ({
         <div className="space-y-6 py-4">
           {/* Card Style */}
           <div className="space-y-2">
-            <Label>Card Style</Label>
+            <Label>Card Style (override global)</Label>
             <ToggleGroup
               type="single"
-              value={theme.card_style}
+              value={theme.card_style || ""}
               onValueChange={(value) =>
-                value && setTheme({ ...theme, card_style: value as ProductTheme['card_style'] })
+                setTheme({ ...theme, card_style: value ? value as ProductTheme['card_style'] : undefined })
               }
               className="justify-start"
             >
-              <ToggleGroupItem value="minimal" className="flex-1">Minimal</ToggleGroupItem>
-              <ToggleGroupItem value="bordered" className="flex-1">Bordered</ToggleGroupItem>
-              <ToggleGroupItem value="shadow" className="flex-1">Shadow</ToggleGroupItem>
+              <ToggleGroupItem value="">Use Global</ToggleGroupItem>
+              <ToggleGroupItem value="default">Default</ToggleGroupItem>
+              <ToggleGroupItem value="minimal">Minimal</ToggleGroupItem>
+              <ToggleGroupItem value="bordered">Bordered</ToggleGroupItem>
             </ToggleGroup>
           </div>
 
@@ -143,35 +144,37 @@ export const ProductItemThemeDialog = ({
 
           {/* Image Fit */}
           <div className="space-y-2">
-            <Label>Image Fit</Label>
+            <Label>Image Fit (override global)</Label>
             <ToggleGroup
               type="single"
-              value={theme.image_fit}
+              value={theme.image_fit || ""}
               onValueChange={(value) =>
-                value && setTheme({ ...theme, image_fit: value as ProductTheme['image_fit'] })
+                setTheme({ ...theme, image_fit: value ? value as ProductTheme['image_fit'] : undefined })
               }
               className="justify-start"
             >
-              <ToggleGroupItem value="cover" className="flex-1">Cover</ToggleGroupItem>
-              <ToggleGroupItem value="contain" className="flex-1">Contain</ToggleGroupItem>
+              <ToggleGroupItem value="">Use Global</ToggleGroupItem>
+              <ToggleGroupItem value="cover">Cover</ToggleGroupItem>
+              <ToggleGroupItem value="contain">Contain</ToggleGroupItem>
             </ToggleGroup>
           </div>
 
           {/* Hover Effect */}
           <div className="space-y-2">
-            <Label>Hover Effect</Label>
+            <Label>Hover Effect (override global)</Label>
             <ToggleGroup
               type="single"
-              value={theme.hover_effect}
+              value={theme.hover_effect || ""}
               onValueChange={(value) =>
-                value && setTheme({ ...theme, hover_effect: value as ProductTheme['hover_effect'] })
+                setTheme({ ...theme, hover_effect: value ? value as ProductTheme['hover_effect'] : undefined })
               }
               className="justify-start"
             >
-              <ToggleGroupItem value="none" className="flex-1">None</ToggleGroupItem>
-              <ToggleGroupItem value="lift" className="flex-1">Lift</ToggleGroupItem>
-              <ToggleGroupItem value="glow" className="flex-1">Glow</ToggleGroupItem>
-              <ToggleGroupItem value="zoom" className="flex-1">Zoom</ToggleGroupItem>
+              <ToggleGroupItem value="">Use Global</ToggleGroupItem>
+              <ToggleGroupItem value="shadow">Shadow</ToggleGroupItem>
+              <ToggleGroupItem value="scale">Scale</ToggleGroupItem>
+              <ToggleGroupItem value="border">Border</ToggleGroupItem>
+              <ToggleGroupItem value="none">None</ToggleGroupItem>
             </ToggleGroup>
           </div>
 
@@ -193,6 +196,7 @@ export const ProductItemThemeDialog = ({
           {theme.featured_border && (
             <div className="space-y-2">
               <Label>Highlight Border Color</Label>
+              <p className="text-xs text-muted-foreground">Leave empty to use site's primary color</p>
               <div className="flex items-center gap-3">
                 <Input
                   type="color"
@@ -205,8 +209,17 @@ export const ProductItemThemeDialog = ({
                   value={theme.highlight_color}
                   onChange={(e) => setTheme({ ...theme, highlight_color: e.target.value })}
                   className="w-28 font-mono text-sm"
-                  placeholder="#d4af37"
+                  placeholder="Primary"
                 />
+                {theme.highlight_color && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTheme({ ...theme, highlight_color: "" })}
+                  >
+                    Reset
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -217,8 +230,13 @@ export const ProductItemThemeDialog = ({
             <div className="flex justify-center p-4 bg-muted/30 rounded-lg">
               <div
                 className={`w-48 rounded-lg overflow-hidden bg-card transition-all duration-300 ${
-                  theme.card_style === 'bordered' ? 'border-2' :
-                  theme.card_style === 'shadow' ? 'shadow-lg' : ''
+                  theme.card_style === 'bordered' ? 'border-2 border-border' :
+                  theme.card_style === 'minimal' ? 'border-0 shadow-none' : 
+                  theme.card_style === 'default' ? 'border shadow-sm' : 'border shadow-sm'
+                } ${
+                  theme.hover_effect === 'shadow' ? 'hover:shadow-lg' :
+                  theme.hover_effect === 'scale' ? 'hover:scale-[1.02]' :
+                  theme.hover_effect === 'border' ? 'hover:border-primary' : ''
                 } ${
                   theme.featured_border ? 'ring-2' : ''
                 }`}

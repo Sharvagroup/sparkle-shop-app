@@ -98,6 +98,7 @@ const BestSellers = () => {
               reviewCount={product.review_count}
               badge={product.badge || undefined}
               variant={index === 0 ? "featured" : undefined}
+              theme={product.theme}
             />
           ))}
         </div>
